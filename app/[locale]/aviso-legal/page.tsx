@@ -30,8 +30,8 @@ export default async function AvisoLegalPage({
             <h2 className="text-xl font-semibold text-[#1E3A5F]">1. Datos identificativos</h2>
             <p>En cumplimiento con el deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico, a continuación se reflejan los datos identificativos:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Denominación social:</strong> {t('pending')}</li>
-              <li><strong>CIF/NIF:</strong> [PENDIENTE]</li>
+              <li><strong>Denominación social:</strong> {t('denominacionSocial')}</li>
+              <li><strong>CIF/NIF:</strong> {t('CIF/NIF')}</li>
               <li><strong>Domicilio social:</strong> Castellón, España</li>
               <li><strong>Email:</strong> hola@pymaticlabs.com</li>
               <li><strong>Web:</strong> https://pymaticlabs.com</li>

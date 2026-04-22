@@ -29,7 +29,7 @@ export default async function PoliticaPrivacidadPage({
           <section>
             <h2 className="text-xl font-semibold text-[#1E3A5F]">1. Responsable del tratamiento</h2>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Denominación:</strong> {t('pending')}</li>
+              <li><strong>Denominación:</strong> {t('denominacionSocial')}</li>
               <li><strong>Email:</strong> hola@pymaticlabs.com</li>
             </ul>
           </section>

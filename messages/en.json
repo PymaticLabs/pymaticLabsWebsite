@@ -8,7 +8,7 @@
     "langSwitch": "ES"
   },
   "hero": {
-    "title": "AI Automation for Spanish SMBs",
+    "title": "AI Automation for SMBs",
     "subtitle": "We automate invoices, Google reviews, accounting and repetitive processes so you can focus on what matters: growing your business.",
     "cta1": "See how we work",
     "cta2": "Talk to us",
@@ -244,6 +244,8 @@
     "privacidadTitle": "Privacy Policy",
     "cookiesTitle": "Cookie Policy",
     "pending": "[COMPANY NAME PENDING]",
+    "denominacionSocial": "Sergio Juan Pérez Jiménez / Eric Ollé Lluch",
+    "CIF/NIF": "48705519Y / 73404720J",
     "lastUpdated": "Last updated: April 2026"
   }
 }
