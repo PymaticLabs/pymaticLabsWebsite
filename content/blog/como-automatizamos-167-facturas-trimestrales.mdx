@@ -1,0 +1,230 @@
+---
+title: "Cómo automatizamos 167 facturas trimestrales con Python"
+description: "El proceso técnico detrás de la automatización de facturas PDF para una pyme familiar: pdfplumber, openpyxl y Claude API."
+date: "2026-04-22"
+tags: ["automatizacion", "python", "pdfplumber", "facturas"]
+author: "Eric Ollé"
+cover: "/blog/covers/facturas-python.png"
+---
+
+Cada trimestre, la gestora de una estación de servicio familiar en Castellón dedicaba más de 10 horas a un mismo proceso: descargar PDFs del correo, abrir cada uno, copiar números a un Excel. 167 veces. Aquí contamos cómo lo automatizamos.
+
+## El problema
+
+El proceso manual tenía tres problemas principales:
+
+1. **Tiempo**: 10+ horas cada trimestre (40+ horas al año)
+2. **Errores**: Cifras copiadas mal, IVAs incorrectos, facturas olvidadas
+3. **Dependencia humana**: El gestor no podía presentar los impuestos hasta recibir el Excel completo y revisado
+
+## La solución técnica
+
+### Paso 1: Monitorización del correo con imaplib
+
+El primer bloque del script se conecta al servidor IMAP y filtra los correos con PDFs adjuntos:
+
+```python
+import imaplib
+import email
+from pathlib import Path
+
+def fetch_invoice_emails(
+    host: str, 
+    username: str, 
+    password: str,
+    folder: str = "INBOX"
+) -> list[tuple[str, bytes]]:
+    """Fetch emails with PDF attachments from inbox."""
+    mail = imaplib.IMAP4_SSL(host)
+    mail.login(username, password)
+    mail.select(folder)
+    
+    # Search for emails with attachments
+    _, message_ids = mail.search(None, 'UNSEEN')
+    
+    invoices = []
+    for msg_id in message_ids[0].split():
+        _, msg_data = mail.fetch(msg_id, '(RFC822)')
+        raw_email = msg_data[0][1]
+        msg = email.message_from_bytes(raw_email)
+        
+        for part in msg.walk():
+            if part.get_content_type() == 'application/pdf':
+                filename = part.get_filename()
+                pdf_data = part.get_payload(decode=True)
+                invoices.append((filename, pdf_data))
+    
+    mail.logout()
+    return invoices
+```
+
+### Paso 2: Extracción de datos con pdfplumber
+
+El núcleo del sistema es la extracción de datos de cada PDF:
+
+```python
+import pdfplumber
+import re
+from dataclasses import dataclass
+
+@dataclass
+class InvoiceData:
+    supplier: str
+    invoice_number: str
+    date: str
+    base_amount: float
+    vat_rate: float
+    vat_amount: float
+    total: float
+
+def extract_invoice_data(pdf_bytes: bytes) -> InvoiceData | None:
+    """Extract structured data from a PDF invoice."""
+    import io
+    
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+        text = ""
+        for page in pdf.pages:
+            text += page.extract_text() or ""
+    
+    # Normalize text
+    text = text.replace('\n', ' ').strip()
+    
+    # Extract patterns
+    patterns = {
+        'supplier': r'(?:Emisor|Razón Social|Empresa|De):\s*([^\n]+)',
+        'invoice_num': r'(?:Factura|Nº Factura|Número)[\s:#]*(\w+[-/]\d+|\d+)',
+        'date': r'(?:Fecha)[\s:]*(\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4})',
+        'base': r'Base\s+[Ii]mponible[\s:€]*(\d+[.,]\d{2})',
+        'vat': r'IVA\s+(\d+)\s*%',
+    }
+    
+    results = {}
+    for key, pattern in patterns.items():
+        match = re.search(pattern, text)
+        results[key] = match.group(1) if match else None
+    
+    if not results['base']:
+        return None
+    
+    base = float(results['base'].replace('.', '').replace(',', '.'))
+    vat_rate = float(results['vat'] or 21) / 100
+    vat_amount = round(base * vat_rate, 2)
+    
+    return InvoiceData(
+        supplier=results['supplier'] or 'Desconocido',
+        invoice_number=results['invoice_num'] or '',
+        date=results['date'] or '',
+        base_amount=base,
+        vat_rate=vat_rate,
+        vat_amount=vat_amount,
+        total=round(base + vat_amount, 2)
+    )
+```
+
+### Paso 3: Validación con Claude API
+
+Para facturas con formatos inusuales, usamos la Claude API como fallback:
+
+```python
+import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+def validate_with_ai(text: str) -> dict | None:
+    """Use Claude to extract invoice data from unstructured text."""
+    message = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=500,
+        messages=[{
+            "role": "user",
+            "content": f"""Extrae los datos de esta factura y devuelve SOLO un JSON con estos campos:
+- supplier (string)
+- invoice_number (string)  
+- date (string DD/MM/YYYY)
+- base_amount (float)
+- vat_rate (float, ejemplo: 0.21)
+- vat_amount (float)
+- total (float)
+
+Texto de la factura:
+{text[:2000]}
+
+Responde SOLO con el JSON, sin explicaciones."""
+        }]
+    )
+    
+    try:
+        return json.loads(message.content[0].text)
+    except:
+        return None
+```
+
+### Paso 4: Generación del Excel con openpyxl
+
+El último paso genera el Excel en el formato exacto del gestor:
+
+```python
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+from datetime import datetime
+
+def generate_excel(invoices: list[InvoiceData], output_path: str) -> None:
+    """Generate a formatted Excel with all invoice data."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Facturas Q{get_quarter()}"
+    
+    # Headers
+    headers = ['Proveedor', 'Nº Factura', 'Fecha', 'Base', 'IVA %', 'IVA €', 'Total']
+    header_fill = PatternFill(start_color='1E3A5F', fill_type='solid')
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Data rows
+    for row, inv in enumerate(invoices, 2):
+        ws.append([
+            inv.supplier,
+            inv.invoice_number,
+            inv.date,
+            inv.base_amount,
+            f"{inv.vat_rate*100:.0f}%",
+            inv.vat_amount,
+            inv.total
+        ])
+    
+    # Totals row
+    total_row = len(invoices) + 2
+    ws.cell(row=total_row, column=1, value='TOTALES').font = Font(bold=True)
+    ws.cell(row=total_row, column=4, value=sum(i.base_amount for i in invoices)).font = Font(bold=True)
+    ws.cell(row=total_row, column=6, value=sum(i.vat_amount for i in invoices)).font = Font(bold=True)
+    ws.cell(row=total_row, column=7, value=sum(i.total for i in invoices)).font = Font(bold=True)
+    
+    wb.save(output_path)
+```
+
+## Resultado
+
+El proceso completo ahora se ejecuta con un solo comando:
+
+```bash
+python invoice_processor.py --quarter Q1-2026 --output facturas_Q1_2026.xlsx
+```
+
+Tiempo de ejecución: **menos de 5 minutos** para 167 facturas.
+
+## Lecciones aprendidas
+
+1. **No todos los PDFs son iguales**: Algunos proveedores generan PDFs con texto embebido, otros con imágenes escaneadas. Para los segundos, necesitamos OCR (pytesseract).
+
+2. **La IA como fallback**: Claude no es necesaria para el 90% de las facturas con formatos estándar, pero es invaluable para el 10% restante.
+
+3. **Validación humana opcional**: Añadimos un modo `--dry-run` que genera el Excel pero lo marca como "pendiente de revisión" para casos donde la confianza es baja.
+
+---
+
+¿Tienes un proceso similar en tu empresa? [Cuéntanoslo](/contacto) y te preparamos una propuesta.

@@ -1,0 +1,102 @@
+---
+title: "n8n vs Zapier vs Make: Guía para pymes en 2026"
+description: "Comparativa honesta de las tres principales herramientas de automatización sin código. ¿Cuál conviene más a tu pyme?"
+date: "2026-04-22"
+tags: ["automatizacion", "n8n", "zapier", "make", "no-code"]
+author: "Sergio J. Pérez"
+cover: "/blog/covers/n8n-vs-zapier-make.png"
+---
+
+Si estás pensando en automatizar procesos en tu pyme, inevitablemente te topas con tres nombres: Zapier, Make (antes Integromat) y n8n. Los tres hacen cosas similares, pero son muy diferentes en precio, flexibilidad y control. Esta es la guía que me hubiera gustado tener antes de recomendar una a los clientes.
+
+## El resumen rápido
+
+| | Zapier | Make | n8n |
+|---|---|---|---|
+| **Precio** | Caro (desde ~$20/mes útil) | Medio (desde $9/mes) | Gratis self-hosted |
+| **Facilidad** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Flexibilidad** | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Control de datos** | Bajo | Medio | Total |
+| **Ideal para** | Freelancers, equipos pequeños | Pymes con presupuesto | Pymes con datos sensibles |
+
+## Zapier: el más fácil, el más caro
+
+Zapier popularizó el concepto de "Zap": trigger + acción. Es ridículamente fácil de usar, tiene más de 6.000 integraciones y funciona perfectamente para automatizaciones simples.
+
+**El problema**: el precio. El plan gratuito es casi inútil (100 tareas/mes, sin filtros multi-paso). Para algo útil en una pyme necesitas al menos el plan Professional (~$49/mes) o Team (~$103/mes). Si tienes 1.000 facturas mensuales, las tareas se consumen rápido.
+
+**Cuándo recomendamos Zapier**: freelancers o equipos muy pequeños que necesitan conectar 2-3 herramientas sencillas y valoran más el tiempo que el dinero.
+
+## Make: el término medio inteligente
+
+Make (ex-Integromat) es visualmente más potente que Zapier. Su editor de flujos "en burbujas" es intuitivo y permite lógica condicional, iteraciones y transformaciones de datos sin código.
+
+**Precio**: mucho más razonable. El plan Core (9$/mes) da 10.000 operaciones/mes, suficiente para muchas pymes. El plan Pro (16$/mes) incluye ejecuciones ilimitadas en términos prácticos.
+
+**El problema**: los datos pasan por servidores de Make (empresa checa, ahora con sede en EEUU). Para datos sensibles como facturas, datos de clientes o información contable, esto puede ser un problema legal (RGPD).
+
+**Cuándo recomendamos Make**: pymes con procesos moderadamente complejos que no manejan datos personales sensibles y buscan un equilibrio precio-funcionalidad.
+
+## n8n: el poder total con self-hosting
+
+n8n es open-source y puede instalarse en tu propio servidor. Esto cambia todo: tus datos nunca salen de tu infraestructura, el coste es prácticamente cero (solo el servidor), y la flexibilidad es ilimitada porque puedes añadir código JavaScript en cualquier punto del flujo.
+
+**El precio**: en cloud (n8n.io) el plan Starter cuesta ~$24/mes. Pero si lo instalas tú mismo en un VPS de Hetzner (~€5/mes), el coste es mínimo. Nosotros nos encargamos del setup e instalación.
+
+**La curva de aprendizaje**: es más pronunciada que Zapier o Make. Necesita alguien que entienda conceptos como webhooks, JSON, autenticación OAuth. Por eso nosotros configuramos el servidor y los flujos, y el cliente solo interactúa con una interfaz sencilla.
+
+**El killer feature**: los nodos de código. En cualquier punto del flujo puedes escribir JavaScript o Python. ¿Necesitas transformar datos de una manera que ningún nodo estándar soporta? Escribes 5 líneas de código y listo.
+
+```javascript
+// Ejemplo: transformar datos de factura en n8n (Code Node)
+const invoices = $input.all();
+
+return invoices.map(item => ({
+  json: {
+    supplier: item.json.supplier?.trim().toUpperCase(),
+    amount: parseFloat(item.json.total) || 0,
+    quarter: getQuarter(new Date(item.json.date)),
+    isHighValue: parseFloat(item.json.total) > 1000
+  }
+}));
+
+function getQuarter(date) {
+  const month = date.getMonth();
+  return `Q${Math.floor(month / 3) + 1}-${date.getFullYear()}`;
+}
+```
+
+**Cuándo recomendamos n8n**: pymes con datos sensibles (contabilidad, RRHH, clientes), volumen alto de operaciones, o necesidades técnicas específicas.
+
+## Casos de uso reales con cada herramienta
+
+### Zapier es perfecto para:
+- Añadir leads de un formulario de contacto a tu CRM
+- Publicar en redes sociales cuando publicas un blog
+- Recibir notificaciones de nuevos pedidos de Shopify
+
+### Make brilla en:
+- Flujos complejos con lógica condicional (si el pedido > 500€ → aprobación manual)
+- Procesar datos de múltiples fuentes y consolidarlos
+- Automatizaciones de marketing multicanal
+
+### n8n es insustituible para:
+- Procesar facturas o documentos con datos personales
+- Integrar con APIs que requieren autenticación compleja
+- Flujos que necesitan código personalizado
+- Empresas que necesitan mantener datos en Europa
+
+## Nuestra recomendación para pymes españolas en 2026
+
+Para el 80% de las pymes españolas que nos contactan, **n8n self-hosted** es la opción correcta:
+
+1. **RGPD**: Los datos no salen de España/UE
+2. **Coste**: ~€5-10/mes en servidor vs $50-100/mes en herramientas SaaS
+3. **Flexibilidad**: Conectamos literalmente cualquier sistema con código personalizado
+4. **Escalabilidad**: Sin límite de operaciones mensuales
+
+El único argumento contra n8n es la curva de aprendizaje, pero eso es exactamente lo que nosotros resolvemos.
+
+---
+
+¿Quieres saber qué herramienta conviene más a tu negocio? [Cuéntanos tu caso](/contacto) y te damos una recomendación gratuita.

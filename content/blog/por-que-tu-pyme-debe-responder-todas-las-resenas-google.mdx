@@ -1,0 +1,108 @@
+---
+title: "Por qué tu pyme debe responder todas las reseñas de Google (y cómo hacerlo con IA)"
+description: "Las reseñas de Google son el escaparate digital de tu negocio. Ignorarlas tiene un coste real. Te explicamos por qué y cómo automatizar las respuestas."
+date: "2026-04-22"
+tags: ["reseñas", "google", "ia", "reputacion-online"]
+author: "Eric Ollé"
+cover: "/blog/covers/resenas-google-ia.png"
+---
+
+Cuando fue la última vez que elegiste un restaurante sin mirar las reseñas de Google. Exacto. Tus clientes tampoco lo hacen. Y sin embargo, la mayoría de pymes españolas tienen decenas de reseñas sin responder.
+
+## El problema de ignorar las reseñas
+
+Las cifras son claras:
+
+- **88% de los consumidores** confían en las reseñas online tanto como en las recomendaciones personales (BrightLocal, 2025)
+- **53% de los clientes** esperan que las empresas respondan a las reseñas negativas en menos de una semana
+- Los negocios que responden reseñas tienen una valoración media **0,3 estrellas más alta** que los que no lo hacen
+
+Cuando un cliente deja una reseña negativa y no recibe respuesta, no solo ese cliente se va. Todos los que lean esa reseña sin respuesta interpretan que al negocio no le importan sus clientes.
+
+## Por qué la mayoría de pymes no responden
+
+El motivo más común que escuchamos: **"No tenemos tiempo"**.
+
+Responder reseñas parece sencillo, pero en la práctica implica:
+
+1. Entrar a Google Business Profile cada día (o varios días)
+2. Revisar si hay reseñas nuevas
+3. Leer cada reseña con atención
+4. Pensar una respuesta adecuada al tono (positiva vs. negativa vs. neutral)
+5. Escribirla sin errores ortográficos
+6. Publicarla
+
+Para un restaurante con 20-30 reseñas mensuales, esto puede ser 2-3 horas al mes. Horas que el dueño prefiere dedicar a su negocio.
+
+## Cómo funciona la respuesta automática con IA
+
+La solución que hemos desarrollado funciona así:
+
+### 1. Detección de nueva reseña
+
+Usamos la Google My Business API para detectar nuevas reseñas en tiempo real. En cuanto aparece una reseña nueva, el sistema la procesa automáticamente.
+
+### 2. Clasificación y análisis
+
+La IA (usamos Claude de Anthropic) analiza:
+- Puntuación (1-5 estrellas)
+- Tono (positivo, negativo, neutro, mixto)
+- Temas mencionados (servicio, comida, precio, atención, etc.)
+- Si hay mención de empleados, platos específicos, situaciones concretas
+
+### 3. Generación de respuesta personalizada
+
+La respuesta no es genérica. Está entrenada con:
+- El tono de comunicación del negocio
+- El nombre del establecimiento y ubicación
+- Los productos/servicios principales
+- Ejemplos de respuestas pasadas aprobadas por el dueño
+- Instrucciones específicas para reseñas negativas
+
+Ejemplo de reseña negativa:
+
+> "Estuvimos esperando la mesa 20 minutos aunque teníamos reserva. La comida estaba buena pero el servicio fue muy lento. 3 estrellas."
+
+Respuesta generada:
+
+> "Hola [nombre], muchas gracias por visitarnos y por tomarte el tiempo de compartir tu experiencia. Lamentamos mucho los problemas con los tiempos de espera, no es el nivel de servicio que queremos ofrecer. Los sábados por la noche solemos tener más demanda de lo esperado y en ocasiones nos genera estas situaciones que queremos mejorar. Nos alegramos de que la comida estuviera a tu gusto. Si nos das la oportunidad de volver a recibirte, te prometemos mejorar en la experiencia. ¡Esperamos verte pronto!"
+
+### 4. Publicación automática (o con aprobación)
+
+El sistema puede configurarse en dos modos:
+- **Automático**: La respuesta se publica directamente sin intervención humana
+- **Semi-automático**: El dueño recibe la respuesta por WhatsApp o email para aprobarla antes de publicar
+
+Para reseñas negativas con menos de 3 estrellas, siempre recomendamos el modo semi-automático la primera semana, hasta que el dueño confíe en el tono de la IA.
+
+## Qué NO hace la IA (y cómo gestionamos los límites)
+
+La IA no puede:
+
+- Resolver problemas reales de servicio
+- Ofrecer compensaciones sin autorización
+- Responder a situaciones legalmente sensibles (accidentes, intoxicaciones)
+
+Para estos casos, el sistema escala automáticamente: clasifica la reseña como "requiere atención humana" y envía una notificación urgente al dueño con la reseña y una sugerencia de respuesta.
+
+## Resultados reales
+
+En los negocios donde hemos implementado el sistema:
+
+- **100% de las reseñas respondidas** en menos de 24 horas
+- **Tiempo dedicado por el dueño**: 0 horas semanales (frente a 2-3 horas anteriores)
+- **Mejora en valoración media**: +0.2 a +0.4 estrellas en 3 meses
+
+## ¿Cuánto cuesta?
+
+Nuestro servicio de gestión de reseñas con IA está disponible desde **150€/mes** por establecimiento. Incluye:
+
+- Configuración inicial y entrenamiento de la IA con tu negocio
+- Respuestas automáticas a todas las reseñas nuevas
+- Informe mensual de reseñas y evolución de valoración
+- Ajustes de tono cuando sea necesario
+- Soporte prioritario para reseñas críticas
+
+---
+
+¿Quieres que te demos más información? [Escríbenos](/contacto) y te explicamos cómo funcionaría para tu negocio específico.
