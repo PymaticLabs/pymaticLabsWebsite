@@ -1,0 +1,249 @@
+{
+  "nav": {
+    "servicios": "Servicios",
+    "casos": "Casos",
+    "blog": "Blog",
+    "sobre": "Sobre nosotros",
+    "cta": "Hablar con nosotros",
+    "langSwitch": "EN"
+  },
+  "hero": {
+    "title": "Automatización con IA para pymes españolas",
+    "subtitle": "Automatizamos facturas, reseñas de Google, contabilidad y procesos repetitivos para que puedas centrarte en lo que importa: hacer crecer tu negocio.",
+    "cta1": "Ver cómo trabajamos",
+    "cta2": "Hablar con nosotros",
+    "metric1": "8 automatizaciones",
+    "metric1sub": "entregadas",
+    "metric2": "~10 horas/semana",
+    "metric2sub": "ahorradas por cliente",
+    "metric3": "100%",
+    "metric3sub": "proyectos entregados"
+  },
+  "problems": {
+    "title": "¿Te suena alguno de estos problemas?",
+    "subtitle": "Estos son los dolores más comunes que escuchamos de pymes como la tuya.",
+    "p1title": "Facturas del correo una a una",
+    "p1desc": "Descargas las facturas manualmente cada mes, copias los datos a mano y siempre hay errores.",
+    "p2title": "Reseñas de Google sin responder",
+    "p2desc": "Las opiniones se acumulan sin respuesta. Cada una ignorada es un cliente que no vuelve.",
+    "p3title": "Datos entre Excels",
+    "p3desc": "Pasas horas copiando datos de un Excel a otro. Tareas repetitivas que un script haría en segundos.",
+    "p4title": "Contabilidad manual",
+    "p4desc": "Tu contabilidad depende de tareas repetitivas que consumen horas cada semana."
+  },
+  "services": {
+    "title": "¿Qué automatizamos?",
+    "subtitle": "Usamos Python, n8n e IA para eliminar el trabajo repetitivo de tu negocio.",
+    "s1title": "Automatizaciones Python",
+    "s1desc": "Scripts a medida que leen correos, procesan PDFs, rellenan hojas de cálculo y más.",
+    "s2title": "Flujos n8n",
+    "s2desc": "Conectamos tus herramientas favoritas sin código: Gmail, Notion, Google Sheets, WhatsApp...",
+    "s3title": "Reseñas con IA",
+    "s3desc": "Respondemos automáticamente todas tus reseñas de Google con IA, personalizadas y en tu tono.",
+    "learnMore": "Ver más"
+  },
+  "cases": {
+    "title": "Casos reales",
+    "subtitle": "Proyectos que ya están ahorrando tiempo a empresas como la tuya.",
+    "featured": {
+      "tag": "Automatización contable",
+      "title": "Estación de servicio + bar familiar · Castellón",
+      "challenge": "El reto",
+      "challengeText": "Una pyme familiar gestionaba 167 facturas trimestrales a mano: descargaban cada PDF del correo, copiaban proveedor, importe e IVA a una hoja de Excel y entregaban ese Excel al gestor. El proceso tardaba más de 10 horas cada trimestre y generaba errores frecuentes.",
+      "built": "Lo que construimos",
+      "builtText": "Un script Python que monitoriza el correo automáticamente, extrae los datos de cada factura con pdfplumber, valida la información con IA (Claude API) y vuelca todo en un Excel estructurado listo para el gestor.",
+      "result": "El resultado",
+      "result1": "10 horas/trimestre ahorradas",
+      "result2": "167 facturas procesadas automáticamente",
+      "result3": "0 errores de transcripción",
+      "stack": "Stack",
+      "cta": "Leer caso completo",
+      "proximity": "Próximamente"
+    }
+  },
+  "about": {
+    "title": "Quiénes somos",
+    "subtitle": "Dos ingenieros de la UJI obsesionados con eliminar el trabajo repetitivo.",
+    "sergioName": "Sergio J. Pérez",
+    "sergioRole": "Co-fundador · Backend & Automatización",
+    "sergioDesc": "Ingeniero Informático por la UJI. Especialista en Python, APIs y arquitecturas de automatización. Ha trabajado en proyectos de procesamiento de datos para startups y pymes.",
+    "ericName": "Eric Ollé",
+    "ericRole": "Co-fundador · IA & Flujos n8n",
+    "ericDesc": "Ingeniero en Sistemas de Información por la UJI. Experto en integraciones n8n, IA generativa y automatización de flujos de negocio.",
+    "location": "Basados en Castellón, trabajamos con toda España."
+  },
+  "howWeWork": {
+    "title": "Cómo trabajamos",
+    "subtitle": "Un proceso claro y sin sorpresas.",
+    "step1title": "Llamada gratuita 30min",
+    "step1desc": "Nos cuentas tu problema, nosotros te explicamos si podemos resolverlo y cómo.",
+    "step2title": "Propuesta por escrito",
+    "step2desc": "Recibes un presupuesto detallado con alcance, plazos y precio fijo. Sin sorpresas.",
+    "step3title": "Construcción + test",
+    "step3desc": "Desarrollamos la solución, la testeamos a fondo y te informamos del progreso.",
+    "step4title": "Entrega + soporte",
+    "step4desc": "Entregamos con documentación, te formamos y ofrecemos soporte post-entrega."
+  },
+  "faq": {
+    "title": "Preguntas frecuentes",
+    "q1": "¿Cuánto cuesta una automatización?",
+    "a1": "El precio depende de la complejidad. Una automatización sencilla (leer correos + Excel) puede estar entre 500 y 1.500 €. Proyectos más complejos con IA integrada entre 2.000 y 5.000 €. Siempre presupuesto fijo antes de empezar.",
+    "q2": "¿Cuánto tiempo tardáis en entregar?",
+    "a2": "Una automatización estándar tarda entre 1 y 3 semanas desde que aprobamos el presupuesto. Proyectos más complejos pueden tardar 4-6 semanas. Siempre con hitos intermedios para que veas el avance.",
+    "q3": "¿Necesito conocimientos técnicos?",
+    "a3": "No. Nos encargamos de todo: análisis, desarrollo, pruebas y puesta en marcha. Solo necesitas explicarnos el proceso que quieres automatizar.",
+    "q4": "¿Qué pasa si algo falla después de la entrega?",
+    "a4": "Incluimos 30 días de garantía post-entrega. Si algo falla por causas del desarrollo, lo solucionamos sin coste adicional.",
+    "q5": "¿Trabajáis solo con empresas de Castellón?",
+    "a5": "No, trabajamos con pymes de toda España. Todo el proceso es 100% remoto: llamadas, demos y entrega se hacen por videollamada.",
+    "q6": "¿Puedo pediros mantenimiento mensual?",
+    "a6": "Sí. Ofrecemos planes de mantenimiento mensual para automatizaciones en producción: monitorización, actualizaciones y soporte prioritario.",
+    "q7": "¿Qué herramientas usáis?",
+    "a7": "Principalmente Python (pdfplumber, openpyxl, imaplib), n8n para flujos sin código, y modelos de IA como Claude o GPT-4 para procesamiento de lenguaje natural.",
+    "q8": "¿Firmáis un NDA?",
+    "a8": "Por supuesto. Firmamos acuerdo de confidencialidad antes de que compartas cualquier dato sensible de tu negocio."
+  },
+  "contact": {
+    "title": "Hablemos",
+    "subtitle": "Cuéntanos tu problema. Primera consulta gratuita.",
+    "name": "Nombre",
+    "email": "Email",
+    "phone": "Teléfono (opcional)",
+    "businessType": "Tipo de negocio",
+    "businessOptions": {
+      "hosteleria": "Hostelería / Restauración",
+      "retail": "Retail / Comercio",
+      "servicios": "Servicios profesionales",
+      "industria": "Industria / Manufactura",
+      "construccion": "Construcción / Reformas",
+      "otro": "Otro"
+    },
+    "message": "Cuéntanos tu proceso repetitivo",
+    "submit": "Enviar mensaje",
+    "sending": "Enviando...",
+    "successTitle": "¡Mensaje enviado!",
+    "successMsg": "Te responderemos en menos de 24 horas.",
+    "errorMsg": "Error al enviar. Inténtalo de nuevo o escríbenos directamente.",
+    "orSchedule": "O reserva una llamada directamente:",
+    "scheduleCta": "Reservar llamada gratuita →",
+    "emailLabel": "Email:",
+    "locationLabel": "Ubicación:",
+    "locationValue": "Castellón, España (remote-first)"
+  },
+  "footer": {
+    "tagline": "Automatización con IA para pymes españolas.",
+    "quickLinks": "Navegación",
+    "legal": "Legal",
+    "connect": "Contacto",
+    "copyright": "© 2026 Pymatic Labs. Todos los derechos reservados.",
+    "links": {
+      "servicios": "Servicios",
+      "casos": "Casos",
+      "blog": "Blog",
+      "sobre": "Sobre nosotros",
+      "contacto": "Contacto"
+    },
+    "legalLinks": {
+      "aviso": "Aviso legal",
+      "privacidad": "Política de privacidad",
+      "cookies": "Política de cookies"
+    }
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Artículos técnicos sobre automatización, Python e IA para pymes.",
+    "readMore": "Leer artículo →",
+    "by": "Por",
+    "back": "← Volver al blog"
+  },
+  "servicios": {
+    "title": "Servicios de automatización",
+    "subtitle": "Soluciones a medida para eliminar el trabajo repetitivo de tu empresa.",
+    "python": {
+      "title": "Automatizaciones Python",
+      "what": "Scripts Python a medida que se integran con tus sistemas actuales.",
+      "for": "Para quién",
+      "forText": "Pymes con procesos repetitivos: procesado de facturas, extracción de datos, reportes automáticos.",
+      "includes": "Qué incluye",
+      "includesList": ["Análisis del proceso actual", "Desarrollo del script", "Tests unitarios", "Documentación", "Soporte 30 días"],
+      "examples": "Ejemplos",
+      "examplesList": ["Extracción de facturas PDF → Excel", "Envío automático de emails con reportes", "Sincronización de datos entre sistemas", "Generación de informes automáticos"],
+      "price": "Desde 500 €",
+      "cta": "Solicitar presupuesto"
+    },
+    "n8n": {
+      "title": "Flujos n8n",
+      "what": "Automatizaciones visuales sin código que conectan tus herramientas.",
+      "for": "Para quién",
+      "forText": "Empresas que usan herramientas cloud: Gmail, Google Sheets, Notion, Slack, WhatsApp Business...",
+      "includes": "Qué incluye",
+      "includesList": ["Diseño del flujo", "Configuración de integraciones", "Tests y validación", "Documentación", "Soporte 30 días"],
+      "examples": "Ejemplos",
+      "examplesList": ["Notificaciones automáticas de pedidos", "Sincronización CRM-facturación", "Alertas de stock bajo", "Onboarding automático de clientes"],
+      "price": "Desde 800 €",
+      "cta": "Solicitar presupuesto"
+    },
+    "reviews": {
+      "title": "Reseñas Google con IA",
+      "what": "Respuestas automáticas personalizadas a todas tus reseñas de Google.",
+      "for": "Para quién",
+      "forText": "Hostelería, retail y cualquier negocio con perfil de Google My Business activo.",
+      "includes": "Qué incluye",
+      "includesList": ["Configuración de la IA con tu tono de marca", "Respuesta automática a nuevas reseñas", "Informe mensual", "Ajustes y mejoras incluidos"],
+      "examples": "Ejemplos",
+      "examplesList": ["Respuestas a reseñas positivas agradeciendo", "Gestión profesional de críticas negativas", "Personalización por nombre del cliente", "Adaptación al sector (restaurante, hotel...)"],
+      "price": "Desde 150 €/mes",
+      "cta": "Solicitar presupuesto"
+    },
+    "faq": {
+      "q1": "¿Cuánto tiempo lleva implementar un flujo n8n?",
+      "a1": "Un flujo estándar (3-5 pasos) suele estar listo en 3-5 días laborables.",
+      "q2": "¿Necesito tener n8n instalado?",
+      "a2": "No. Nos encargamos del hosting del servidor n8n en la nube si no tienes infraestructura propia.",
+      "q3": "¿Las respuestas de IA suenan naturales?",
+      "a3": "Sí. Entrenamos el modelo con ejemplos de tu negocio para que el tono sea coherente con tu marca."
+    }
+  },
+  "casos": {
+    "title": "Casos de éxito",
+    "subtitle": "Proyectos reales que ya están funcionando.",
+    "comingSoon": "Próximamente",
+    "comingSoon1Title": "Clínica dental · Valencia",
+    "comingSoon1Desc": "Automatización de citas, recordatorios y facturación.",
+    "comingSoon2Title": "Despacho de abogados · Madrid",
+    "comingSoon2Desc": "Procesado automático de documentos y seguimiento de expedientes.",
+    "readCase": "Leer caso completo →"
+  },
+  "sobre": {
+    "title": "Sobre Pymatic Labs",
+    "subtitle": "Dos ingenieros de la UJI con obsesión por la automatización.",
+    "story": "Historia",
+    "storyText": "Pymatic Labs nació de una conversación entre Sergio y Eric mientras estudiaban en la Universitat Jaume I de Castellón. Ambos veían cómo los negocios familiares de sus entornos perdían horas cada semana en tareas repetitivas que la tecnología podía resolver. Decidieron hacer algo al respecto.",
+    "methodology": "Metodología",
+    "methodologyText": "Creemos en la automatización pragmática: soluciones simples que funcionan, son mantenibles y resuelven problemas reales. No sobre-ingeniería, no promesas vacías.",
+    "tools": "Herramientas",
+    "principles": "Principios",
+    "p1": "Transparencia total en presupuestos y plazos",
+    "p2": "Código limpio y documentado",
+    "p3": "Sin cláusulas de dependencia: el código es tuyo",
+    "p4": "Comunicación directa, sin intermediarios"
+  },
+  "contacto": {
+    "title": "Contacto",
+    "subtitle": "Primera consulta gratuita. Cuéntanos tu problema.",
+    "faqTitle": "Preguntas frecuentes sobre el proceso",
+    "faq1q": "¿Cómo es la primera llamada?",
+    "faq1a": "Es una videollamada de 30 minutos donde nos cuentas tu proceso actual. Sin compromiso.",
+    "faq2q": "¿Cuándo recibiré el presupuesto?",
+    "faq2a": "Enviamos la propuesta por escrito en menos de 48 horas tras la llamada.",
+    "faq3q": "¿Hay coste por la consulta inicial?",
+    "faq3a": "No. La primera llamada es completamente gratuita y sin compromiso."
+  },
+  "legal": {
+    "avisoTitle": "Aviso Legal",
+    "privacidadTitle": "Política de Privacidad",
+    "cookiesTitle": "Política de Cookies",
+    "pending": "[RAZÓN SOCIAL PENDIENTE]",
+    "lastUpdated": "Última actualización: abril 2026"
+  }
+}

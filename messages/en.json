@@ -1,0 +1,249 @@
+{
+  "nav": {
+    "servicios": "Services",
+    "casos": "Cases",
+    "blog": "Blog",
+    "sobre": "About us",
+    "cta": "Talk to us",
+    "langSwitch": "ES"
+  },
+  "hero": {
+    "title": "AI Automation for Spanish SMBs",
+    "subtitle": "We automate invoices, Google reviews, accounting and repetitive processes so you can focus on what matters: growing your business.",
+    "cta1": "See how we work",
+    "cta2": "Talk to us",
+    "metric1": "8 automations",
+    "metric1sub": "delivered",
+    "metric2": "~10 hours/week",
+    "metric2sub": "saved per client",
+    "metric3": "100%",
+    "metric3sub": "projects delivered"
+  },
+  "problems": {
+    "title": "Do any of these problems sound familiar?",
+    "subtitle": "These are the most common pain points we hear from SMBs like yours.",
+    "p1title": "Invoices from email one by one",
+    "p1desc": "You manually download invoices every month, copy data by hand, and errors creep in.",
+    "p2title": "Google reviews going unanswered",
+    "p2desc": "Opinions pile up without responses. Every ignored review is a customer who won't return.",
+    "p3title": "Data between spreadsheets",
+    "p3desc": "You spend hours copying data from one Excel to another. Repetitive tasks a script would do in seconds.",
+    "p4title": "Manual accounting",
+    "p4desc": "Your accounting depends on repetitive tasks that consume hours every week."
+  },
+  "services": {
+    "title": "What do we automate?",
+    "subtitle": "We use Python, n8n and AI to eliminate repetitive work from your business.",
+    "s1title": "Python Automations",
+    "s1desc": "Custom scripts that read emails, process PDFs, fill spreadsheets and more.",
+    "s2title": "n8n Workflows",
+    "s2desc": "Connect your favorite tools without code: Gmail, Notion, Google Sheets, WhatsApp...",
+    "s3title": "AI-powered Reviews",
+    "s3desc": "We automatically respond to all your Google reviews with AI, personalized in your tone.",
+    "learnMore": "Learn more"
+  },
+  "cases": {
+    "title": "Real cases",
+    "subtitle": "Projects already saving time for businesses like yours.",
+    "featured": {
+      "tag": "Accounting automation",
+      "title": "Family service station + bar · Castellón",
+      "challenge": "The challenge",
+      "challengeText": "A family SMB managed 167 quarterly invoices by hand: they downloaded each PDF from email, copied supplier, amount and VAT to an Excel sheet and delivered it to their accountant. The process took over 10 hours each quarter and generated frequent errors.",
+      "built": "What we built",
+      "builtText": "A Python script that automatically monitors email, extracts data from each invoice with pdfplumber, validates the information with AI (Claude API) and outputs everything into a structured Excel ready for the accountant.",
+      "result": "The result",
+      "result1": "10 hours/quarter saved",
+      "result2": "167 invoices processed automatically",
+      "result3": "0 transcription errors",
+      "stack": "Stack",
+      "cta": "Read full case",
+      "proximity": "Coming soon"
+    }
+  },
+  "about": {
+    "title": "Who we are",
+    "subtitle": "Two UJI engineers obsessed with eliminating repetitive work.",
+    "sergioName": "Sergio J. Pérez",
+    "sergioRole": "Co-founder · Backend & Automation",
+    "sergioDesc": "Computer Science engineer from UJI. Specialist in Python, APIs and automation architectures. Has worked on data processing projects for startups and SMBs.",
+    "ericName": "Eric Ollé",
+    "ericRole": "Co-founder · AI & n8n Flows",
+    "ericDesc": "Information Systems Engineer from UJI. Expert in n8n integrations, generative AI and business workflow automation.",
+    "location": "Based in Castellón, we work with all of Spain."
+  },
+  "howWeWork": {
+    "title": "How we work",
+    "subtitle": "A clear process with no surprises.",
+    "step1title": "Free 30-min call",
+    "step1desc": "You tell us your problem, we explain if and how we can solve it.",
+    "step2title": "Written proposal",
+    "step2desc": "You receive a detailed quote with scope, timelines and fixed price. No surprises.",
+    "step3title": "Build + test",
+    "step3desc": "We develop the solution, test it thoroughly and keep you updated on progress.",
+    "step4title": "Delivery + support",
+    "step4desc": "We deliver with documentation, train you and offer post-delivery support."
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "q1": "How much does an automation cost?",
+    "a1": "The price depends on complexity. A simple automation (read emails + Excel) can be between €500 and €1,500. More complex projects with integrated AI between €2,000 and €5,000. Always a fixed quote before starting.",
+    "q2": "How long does delivery take?",
+    "a2": "A standard automation takes 1 to 3 weeks from budget approval. More complex projects may take 4-6 weeks. Always with intermediate milestones so you can see progress.",
+    "q3": "Do I need technical knowledge?",
+    "a3": "No. We handle everything: analysis, development, testing and launch. You just need to explain the process you want to automate.",
+    "q4": "What if something breaks after delivery?",
+    "a4": "We include 30 days post-delivery warranty. If something fails due to development issues, we fix it at no extra cost.",
+    "q5": "Do you only work with companies in Castellón?",
+    "a5": "No, we work with SMBs throughout Spain. The entire process is 100% remote: calls, demos and delivery are done by video call.",
+    "q6": "Can I request monthly maintenance?",
+    "a6": "Yes. We offer monthly maintenance plans for automations in production: monitoring, updates and priority support.",
+    "q7": "What tools do you use?",
+    "a7": "Primarily Python (pdfplumber, openpyxl, imaplib), n8n for no-code flows, and AI models like Claude or GPT-4 for natural language processing.",
+    "q8": "Do you sign an NDA?",
+    "a8": "Of course. We sign a confidentiality agreement before you share any sensitive business data."
+  },
+  "contact": {
+    "title": "Let's talk",
+    "subtitle": "Tell us your problem. First consultation is free.",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "businessType": "Business type",
+    "businessOptions": {
+      "hosteleria": "Hospitality / Restaurants",
+      "retail": "Retail / Commerce",
+      "servicios": "Professional services",
+      "industria": "Industry / Manufacturing",
+      "construccion": "Construction / Renovation",
+      "otro": "Other"
+    },
+    "message": "Tell us about your repetitive process",
+    "submit": "Send message",
+    "sending": "Sending...",
+    "successTitle": "Message sent!",
+    "successMsg": "We'll get back to you within 24 hours.",
+    "errorMsg": "Error sending. Try again or write to us directly.",
+    "orSchedule": "Or book a call directly:",
+    "scheduleCta": "Book free call →",
+    "emailLabel": "Email:",
+    "locationLabel": "Location:",
+    "locationValue": "Castellón, Spain (remote-first)"
+  },
+  "footer": {
+    "tagline": "AI automation for Spanish SMBs.",
+    "quickLinks": "Navigation",
+    "legal": "Legal",
+    "connect": "Contact",
+    "copyright": "© 2026 Pymatic Labs. All rights reserved.",
+    "links": {
+      "servicios": "Services",
+      "casos": "Cases",
+      "blog": "Blog",
+      "sobre": "About us",
+      "contacto": "Contact"
+    },
+    "legalLinks": {
+      "aviso": "Legal notice",
+      "privacidad": "Privacy policy",
+      "cookies": "Cookie policy"
+    }
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Technical articles on automation, Python and AI for SMBs.",
+    "readMore": "Read article →",
+    "by": "By",
+    "back": "← Back to blog"
+  },
+  "servicios": {
+    "title": "Automation services",
+    "subtitle": "Custom solutions to eliminate repetitive work from your company.",
+    "python": {
+      "title": "Python Automations",
+      "what": "Custom Python scripts that integrate with your current systems.",
+      "for": "Who it's for",
+      "forText": "SMBs with repetitive processes: invoice processing, data extraction, automatic reports.",
+      "includes": "What's included",
+      "includesList": ["Current process analysis", "Script development", "Unit tests", "Documentation", "30-day support"],
+      "examples": "Examples",
+      "examplesList": ["PDF invoice extraction → Excel", "Automatic email sending with reports", "Data synchronization between systems", "Automatic report generation"],
+      "price": "From €500",
+      "cta": "Request quote"
+    },
+    "n8n": {
+      "title": "n8n Workflows",
+      "what": "Visual no-code automations that connect your tools.",
+      "for": "Who it's for",
+      "forText": "Companies using cloud tools: Gmail, Google Sheets, Notion, Slack, WhatsApp Business...",
+      "includes": "What's included",
+      "includesList": ["Flow design", "Integration configuration", "Tests and validation", "Documentation", "30-day support"],
+      "examples": "Examples",
+      "examplesList": ["Automatic order notifications", "CRM-billing synchronization", "Low stock alerts", "Automatic customer onboarding"],
+      "price": "From €800",
+      "cta": "Request quote"
+    },
+    "reviews": {
+      "title": "Google Reviews with AI",
+      "what": "Automatic personalized responses to all your Google reviews.",
+      "for": "Who it's for",
+      "forText": "Hospitality, retail and any business with an active Google My Business profile.",
+      "includes": "What's included",
+      "includesList": ["AI configuration with your brand tone", "Automatic response to new reviews", "Monthly report", "Adjustments and improvements included"],
+      "examples": "Examples",
+      "examplesList": ["Grateful responses to positive reviews", "Professional handling of negative criticism", "Personalization by customer name", "Adaptation to sector (restaurant, hotel...)"],
+      "price": "From €150/month",
+      "cta": "Request quote"
+    },
+    "faq": {
+      "q1": "How long does it take to implement an n8n flow?",
+      "a1": "A standard flow (3-5 steps) is usually ready in 3-5 business days.",
+      "q2": "Do I need to have n8n installed?",
+      "a2": "No. We handle cloud server hosting for n8n if you don't have your own infrastructure.",
+      "q3": "Do AI responses sound natural?",
+      "a3": "Yes. We train the model with examples from your business so the tone is consistent with your brand."
+    }
+  },
+  "casos": {
+    "title": "Success cases",
+    "subtitle": "Real projects already working.",
+    "comingSoon": "Coming soon",
+    "comingSoon1Title": "Dental clinic · Valencia",
+    "comingSoon1Desc": "Automation of appointments, reminders and billing.",
+    "comingSoon2Title": "Law firm · Madrid",
+    "comingSoon2Desc": "Automatic document processing and case tracking.",
+    "readCase": "Read full case →"
+  },
+  "sobre": {
+    "title": "About Pymatic Labs",
+    "subtitle": "Two UJI engineers with an obsession for automation.",
+    "story": "Story",
+    "storyText": "Pymatic Labs was born from a conversation between Sergio and Eric while studying at the Universitat Jaume I de Castellón. Both saw how family businesses around them were losing hours every week to repetitive tasks that technology could solve. They decided to do something about it.",
+    "methodology": "Methodology",
+    "methodologyText": "We believe in pragmatic automation: simple solutions that work, are maintainable and solve real problems. No over-engineering, no empty promises.",
+    "tools": "Tools",
+    "principles": "Principles",
+    "p1": "Full transparency in budgets and timelines",
+    "p2": "Clean, documented code",
+    "p3": "No lock-in clauses: the code is yours",
+    "p4": "Direct communication, no intermediaries"
+  },
+  "contacto": {
+    "title": "Contact",
+    "subtitle": "First consultation free. Tell us your problem.",
+    "faqTitle": "Frequently asked questions about the process",
+    "faq1q": "What is the first call like?",
+    "faq1a": "It's a 30-minute video call where you tell us your current process. No commitment.",
+    "faq2q": "When will I receive the quote?",
+    "faq2a": "We send the written proposal within 48 hours of the call.",
+    "faq3q": "Is there a cost for the initial consultation?",
+    "faq3a": "No. The first call is completely free and with no commitment."
+  },
+  "legal": {
+    "avisoTitle": "Legal Notice",
+    "privacidadTitle": "Privacy Policy",
+    "cookiesTitle": "Cookie Policy",
+    "pending": "[COMPANY NAME PENDING]",
+    "lastUpdated": "Last updated: April 2026"
+  }
+}
