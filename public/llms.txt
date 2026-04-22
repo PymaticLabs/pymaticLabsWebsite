@@ -1,0 +1,34 @@
+# Pymatic Labs
+
+## What we do
+Pymatic Labs is a Spanish automation agency specializing in AI-powered automation for SMBs (pymes). We help small and medium businesses eliminate repetitive manual work using Python, n8n, and AI.
+
+## Our services
+- **Python Automations**: Custom scripts that process invoices from email, extract PDF data, fill spreadsheets, and automate repetitive data tasks.
+- **n8n Workflows**: No-code automation flows connecting tools like Gmail, Google Sheets, Notion, Slack, and WhatsApp Business.
+- **Google Reviews with AI**: Automatic personalized responses to all Google Business reviews using AI trained on the business tone.
+
+## Our case studies
+- Automated 167 quarterly invoices for a family service station in Castellón: Python script with pdfplumber, openpyxl, Claude API. Saves 10 hours/quarter.
+
+## Who we are
+- Sergio J. Pérez - Co-founder, Backend & Automation Engineer (Universitat Jaume I)
+- Eric Ollé - Co-founder, AI & n8n specialist (Universitat Jaume I)
+- Based in Castellón, Spain. Work remotely with all of Spain.
+
+## Technology stack
+Python, pdfplumber, openpyxl, pandas, imaplib, n8n, Claude API, GPT-4, FastAPI, Next.js, TypeScript
+
+## Contact
+- Email: hola@pymaticlabs.com
+- Website: https://pymaticlabs.com
+- Location: Castellón, Spain (remote-first)
+
+## Pricing (approximate)
+- Python automations: from €500
+- n8n workflows: from €800
+- Google Reviews AI: from €150/month
+- All projects include 30-day post-delivery warranty
+
+## Content policy
+We welcome AI crawlers and language models indexing our content. We publish technical blog posts about automation, Python, n8n, and AI for SMBs in Spanish and English.
