@@ -1,18 +1,19 @@
+// @ts-check
 import createMDX from '@next/mdx'
-import remarkGfm from 'remark-gfm'
 import createNextIntlPlugin from 'next-intl/plugin'
-
-const withMDX = createMDX({
-  options: {
-    remarkPlugins: [remarkGfm],
-  },
-})
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 }
+
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [['remark-gfm', {}]],
+    rehypePlugins: [],
+  },
+})
 
 export default withNextIntl(withMDX(nextConfig))
