@@ -20,11 +20,19 @@ export default async function SobreNosotrosPage({
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'sobre' })
 
-  const tools = [
-    'Python 3.11+', 'pdfplumber', 'openpyxl', 'pandas', 'FastAPI',
-    'n8n', 'Claude API', 'GPT-4', 'Docker', 'PostgreSQL',
-    'Google APIs', 'Resend', 'Next.js', 'Vercel',
-  ]
+  const tools = locale === 'es'
+    ? [
+        'Automatización de correo', 'Procesado de PDFs', 'Generación de Excel',
+        'Flujos sin código', 'Respuestas con IA', 'Integración de herramientas',
+        'Notificaciones automáticas', 'Extracción de datos', 'APIs de Google',
+        'Aplicaciones de escritorio', 'Detección de errores', 'Informes automáticos',
+      ]
+    : [
+        'Email automation', 'PDF processing', 'Excel generation',
+        'No-code flows', 'AI-powered responses', 'Tool integrations',
+        'Automatic notifications', 'Data extraction', 'Google APIs',
+        'Desktop applications', 'Error detection', 'Automatic reports',
+      ]
 
   const principles = [t('p1'), t('p2'), t('p3'), t('p4')]
 
@@ -42,8 +50,8 @@ export default async function SobreNosotrosPage({
         {/* Team */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
           {[
-            { initial: 'S', name: locale === 'es' ? 'Sergio J. Pérez' : 'Sergio J. Pérez', role: locale === 'es' ? 'Co-fundador · Backend & Automatización' : 'Co-founder · Backend & Automation', desc: locale === 'es' ? 'Ingeniero Informático por la UJI. Especialista en Python, APIs y arquitecturas de automatización. Ha trabajado en proyectos de procesamiento de datos para startups y pymes.' : 'Computer Science engineer from UJI. Specialist in Python, APIs and automation architectures. Has worked on data processing projects for startups and SMBs.' },
-            { initial: 'E', name: 'Eric Ollé', role: locale === 'es' ? 'Co-fundador · IA & Flujos n8n' : 'Co-founder · AI & n8n Flows', desc: locale === 'es' ? 'Ingeniero en Sistemas de Información por la UJI. Experto en integraciones n8n, IA generativa y automatización de flujos de negocio.' : 'Information Systems Engineer from UJI. Expert in n8n integrations, generative AI and business workflow automation.' },
+            { initial: 'S', name: 'Sergio J. Pérez', role: locale === 'es' ? 'Co-fundador · Backend & Automatización' : 'Co-founder · Backend & Automation', desc: locale === 'es' ? 'Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Apasionado por la programación, la automatización de procesos y la creación de herramientas que ahorran tiempo real.' : 'Video Game Design and Development Engineer from UJI. Passionate about programming, process automation and building tools that save real time.' },
+            { initial: 'E', name: 'Eric Ollé', role: locale === 'es' ? 'Co-fundador · IA & Automatización' : 'Co-founder · AI & Automation', desc: locale === 'es' ? 'Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Especializado en integraciones de herramientas, inteligencia artificial y automatización de flujos de negocio.' : 'Video Game Design and Development Engineer from UJI. Specialized in tool integrations, artificial intelligence and business workflow automation.' },
           ].map((person) => (
             <div key={person.initial} className="flex gap-5">
               <div className="flex-shrink-0 w-20 h-20 bg-[#1E3A5F] rounded-2xl flex items-center justify-center text-white font-bold text-2xl">

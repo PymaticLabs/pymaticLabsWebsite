@@ -1,0 +1,77 @@
+---
+title: "Cómo eliminamos los errores manuales y automatizamos la operativa de una gasolinera"
+description: "El proceso real detrás de las automatizaciones que desarrollamos para una estación de servicio familiar: desde la descarga automática de facturas hasta el formateo de excels del TPV."
+date: "2026-04-22"
+tags: ["automatizacion", "python", "facturas", "excel", "operativa"]
+author: "Eric Ollé"
+cover: "/blog/covers/facturas-python.png"
+---
+
+Cuando hablamos con negocios que quieren automatizar su operativa, el problema rara vez es uno solo. Suele ser una acumulación de pequeños procesos manuales que, sumados, roban horas cada semana. Este es el caso de una gasolinera familiar en Castellón para la que desarrollamos un conjunto de automatizaciones que transformaron su día a día.
+
+## El punto de partida: horas perdidas en tareas rutinarias
+
+El negocio tenía varios procesos manuales que se repetían semana tras semana:
+
+- **Facturas por correo**: llegaban de distintos proveedores, había que abrirlas una a una, descargarlas y renombrarlas de forma coherente para poder encontrarlas después.
+- **Excel del TPV**: el sistema de punto de venta generaba exportaciones diarias en un formato difícil de leer, que luego había que reformatear manualmente y volcar en el diario mensual.
+- **Tareas recurrentes de oficina**: recordatorios, comprobaciones diarias y semanales que dependían de que alguien los recordara.
+- **Tareas recurrentes de oficina**: recordatorios, comprobaciones diarias y semanales que dependían de que alguien los recordara.
+
+Ninguna de estas tareas era complicada. Pero hacerlas cada día, sin fallo, consumía tiempo y concentración que el negocio no podía permitirse desperdiciar.
+
+## Automatización 1: descarga y renombrado de facturas
+
+La primera automatización conecta directamente con el correo del negocio usando la API de Gmail. El script escanea los emails entrantes, identifica los que tienen facturas adjuntas en PDF y los descarga automáticamente.
+
+Lo más importante no es solo la descarga: es el renombrado. Cada factura se renombra siguiendo un patrón consistente que incluye la fecha, el tipo de gasto (bar o gasolinera) y el proveedor:
+
+```
+MMDD_BAR_Makro_245.60.pdf
+MMDD_EESS_Repsol_89.40.pdf
+```
+
+Para identificar a qué parte del negocio pertenece cada factura, el sistema usa una combinación de patrones en el PDF y, cuando no es suficiente, recurre a la Claude API para interpretar el contenido. Los emails procesados reciben automáticamente una etiqueta en Gmail para no volver a procesarse.
+
+El resultado: las facturas llegan al gestor ya organizadas, sin que nadie haya tenido que hacer nada.
+
+## Automatización 2: formateo del Excel del TPV
+
+El sistema de punto de venta de la gasolinera genera exportaciones diarias en formato `.xls` con una estructura pensada para el sistema, no para las personas. Los datos de combustible, ingresos, impuestos y movimientos aparecen en bloques difíciles de leer.
+
+Desarrollamos un script que convierte esas exportaciones en un libro Excel bien estructurado:
+
+- Una pestaña por día, nombrada por número de día
+- Exportaciones mensuales en una pestaña `MES_MM` con el rango de fechas en la cabecera
+- Formato numérico en euros y litros
+- Secciones claramente separadas: impuestos, contadores de combustible, TPV
+
+El script es acumulativo: reprocesar un día solo sobreescribe esa pestaña sin tocar el resto del libro.
+
+## Automatización 3: actualización del diario mensual
+
+El libro del TPV generado en el paso anterior es solo la mitad del trabajo. El diario mensual es el documento que el gestor necesita para la contabilidad, y tiene su propio formato con docenas de columnas específicas.
+
+Un segundo script lee los datos del libro de fichas y los escribe directamente en las celdas correctas del diario mensual, localizando la fila por número de día y rellenando los 23 campos correspondientes. Si el diario del mes no existe todavía, lo crea automáticamente desde una plantilla.
+
+## Automatización 4: gestión de tareas recurrentes
+
+Las tareas de oficina que se repiten cada día, cada semana o cada mes son invisibles hasta que alguien las olvida. Desarrollamos una pequeña aplicación de escritorio que muestra al abrir cada mañana exactamente qué hay que hacer ese día:
+
+- Tareas diarias fijas
+- Tareas del día de la semana
+- Tareas del día del mes
+- Pendientes arrastrados de días anteriores
+
+Las tareas completadas se marcan y las pendientes se conservan automáticamente para el día siguiente. Sin conexión a internet, sin cuentas externas, sin aprender ninguna herramienta nueva.
+
+
+## El impacto real
+
+El conjunto de estas automatizaciones eliminó aproximadamente 10 horas de trabajo manual a la semana. No de golpe, sino en pequeñas mejoras acumuladas en cada proceso. La dueña del negocio dejó de pensar en si las facturas estaban bien organizadas, si el Excel del día anterior estaba actualizado o si alguien había fichado mal.
+
+Lo más valioso no fue el tiempo ahorrado en sí. Fue eliminar la carga mental de tener que recordar y supervisar procesos que ahora simplemente funcionan solos.
+
+---
+
+¿Tienes procesos similares en tu negocio? [Cuéntanoslo](/contacto) — la primera consulta es gratuita.

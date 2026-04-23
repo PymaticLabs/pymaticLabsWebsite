@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, email, phone, businessType, message } = parsed.data
-    const contactEmail = process.env.CONTACT_EMAIL || 'hola@pymaticlabs.com'
+    const contactEmail = process.env.CONTACT_EMAIL || 'info@pymaticlabs.com'
 
     if (process.env.RESEND_API_KEY) {
       const { Resend } = await import('resend')
