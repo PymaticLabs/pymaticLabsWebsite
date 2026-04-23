@@ -168,8 +168,8 @@ export default function Contact() {
                 <Mail className="h-5 w-5 text-[#1E3A5F]" />
                 <div>
                   <span className="text-sm font-medium text-[#64748B]">{t('emailLabel')} </span>
-                  <a href="mailto:hola@pymaticlabs.com" className="text-[#1E3A5F] font-medium">
-                    hola@pymaticlabs.com
+                  <a href="mailto:info@pymaticlabs.com" className="text-[#1E3A5F] font-medium">
+                    info@pymaticlabs.com
                   </a>
                 </div>
               </div>

@@ -8,7 +8,7 @@ export function getOrganizationSchema() {
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
     description: 'Agencia de automatización con IA para pymes españolas.',
-    email: 'hola@pymaticlabs.com',
+    email: 'info@pymaticlabs.com',
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'ES',

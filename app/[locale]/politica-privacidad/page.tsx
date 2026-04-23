@@ -30,7 +30,7 @@ export default async function PoliticaPrivacidadPage({
             <h2 className="text-xl font-semibold text-[#1E3A5F]">1. Responsable del tratamiento</h2>
             <ul className="list-disc pl-6 space-y-1">
               <li><strong>Denominación:</strong> {t('denominacionSocial')}</li>
-              <li><strong>Email:</strong> hola@pymaticlabs.com</li>
+              <li><strong>Email:</strong> info@pymaticlabs.com</li>
             </ul>
           </section>
 
@@ -61,7 +61,7 @@ export default async function PoliticaPrivacidadPage({
 
           <section>
             <h2 className="text-xl font-semibold text-[#1E3A5F]">6. Derechos</h2>
-            <p>Puede ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad enviando un email a hola@pymaticlabs.com con asunto &quot;Protección de datos&quot;.</p>
+            <p>Puede ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad enviando un email a info@pymaticlabs.com con asunto &quot;Protección de datos&quot;.</p>
           </section>
         </div>
       </div>

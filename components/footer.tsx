@@ -96,11 +96,11 @@ export default function Footer() {
                 GitHub
               </a>
               <a
-                href="mailto:hola@pymaticlabs.com"
+                href="mailto:info@pymaticlabs.com"
                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                hola@pymaticlabs.com
+                info@pymaticlabs.com
               </a>
             </div>
           </div>

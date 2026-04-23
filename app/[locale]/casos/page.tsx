@@ -35,11 +35,10 @@ export default async function CasosPage({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Real case */}
           <Card className="md:col-span-1 border-2 border-[#1E3A5F] hover:shadow-lg transition-shadow">
             <CardContent className="p-6 space-y-4">
               <Badge variant="default" className="text-xs">
-                {locale === 'es' ? 'Automatización contable' : 'Accounting automation'}
+                {locale === 'es' ? 'Automatización operativa' : 'Operations automation'}
               </Badge>
               <h2 className="font-bold text-[#1E3A5F] text-lg">
                 {locale === 'es'
@@ -49,15 +48,15 @@ export default async function CasosPage({
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">
                   <Clock className="h-4 w-4 text-[#F4B860]" />
-                  {locale === 'es' ? '10h ahorradas/trimestre' : '10h saved/quarter'}
+                  {locale === 'es' ? '~10h ahorradas/semana' : '~10h saved/week'}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">
                   <FileText className="h-4 w-4 text-[#F4B860]" />
-                  {locale === 'es' ? '167 facturas automatizadas' : '167 invoices automated'}
+                  {locale === 'es' ? '4 automatizaciones activas' : '4 active automations'}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">
                   <CheckCircle2 className="h-4 w-4 text-[#F4B860]" />
-                  {locale === 'es' ? '0 errores de transcripción' : '0 transcription errors'}
+                  {locale === 'es' ? '0 errores manuales en contabilidad' : '0 manual accounting errors'}
                 </div>
               </div>
               <Link
@@ -66,32 +65,6 @@ export default async function CasosPage({
               >
                 {t('readCase')}
               </Link>
-            </CardContent>
-          </Card>
-
-          {/* Coming soon 1 */}
-          <Card className="opacity-60">
-            <CardContent className="p-6 space-y-4">
-              <Badge variant="secondary" className="text-xs">
-                {t('comingSoon')}
-              </Badge>
-              <h2 className="font-bold text-[#1E3A5F] text-lg">
-                {t('comingSoon1Title')}
-              </h2>
-              <p className="text-sm text-[#64748B]">{t('comingSoon1Desc')}</p>
-            </CardContent>
-          </Card>
-
-          {/* Coming soon 2 */}
-          <Card className="opacity-60">
-            <CardContent className="p-6 space-y-4">
-              <Badge variant="secondary" className="text-xs">
-                {t('comingSoon')}
-              </Badge>
-              <h2 className="font-bold text-[#1E3A5F] text-lg">
-                {t('comingSoon2Title')}
-              </h2>
-              <p className="text-sm text-[#64748B]">{t('comingSoon2Desc')}</p>
             </CardContent>
           </Card>
         </div>

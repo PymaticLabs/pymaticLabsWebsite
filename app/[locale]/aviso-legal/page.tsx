@@ -33,7 +33,7 @@ export default async function AvisoLegalPage({
               <li><strong>Denominación social:</strong> {t('denominacionSocial')}</li>
               <li><strong>CIF/NIF:</strong> {t('CIF/NIF')}</li>
               <li><strong>Domicilio social:</strong> Castellón, España</li>
-              <li><strong>Email:</strong> hola@pymaticlabs.com</li>
+              <li><strong>Email:</strong> info@pymaticlabs.com</li>
               <li><strong>Web:</strong> https://pymaticlabs.com</li>
             </ul>
           </section>

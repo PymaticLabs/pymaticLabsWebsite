@@ -49,13 +49,13 @@
       "tag": "Automatización contable",
       "title": "Estación de servicio + bar familiar · Castellón",
       "challenge": "El reto",
-      "challengeText": "Una pyme familiar gestionaba 167 facturas trimestrales a mano: descargaban cada PDF del correo, copiaban proveedor, importe e IVA a una hoja de Excel y entregaban ese Excel al gestor. El proceso tardaba más de 10 horas cada trimestre y generaba errores frecuentes.",
+      "challengeText": "Una pyme familiar con estación de servicio y bar dedicaba horas cada semana a tareas manuales: descargar facturas del correo una a una, renombrarlas, copiar datos a excels y actualizar el diario de caja del TPV. Procesos dispersos, lentos y con margen de error constante.",
       "built": "Lo que construimos",
-      "builtText": "Un script Python que monitoriza el correo automáticamente, extrae los datos de cada factura con pdfplumber, valida la información con IA (Claude API) y vuelca todo en un Excel estructurado listo para el gestor.",
+      "builtText": "Un conjunto de automatizaciones que cubren todo el ciclo operativo: descarga y renombrado automático de facturas desde el correo, formateo del Excel de ventas diarias del TPV, actualización del diario mensual y gestión de tareas recurrentes de oficina.",
       "result": "El resultado",
-      "result1": "10 horas/trimestre ahorradas",
-      "result2": "167 facturas procesadas automáticamente",
-      "result3": "0 errores de transcripción",
+      "result1": "~10 horas/semana ahorradas",
+      "result2": "0 errores manuales en el proceso contable",
+      "result3": "Operativa diaria automatizada end-to-end",
       "stack": "Stack",
       "cta": "Leer caso completo",
       "proximity": "Próximamente"
@@ -66,10 +66,10 @@
     "subtitle": "Dos ingenieros de la UJI obsesionados con eliminar el trabajo repetitivo.",
     "sergioName": "Sergio J. Pérez",
     "sergioRole": "Co-fundador · Backend & Automatización",
-    "sergioDesc": "Ingeniero Informático por la UJI. Especialista en Python, APIs y arquitecturas de automatización. Ha trabajado en proyectos de procesamiento de datos para startups y pymes.",
+    "sergioDesc": "Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Apasionado por la programación, la automatización de procesos y la creación de herramientas que ahorran tiempo real.",
     "ericName": "Eric Ollé",
-    "ericRole": "Co-fundador · IA & Flujos n8n",
-    "ericDesc": "Ingeniero en Sistemas de Información por la UJI. Experto en integraciones n8n, IA generativa y automatización de flujos de negocio.",
+    "ericRole": "Co-fundador · IA & Automatización",
+    "ericDesc": "Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Especializado en integraciones de herramientas, inteligencia artificial y automatización de flujos de negocio.",
     "location": "Basados en Castellón, trabajamos con toda España."
   },
   "howWeWork": {
@@ -168,7 +168,7 @@
       "includesList": ["Análisis del proceso actual", "Desarrollo del script", "Tests unitarios", "Documentación", "Soporte 30 días"],
       "examples": "Ejemplos",
       "examplesList": ["Extracción de facturas PDF → Excel", "Envío automático de emails con reportes", "Sincronización de datos entre sistemas", "Generación de informes automáticos"],
-      "price": "Desde 500 €",
+      "price": "Desde 100 €",
       "cta": "Solicitar presupuesto"
     },
     "n8n": {
@@ -180,7 +180,7 @@
       "includesList": ["Diseño del flujo", "Configuración de integraciones", "Tests y validación", "Documentación", "Soporte 30 días"],
       "examples": "Ejemplos",
       "examplesList": ["Notificaciones automáticas de pedidos", "Sincronización CRM-facturación", "Alertas de stock bajo", "Onboarding automático de clientes"],
-      "price": "Desde 800 €",
+      "price": "Desde 100 €/mes",
       "cta": "Solicitar presupuesto"
     },
     "reviews": {
@@ -192,7 +192,7 @@
       "includesList": ["Configuración de la IA con tu tono de marca", "Respuesta automática a nuevas reseñas", "Informe mensual", "Ajustes y mejoras incluidos"],
       "examples": "Ejemplos",
       "examplesList": ["Respuestas a reseñas positivas agradeciendo", "Gestión profesional de críticas negativas", "Personalización por nombre del cliente", "Adaptación al sector (restaurante, hotel...)"],
-      "price": "Desde 150 €/mes",
+      "price": "Desde 20 €/mes",
       "cta": "Solicitar presupuesto"
     },
     "faq": {
@@ -207,11 +207,6 @@
   "casos": {
     "title": "Casos de éxito",
     "subtitle": "Proyectos reales que ya están funcionando.",
-    "comingSoon": "Próximamente",
-    "comingSoon1Title": "Clínica dental · Valencia",
-    "comingSoon1Desc": "Automatización de citas, recordatorios y facturación.",
-    "comingSoon2Title": "Despacho de abogados · Madrid",
-    "comingSoon2Desc": "Procesado automático de documentos y seguimiento de expedientes.",
     "readCase": "Leer caso completo →"
   },
   "sobre": {

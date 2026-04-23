@@ -49,13 +49,13 @@
       "tag": "Accounting automation",
       "title": "Family service station + bar · Castellón",
       "challenge": "The challenge",
-      "challengeText": "A family SMB managed 167 quarterly invoices by hand: they downloaded each PDF from email, copied supplier, amount and VAT to an Excel sheet and delivered it to their accountant. The process took over 10 hours each quarter and generated frequent errors.",
+      "challengeText": "A family-owned SMB with a service station and bar spent hours every week on manual tasks: downloading invoices from email one by one, renaming them, copying data into spreadsheets and updating the daily POS cash report. Scattered processes, slow and constantly prone to mistakes.",
       "built": "What we built",
-      "builtText": "A Python script that automatically monitors email, extracts data from each invoice with pdfplumber, validates the information with AI (Claude API) and outputs everything into a structured Excel ready for the accountant.",
+      "builtText": "A set of automations covering the full operational cycle: automatic invoice download and renaming from email, daily POS sales spreadsheet formatting, monthly journal updating and recurring office task management.",
       "result": "The result",
-      "result1": "10 hours/quarter saved",
-      "result2": "167 invoices processed automatically",
-      "result3": "0 transcription errors",
+      "result1": "~10 hours/week saved",
+      "result2": "0 manual errors in the accounting process",
+      "result3": "Daily operations automated end-to-end",
       "stack": "Stack",
       "cta": "Read full case",
       "proximity": "Coming soon"
@@ -66,10 +66,10 @@
     "subtitle": "Two UJI engineers obsessed with eliminating repetitive work.",
     "sergioName": "Sergio J. Pérez",
     "sergioRole": "Co-founder · Backend & Automation",
-    "sergioDesc": "Computer Science engineer from UJI. Specialist in Python, APIs and automation architectures. Has worked on data processing projects for startups and SMBs.",
+    "sergioDesc": "Video Game Design and Development Engineer from UJI. Passionate about programming, process automation and building tools that save real time.",
     "ericName": "Eric Ollé",
-    "ericRole": "Co-founder · AI & n8n Flows",
-    "ericDesc": "Information Systems Engineer from UJI. Expert in n8n integrations, generative AI and business workflow automation.",
+    "ericRole": "Co-founder · AI & Automation",
+    "ericDesc": "Video Game Design and Development Engineer from UJI. Specialized in tool integrations, artificial intelligence and business workflow automation.",
     "location": "Based in Castellón, we work with all of Spain."
   },
   "howWeWork": {
@@ -168,7 +168,7 @@
       "includesList": ["Current process analysis", "Script development", "Unit tests", "Documentation", "30-day support"],
       "examples": "Examples",
       "examplesList": ["PDF invoice extraction → Excel", "Automatic email sending with reports", "Data synchronization between systems", "Automatic report generation"],
-      "price": "From €500",
+      "price": "From €100",
       "cta": "Request quote"
     },
     "n8n": {
@@ -180,7 +180,7 @@
       "includesList": ["Flow design", "Integration configuration", "Tests and validation", "Documentation", "30-day support"],
       "examples": "Examples",
       "examplesList": ["Automatic order notifications", "CRM-billing synchronization", "Low stock alerts", "Automatic customer onboarding"],
-      "price": "From €800",
+      "price": "From €100/month",
       "cta": "Request quote"
     },
     "reviews": {
@@ -192,7 +192,7 @@
       "includesList": ["AI configuration with your brand tone", "Automatic response to new reviews", "Monthly report", "Adjustments and improvements included"],
       "examples": "Examples",
       "examplesList": ["Grateful responses to positive reviews", "Professional handling of negative criticism", "Personalization by customer name", "Adaptation to sector (restaurant, hotel...)"],
-      "price": "From €150/month",
+      "price": "From €20/month",
       "cta": "Request quote"
     },
     "faq": {
@@ -207,11 +207,6 @@
   "casos": {
     "title": "Success cases",
     "subtitle": "Real projects already working.",
-    "comingSoon": "Coming soon",
-    "comingSoon1Title": "Dental clinic · Valencia",
-    "comingSoon1Desc": "Automation of appointments, reminders and billing.",
-    "comingSoon2Title": "Law firm · Madrid",
-    "comingSoon2Desc": "Automatic document processing and case tracking.",
     "readCase": "Read full case →"
   },
   "sobre": {
