@@ -47,15 +47,15 @@ export default async function CasosPage({
               </h2>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">
-                  <Clock className="h-4 w-4 text-[#95703A]" />
+                  <Clock className="h-4 w-4 text-[#7A5C2E]" />
                   {locale === 'es' ? '~10h ahorradas/semana' : '~10h saved/week'}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">
-                  <FileText className="h-4 w-4 text-[#95703A]" />
+                  <FileText className="h-4 w-4 text-[#7A5C2E]" />
                   {locale === 'es' ? '4 automatizaciones activas' : '4 active automations'}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">
-                  <CheckCircle2 className="h-4 w-4 text-[#95703A]" />
+                  <CheckCircle2 className="h-4 w-4 text-[#7A5C2E]" />
                   {locale === 'es' ? '0 errores manuales en contabilidad' : '0 manual accounting errors'}
                 </div>
               </div>

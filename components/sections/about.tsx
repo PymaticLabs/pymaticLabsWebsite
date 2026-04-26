@@ -22,7 +22,7 @@ export default function About() {
             </div>
             <div>
               <h3 className="font-bold text-[#1E3A5F] text-lg">{t('sergioName')}</h3>
-              <p className="text-sm text-[#95703A] font-medium mb-2">{t('sergioRole')}</p>
+              <p className="text-sm text-[#7A5C2E] font-medium mb-2">{t('sergioRole')}</p>
               <p className="text-sm text-[#475569] leading-relaxed">{t('sergioDesc')}</p>
             </div>
           </div>
@@ -34,7 +34,7 @@ export default function About() {
             </div>
             <div>
               <h3 className="font-bold text-[#1E3A5F] text-lg">{t('ericName')}</h3>
-              <p className="text-sm text-[#95703A] font-medium mb-2">{t('ericRole')}</p>
+              <p className="text-sm text-[#7A5C2E] font-medium mb-2">{t('ericRole')}</p>
               <p className="text-sm text-[#475569] leading-relaxed">{t('ericDesc')}</p>
             </div>
           </div>

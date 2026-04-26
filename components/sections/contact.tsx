@@ -105,12 +105,12 @@ export default function Contact() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="businessType">{t('businessType')}</Label>
+                  <Label htmlFor="businessType" id="businessType-label">{t('businessType')}</Label>
                   <Select
                     value={formData.businessType}
                     onValueChange={(v) => setFormData({ ...formData, businessType: v })}
                   >
-                    <SelectTrigger className="mt-1">
+                    <SelectTrigger id="businessType" aria-labelledby="businessType-label" className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
