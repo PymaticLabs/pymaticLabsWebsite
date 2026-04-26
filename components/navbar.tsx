@@ -60,7 +60,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href={`${altPrefix}/`}
-            className="text-sm font-medium text-[#64748B] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
+            className="text-sm font-medium text-[#475569] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
           >
             {t('langSwitch')}
           </Link>
@@ -95,7 +95,7 @@ export default function Navbar() {
           <div className="pt-2 flex items-center gap-3">
             <Link
               href={`${altPrefix}/`}
-              className="text-sm font-medium text-[#64748B] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
+              className="text-sm font-medium text-[#475569] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
             >
               {t('langSwitch')}
             </Link>

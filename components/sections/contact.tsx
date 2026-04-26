@@ -59,7 +59,7 @@ export default function Contact() {
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1E3A5F] mb-4">
             {t('title')}
           </h2>
-          <p className="text-lg text-[#64748B]">{t('subtitle')}</p>
+          <p className="text-lg text-[#475569]">{t('subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
@@ -69,7 +69,7 @@ export default function Contact() {
               <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
                 <h3 className="text-xl font-bold text-[#1E3A5F]">{t('successTitle')}</h3>
-                <p className="text-[#64748B]">{t('successMsg')}</p>
+                <p className="text-[#475569]">{t('successMsg')}</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,7 +167,7 @@ export default function Contact() {
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-[#1E3A5F]" />
                 <div>
-                  <span className="text-sm font-medium text-[#64748B]">{t('emailLabel')} </span>
+                  <span className="text-sm font-medium text-[#475569]">{t('emailLabel')} </span>
                   <a href="mailto:info@pymaticlabs.com" className="text-[#1E3A5F] font-medium">
                     info@pymaticlabs.com
                   </a>
@@ -176,7 +176,7 @@ export default function Contact() {
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-[#1E3A5F]" />
                 <div>
-                  <span className="text-sm font-medium text-[#64748B]">{t('locationLabel')} </span>
+                  <span className="text-sm font-medium text-[#475569]">{t('locationLabel')} </span>
                   <span className="text-[#0F172A]">{t('locationValue')}</span>
                 </div>
               </div>

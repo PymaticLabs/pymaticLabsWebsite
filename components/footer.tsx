@@ -18,7 +18,7 @@ export default function Footer() {
             </Link>
             <p className="text-sm text-gray-400">{t('tagline')}</p>
             <div className="flex items-center gap-1 text-sm text-gray-400">
-              <MapPin className="h-3 w-3" />
+              <MapPin className="h-3 w-3" aria-hidden="true" />
               <span>Castellón, España</span>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 LinkedIn
               </a>
               <a
@@ -92,14 +92,14 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 GitHub
               </a>
               <a
                 href="mailto:info@pymaticlabs.com"
                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
               >
-                <Mail className="h-4 w-4" />
+                <Mail className="h-4 w-4" aria-hidden="true" />
                 info@pymaticlabs.com
               </a>
             </div>
@@ -107,7 +107,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-800">
-          <p className="text-sm text-gray-500 text-center">{t('copyright')}</p>
+          <p className="text-sm text-gray-400 text-center">{t('copyright')}</p>
         </div>
       </div>
     </footer>

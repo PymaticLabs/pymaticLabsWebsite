@@ -19,7 +19,7 @@ export default function Problems() {
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1E3A5F] mb-4">
             {t('title')}
           </h2>
-          <p className="text-lg text-[#64748B] max-w-2xl mx-auto">
+          <p className="text-lg text-[#475569] max-w-2xl mx-auto">
             {t('subtitle')}
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function Problems() {
                   <h3 className="font-semibold text-[#1E3A5F] mb-2">
                     {t(`${key}title` as 'p1title' | 'p2title' | 'p3title' | 'p4title')}
                   </h3>
-                  <p className="text-sm text-[#64748B]">
+                  <p className="text-sm text-[#475569]">
                     {t(`${key}desc` as 'p1desc' | 'p2desc' | 'p3desc' | 'p4desc')}
                   </p>
                 </div>
