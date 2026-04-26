@@ -133,7 +133,7 @@ export default async function ServiciosPage({
                     <p className="text-[#64748B]">{service.forText}</p>
                   </div>
                   <div className="bg-[#1E3A5F] text-white rounded-xl p-6">
-                    <div className="text-2xl font-bold text-[#F4B860] mb-2">{service.price}</div>
+                    <div className="text-2xl font-bold text-[#95703A] mb-2">{service.price}</div>
                     <Button variant="accent" size="lg" asChild>
                       <a href="#contacto">{service.cta} →</a>
                     </Button>
@@ -165,7 +165,7 @@ export default async function ServiciosPage({
                       <ul className="space-y-2">
                         {service.examples.map((item: string) => (
                           <li key={item} className="flex items-start gap-2 text-sm text-[#64748B]">
-                            <span className="text-[#F4B860] font-bold mt-0.5">→</span>
+                            <span className="text-[#95703A] font-bold mt-0.5">→</span>
                             {item}
                           </li>
                         ))}

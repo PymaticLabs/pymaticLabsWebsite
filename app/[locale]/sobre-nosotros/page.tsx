@@ -59,7 +59,7 @@ export default async function SobreNosotrosPage({
               </div>
               <div>
                 <h2 className="font-bold text-[#1E3A5F] text-xl">{person.name}</h2>
-                <p className="text-sm text-[#F4B860] font-medium mb-2">{person.role}</p>
+                <p className="text-sm text-[#95703A] font-medium mb-2">{person.role}</p>
                 <p className="text-sm text-[#64748B] leading-relaxed">{person.desc}</p>
               </div>
             </div>
@@ -91,7 +91,7 @@ export default async function SobreNosotrosPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {principles.map((p, i) => (
               <div key={i} className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-[#F4B860] flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-[#95703A] flex-shrink-0 mt-0.5" />
                 <span className="text-[#64748B]">{p}</span>
               </div>
             ))}
