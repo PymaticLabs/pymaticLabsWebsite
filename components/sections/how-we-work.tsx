@@ -20,7 +20,7 @@ export default function HowWeWork() {
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1E3A5F] mb-4">
             {t('title')}
           </h2>
-          <p className="text-lg text-[#64748B]">{t('subtitle')}</p>
+          <p className="text-lg text-[#475569]">{t('subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -38,7 +38,7 @@ export default function HowWeWork() {
                   <step.icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="font-bold text-[#1E3A5F]">{t(step.titleKey)}</h3>
-                <p className="text-sm text-[#64748B]">{t(step.descKey)}</p>
+                <p className="text-sm text-[#475569]">{t(step.descKey)}</p>
               </div>
             </div>
           ))}

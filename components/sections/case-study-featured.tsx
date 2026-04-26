@@ -19,7 +19,7 @@ export default function CaseStudyFeatured() {
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1E3A5F] mb-4">
             {t('title')}
           </h2>
-          <p className="text-lg text-[#64748B] max-w-2xl mx-auto">
+          <p className="text-lg text-[#475569] max-w-2xl mx-auto">
             {t('subtitle')}
           </p>
         </div>
@@ -64,11 +64,11 @@ export default function CaseStudyFeatured() {
             <div className="p-8 lg:p-10 space-y-6">
               <div>
                 <h4 className="font-semibold text-[#1E3A5F] mb-2">{tFeatured('challenge')}</h4>
-                <p className="text-[#64748B] text-sm leading-relaxed">{tFeatured('challengeText')}</p>
+                <p className="text-[#475569] text-sm leading-relaxed">{tFeatured('challengeText')}</p>
               </div>
               <div>
                 <h4 className="font-semibold text-[#1E3A5F] mb-2">{tFeatured('built')}</h4>
-                <p className="text-[#64748B] text-sm leading-relaxed">{tFeatured('builtText')}</p>
+                <p className="text-[#475569] text-sm leading-relaxed">{tFeatured('builtText')}</p>
               </div>
               <div>
                 <h4 className="font-semibold text-[#1E3A5F] mb-3">{tFeatured('stack')}</h4>

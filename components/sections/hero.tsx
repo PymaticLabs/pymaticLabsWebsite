@@ -24,7 +24,7 @@ export default function Hero() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1E3A5F] leading-tight">
             {t('title')}
           </h1>
-          <p className="text-lg text-[#64748B] leading-relaxed max-w-xl">
+          <p className="text-lg text-[#475569] leading-relaxed max-w-xl">
             {t('subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -40,17 +40,17 @@ export default function Hero() {
           <div className="flex flex-wrap gap-6 pt-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-[#1E3A5F]">{t('metric1')}</div>
-              <div className="text-sm text-[#64748B]">{t('metric1sub')}</div>
+              <div className="text-sm text-[#475569]">{t('metric1sub')}</div>
             </div>
             <div className="w-px bg-[#E2E8F0]" />
             <div className="text-center">
               <div className="text-2xl font-bold text-[#1E3A5F]">{t('metric2')}</div>
-              <div className="text-sm text-[#64748B]">{t('metric2sub')}</div>
+              <div className="text-sm text-[#475569]">{t('metric2sub')}</div>
             </div>
             <div className="w-px bg-[#E2E8F0]" />
             <div className="text-center">
               <div className="text-2xl font-bold text-[#1E3A5F]">{t('metric3')}</div>
-              <div className="text-sm text-[#64748B]">{t('metric3sub')}</div>
+              <div className="text-sm text-[#475569]">{t('metric3sub')}</div>
             </div>
           </div>
         </div>

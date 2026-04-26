@@ -42,7 +42,7 @@ export default function FAQ() {
               <AccordionTrigger className="text-left font-medium text-[#1E3A5F]">
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-[#64748B]">
+              <AccordionContent className="text-[#475569]">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>

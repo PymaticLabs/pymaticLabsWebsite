@@ -36,7 +36,7 @@ export default function ServicesSummary() {
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1E3A5F] mb-4">
             {t('title')}
           </h2>
-          <p className="text-lg text-[#64748B] max-w-2xl mx-auto">
+          <p className="text-lg text-[#475569] max-w-2xl mx-auto">
             {t('subtitle')}
           </p>
         </div>
@@ -52,7 +52,7 @@ export default function ServicesSummary() {
                   <service.icon className="h-6 w-6 text-[#1E3A5F] group-hover:text-white transition-colors" />
                 </div>
                 <h3 className="font-bold text-lg text-[#1E3A5F]">{service.title}</h3>
-                <p className="text-sm text-[#64748B]">{service.desc}</p>
+                <p className="text-sm text-[#475569]">{service.desc}</p>
                 <Link
                   href={service.href}
                   className="inline-flex items-center gap-1 text-sm font-medium text-[#1E3A5F] hover:gap-2 transition-all"
