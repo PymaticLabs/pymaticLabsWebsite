@@ -71,7 +71,7 @@ export default async function CaseSlugPage({
             <div className="flex flex-wrap gap-4 my-6">
               {caseStudy.metrics.map((m, i) => (
                 <div key={i} className="bg-[#1E3A5F] text-white rounded-xl px-5 py-3 text-center">
-                  <div className="text-2xl font-bold text-[#F4B860]">{m.value}</div>
+                  <div className="text-2xl font-bold text-[#95703A]">{m.value}</div>
                   <div className="text-xs text-gray-300">{locale === 'es' ? m.label : m.labelEn}</div>
                 </div>
               ))}

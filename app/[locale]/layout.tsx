@@ -59,6 +59,11 @@ export async function generateMetadata({
       index: true,
       follow: true,
     },
+    icons: {
+      icon: '/logo.png',
+      shortcut: '/logo.png',
+      apple: '/logo.png',
+    },
   }
 }
 
