@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { CheckCircle2, MapPin } from 'lucide-react'
+import Image from 'next/image'
 
 export async function generateMetadata({
   params,
@@ -50,12 +51,12 @@ export default async function SobreNosotrosPage({
         {/* Team */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
           {[
-            { initial: 'S', name: 'Sergio J. Pérez', role: locale === 'es' ? 'Co-fundador · Backend & Automatización' : 'Co-founder · Backend & Automation', desc: locale === 'es' ? 'Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Apasionado por la programación, la automatización de procesos y la creación de herramientas que ahorran tiempo real.' : 'Video Game Design and Development Engineer from UJI. Passionate about programming, process automation and building tools that save real time.' },
-            { initial: 'E', name: 'Eric Ollé', role: locale === 'es' ? 'Co-fundador · IA & Automatización' : 'Co-founder · AI & Automation', desc: locale === 'es' ? 'Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Especializado en integraciones de herramientas, inteligencia artificial y automatización de flujos de negocio.' : 'Video Game Design and Development Engineer from UJI. Specialized in tool integrations, artificial intelligence and business workflow automation.' },
+            { src: '/sergio.jpg', name: 'Sergio J. Pérez', role: locale === 'es' ? 'Co-fundador · Backend & Automatización' : 'Co-founder · Backend & Automation', desc: locale === 'es' ? 'Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Apasionado por la programación, la automatización de procesos y la creación de herramientas que ahorran tiempo real.' : 'Video Game Design and Development Engineer from UJI. Passionate about programming, process automation and building tools that save real time.' },
+            { src: '/eric.jpg', name: 'Eric Ollé', role: locale === 'es' ? 'Co-fundador · IA & Automatización' : 'Co-founder · AI & Automation', desc: locale === 'es' ? 'Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Especializado en integraciones de herramientas, inteligencia artificial y automatización de flujos de negocio.' : 'Video Game Design and Development Engineer from UJI. Specialized in tool integrations, artificial intelligence and business workflow automation.' },
           ].map((person) => (
-            <div key={person.initial} className="flex gap-5">
-              <div className="flex-shrink-0 w-20 h-20 bg-[#1E3A5F] rounded-2xl flex items-center justify-center text-white font-bold text-2xl">
-                {person.initial}
+            <div key={person.src} className="flex gap-5">
+              <div className="flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden">
+                <Image src={person.src} alt={person.name} width={80} height={80} className="object-cover w-full h-full" />
               </div>
               <div>
                 <h2 className="font-bold text-[#1E3A5F] text-xl">{person.name}</h2>
