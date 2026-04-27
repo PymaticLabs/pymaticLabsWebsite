@@ -1,7 +1,9 @@
 // @ts-check
 import createMDX from '@next/mdx'
 import createNextIntlPlugin from 'next-intl/plugin'
+import bundleAnalyzer from '@next/bundle-analyzer'
 
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' })
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 /** @type {import('next').NextConfig} */
@@ -19,4 +21,4 @@ const withMDX = createMDX({
   },
 })
 
-export default withNextIntl(withMDX(nextConfig))
+export default withBundleAnalyzer(withNextIntl(withMDX(nextConfig)))
