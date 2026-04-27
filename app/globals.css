@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --primary: #1E3A5F;
   --accent: #F4B860;
@@ -11,12 +13,52 @@
   --radius: 0.5rem;
 }
 
+.dark {
+  --primary: #93B4D9;
+  --accent: #F4B860;
+  --foreground: #F1F5F9;
+  --muted: #94A3B8;
+  --background: #0B1220;
+  --surface: #0F172A;
+  --border: #1E293B;
+}
+
 * {
   border-color: var(--border);
 }
 
+html {
+  background-color: var(--background);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
-  background-color: #FAFAF9;
-  color: #0F172A;
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-inter, sans-serif);
 }
+
+/* Dark-mode overrides for hardcoded hex literals used across components.
+   Long-term: migrate components to semantic tokens (var(--surface), etc.). */
+.dark .bg-white { background-color: var(--surface); }
+.dark .bg-\[\#FAFAF9\] { background-color: var(--background); }
+.dark .bg-\[\#FFFFFF\] { background-color: var(--surface); }
+.dark .bg-\[\#F8FAFC\] { background-color: var(--background); }
+.dark .bg-\[\#F1F5F9\] { background-color: var(--surface); }
+.dark .bg-\[\#E2E8F0\] { background-color: #1E293B; }
+
+.dark .text-\[\#0F172A\] { color: var(--foreground); }
+.dark .text-\[\#1E3A5F\] { color: var(--primary); }
+.dark .text-\[\#475569\] { color: var(--muted); }
+.dark .text-\[\#64748B\] { color: var(--muted); }
+.dark .text-\[\#7A5C2E\] { color: var(--accent); }
+
+.dark .border-\[\#E2E8F0\] { border-color: var(--border); }
+.dark .border-\[\#F1F5F9\] { border-color: var(--border); }
+
+.dark .bg-white\/90 { background-color: rgb(15 23 42 / 0.9); }
+.dark .bg-white\/80 { background-color: rgb(15 23 42 / 0.8); }

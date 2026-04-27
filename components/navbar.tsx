@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
+import ThemeToggle from '@/components/theme-toggle'
 
 export default function Navbar() {
   const t = useTranslations('nav')
@@ -58,6 +59,7 @@ export default function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href={`${altPrefix}/`}
             className="text-sm font-medium text-[#475569] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
@@ -93,6 +95,7 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-2 flex items-center gap-3">
+            <ThemeToggle />
             <Link
               href={`${altPrefix}/`}
               className="text-sm font-medium text-[#475569] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"

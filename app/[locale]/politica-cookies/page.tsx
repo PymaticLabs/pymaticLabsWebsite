@@ -49,6 +49,11 @@ export default async function PoliticaCookiesPage({
                     <td className="border border-[#E2E8F0] px-3 py-2">Guardar preferencia de idioma</td>
                     <td className="border border-[#E2E8F0] px-3 py-2">1 año</td>
                   </tr>
+                  <tr>
+                    <td className="border border-[#E2E8F0] px-3 py-2">pymatic_theme</td>
+                    <td className="border border-[#E2E8F0] px-3 py-2">Guardar preferencia de tema (claro/oscuro)</td>
+                    <td className="border border-[#E2E8F0] px-3 py-2">1 año</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
