@@ -23,7 +23,13 @@
       "Bash(xargs cat *)",
       "Bash(grep -E '\\\\.\\(json|ts|tsx|js|jsx|css\\)$')",
       "Bash(perl *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(wait)",
+      "Bash(npm --version)",
+      "Bash(yarn --version)",
+      "Bash(ANALYZE=true pnpm run *)",
+      "Bash(ANALYZE=true npx next *)",
+      "Bash(sort -t'|' -k2 -nr)"
     ]
   }
 }
