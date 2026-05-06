@@ -62,3 +62,10 @@ body {
 
 .dark .bg-white\/90 { background-color: rgb(15 23 42 / 0.9); }
 .dark .bg-white\/80 { background-color: rgb(15 23 42 / 0.8); }
+
+/* Keep dark text on accent (yellow) backgrounds for contrast in both modes. */
+.dark .bg-\[\#F4B860\],
+.dark .bg-\[\#F4B860\] *,
+.dark .hover\:bg-\[\#f0a840\]:hover {
+  color: #0F172A;
+}

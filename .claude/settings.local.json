@@ -29,7 +29,8 @@
       "Bash(yarn --version)",
       "Bash(ANALYZE=true pnpm run *)",
       "Bash(ANALYZE=true npx next *)",
-      "Bash(sort -t'|' -k2 -nr)"
+      "Bash(sort -t'|' -k2 -nr)",
+      "Bash(pnpm start *)"
     ]
   }
 }

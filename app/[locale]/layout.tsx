@@ -9,6 +9,7 @@ import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 import { ThemeProvider, type Theme, THEME_COOKIE } from '@/components/theme-provider'
 import '@/app/globals.css'
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -96,13 +97,12 @@ export default async function LocaleLayout({
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>
       <body className="min-h-screen flex flex-col">
-        <ThemeProvider initialTheme={themeCookie}>
-          <NextIntlClientProvider messages={messages}>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </NextIntlClientProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   )

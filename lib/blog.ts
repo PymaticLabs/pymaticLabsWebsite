@@ -22,7 +22,7 @@ export interface BlogFrontmatter {
 }
 
 export function parseFrontmatter(content: string): { frontmatter: BlogFrontmatter; body: string } {
-  const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
+  const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
   if (!fmMatch) {
     return {
       frontmatter: {

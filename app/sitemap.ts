@@ -37,17 +37,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
   let posts: MetadataRoute.Sitemap = []
   try {
     const allPosts = getAllPosts()
-    posts = allPosts.flatMap((post) =>
-      locales.map((locale) => ({
+    posts = allPosts.flatMap((post) => {
+      const parsed = post.date ? new Date(post.date) : new Date()
+      const lastModified = isNaN(parsed.getTime()) ? new Date() : parsed
+      return locales.map((locale) => ({
         url:
           locale === 'es'
             ? `${baseUrl}/blog/${post.slug}`
             : `${baseUrl}/en/blog/${post.slug}`,
-        lastModified: new Date(post.date),
+        lastModified,
         changeFrequency: 'monthly' as const,
         priority: 0.7,
       }))
-    )
+    })
   } catch {
     // posts directory might not exist
   }
