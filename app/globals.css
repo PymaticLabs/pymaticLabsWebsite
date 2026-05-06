@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --primary: #1E3A5F;
   --accent: #F4B860;
@@ -8,48 +10,55 @@
   --background: #FAFAF9;
   --surface: #FFFFFF;
   --border: #E2E8F0;
-
-  /* shadcn/ui compatible vars */
   --radius: 0.5rem;
-  --background: oklch(0.99 0.002 106.42);
-  --foreground: oklch(0.13 0.028 261.69);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.028 261.69);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.028 261.69);
-  --primary-color: oklch(0.26 0.07 229.84);
-  --primary-foreground: oklch(0.98 0.002 247.84);
-  --secondary: oklch(0.97 0.003 264.54);
-  --secondary-foreground: oklch(0.21 0.034 264.67);
-  --muted-color: oklch(0.97 0.003 264.54);
-  --muted-foreground: oklch(0.55 0.023 264.36);
-  --accent-color: oklch(0.80 0.10 71.0);
-  --accent-foreground: oklch(0.21 0.034 264.67);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border-color: oklch(0.92 0.004 264.54);
-  --input: oklch(0.92 0.004 264.54);
-  --ring: oklch(0.26 0.07 229.84);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.002 247.858);
-  --sidebar-foreground: oklch(0.13 0.028 261.69);
-  --sidebar-primary: oklch(0.26 0.07 229.84);
-  --sidebar-primary-foreground: oklch(0.98 0.002 247.84);
-  --sidebar-accent: oklch(0.97 0.003 264.54);
-  --sidebar-accent-foreground: oklch(0.21 0.034 264.67);
-  --sidebar-border: oklch(0.92 0.004 264.54);
-  --sidebar-ring: oklch(0.26 0.07 229.84);
+}
+
+.dark {
+  --primary: #93B4D9;
+  --accent: #F4B860;
+  --foreground: #F1F5F9;
+  --muted: #94A3B8;
+  --background: #0B1220;
+  --surface: #0F172A;
+  --border: #1E293B;
 }
 
 * {
   border-color: var(--border);
 }
 
+html {
+  background-color: var(--background);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
-  background-color: #FAFAF9;
-  color: #0F172A;
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-inter, sans-serif);
 }
+
+/* Dark-mode overrides for hardcoded hex literals used across components.
+   Long-term: migrate components to semantic tokens (var(--surface), etc.). */
+.dark .bg-white { background-color: var(--surface); }
+.dark .bg-\[\#FAFAF9\] { background-color: var(--background); }
+.dark .bg-\[\#FFFFFF\] { background-color: var(--surface); }
+.dark .bg-\[\#F8FAFC\] { background-color: var(--background); }
+.dark .bg-\[\#F1F5F9\] { background-color: var(--surface); }
+.dark .bg-\[\#E2E8F0\] { background-color: #1E293B; }
+
+.dark .text-\[\#0F172A\] { color: var(--foreground); }
+.dark .text-\[\#1E3A5F\] { color: var(--primary); }
+.dark .text-\[\#475569\] { color: var(--muted); }
+.dark .text-\[\#64748B\] { color: var(--muted); }
+.dark .text-\[\#7A5C2E\] { color: var(--accent); }
+
+.dark .border-\[\#E2E8F0\] { border-color: var(--border); }
+.dark .border-\[\#F1F5F9\] { border-color: var(--border); }
+
+.dark .bg-white\/90 { background-color: rgb(15 23 42 / 0.9); }
+.dark .bg-white\/80 { background-color: rgb(15 23 42 / 0.8); }

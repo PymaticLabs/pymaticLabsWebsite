@@ -3,9 +3,11 @@ import { Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { locales } from '@/lib/i18n'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
+import { ThemeProvider, type Theme, THEME_COOKIE } from '@/components/theme-provider'
 import '@/app/globals.css'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -60,6 +62,11 @@ export async function generateMetadata({
       index: true,
       follow: true,
     },
+    icons: {
+      icon: '/logo.png',
+      shortcut: '/logo.png',
+      apple: '/logo.png',
+    },
   }
 }
 
@@ -78,8 +85,17 @@ export default async function LocaleLayout({
 
   const messages = await getMessages()
 
+  const cookieStore = await cookies()
+  const themeCookie = (cookieStore.get(THEME_COOKIE)?.value as Theme | undefined) ?? 'system'
+  const initialClass = themeCookie === 'dark' ? 'dark' : ''
+
+  const noFlashScript = `(function(){try{var m=document.cookie.match(/(?:^|; )${THEME_COOKIE}=([^;]*)/);var t=m?decodeURIComponent(m[1]):'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`
+
   return (
-    <html lang={locale} className={inter.variable}>
+    <html lang={locale} className={`${inter.variable} ${initialClass}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+      </head>
       <body className="min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
           <Navbar />

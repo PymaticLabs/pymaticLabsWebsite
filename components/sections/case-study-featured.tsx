@@ -36,23 +36,23 @@ export default function CaseStudyFeatured() {
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                    <Clock className="h-8 w-8 text-[#F4B860]" />
+                    <Clock className="h-8 w-8 text-[#7A5C2E]" />
                     <div>
-                      <div className="text-xl font-bold text-[#F4B860]">10h</div>
+                      <div className="text-xl font-bold text-[#7A5C2E]">10h</div>
                       <div className="text-sm text-gray-300">{tFeatured('result1')}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                    <FileText className="h-8 w-8 text-[#F4B860]" />
+                    <FileText className="h-8 w-8 text-[#7A5C2E]" />
                     <div>
-                      <div className="text-xl font-bold text-[#F4B860]">167</div>
+                      <div className="text-xl font-bold text-[#7A5C2E]">167</div>
                       <div className="text-sm text-gray-300">{tFeatured('result2')}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                    <CheckCircle2 className="h-8 w-8 text-[#F4B860]" />
+                    <CheckCircle2 className="h-8 w-8 text-[#7A5C2E]" />
                     <div>
-                      <div className="text-xl font-bold text-[#F4B860]">0</div>
+                      <div className="text-xl font-bold text-[#7A5C2E]">0</div>
                       <div className="text-sm text-gray-300">{tFeatured('result3')}</div>
                     </div>
                   </div>

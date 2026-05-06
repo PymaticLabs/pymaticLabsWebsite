@@ -41,6 +41,7 @@ const SelectScrollUpButton = React.forwardRef<
       "flex cursor-default items-center justify-center py-1",
       className
     )}
+    aria-label="Scroll up"
     {...props}
   >
     <ChevronUp className="h-4 w-4" />
@@ -58,6 +59,7 @@ const SelectScrollDownButton = React.forwardRef<
       "flex cursor-default items-center justify-center py-1",
       className
     )}
+    aria-label="Scroll down"
     {...props}
   >
     <ChevronDown className="h-4 w-4" />
