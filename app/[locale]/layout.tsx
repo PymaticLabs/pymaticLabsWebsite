@@ -7,6 +7,7 @@ import { locales } from '@/lib/i18n'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 import '@/app/globals.css'
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -85,6 +86,7 @@ export default async function LocaleLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   )
