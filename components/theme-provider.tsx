@@ -1,9 +1,10 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-
-export type Theme = 'light' | 'dark' | 'system'
-export const THEME_COOKIE = 'pymatic_theme'
+export type { Theme } from '@/lib/theme'
+export { THEME_COOKIE } from '@/lib/theme'
+import type { Theme } from '@/lib/theme'
+import { THEME_COOKIE } from '@/lib/theme'
 
 type ThemeContextValue = {
   theme: Theme

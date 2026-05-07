@@ -7,7 +7,8 @@ import { cookies } from 'next/headers'
 import { locales } from '@/lib/i18n'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
-import { ThemeProvider, type Theme, THEME_COOKIE } from '@/components/theme-provider'
+import { ThemeProvider } from '@/components/theme-provider'
+import { type Theme, THEME_COOKIE } from '@/lib/theme'
 import '@/app/globals.css'
 
 const inter = Inter({
