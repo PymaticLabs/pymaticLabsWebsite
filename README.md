@@ -1,97 +1,61 @@
-# Pymatic Labs Website
+# Pymatic Labs · Cerebro Digital
 
-Official website for Pymatic Labs — AI automation agency for Spanish SMBs.
+Web de pymaticlabs.com, rehecha solo para el Cerebro Digital (Eric, 02-10-2026). Castellano (fuente) e inglés.
 
-## Tech Stack
+Las fuentes de verdad del contenido están en el repo `cerebro-pymaticlabs`:
 
-- Next.js 15 (App Router + Turbopack)
-- TypeScript (strict mode)
-- Tailwind CSS v4
-- shadcn/ui (manual components)
-- next-intl (es default, en with /en/ prefix)
-- lucide-react
-- MDX for blog posts
-- Resend for contact form emails
-- Zod v4 for form validation
+- Oferta y precios: `knowledge/11_Comercial/oferta-del-cerebro-digital.md` → aquí, `lib/offer.ts` (único sitio con cifras).
+- Mensual: `knowledge/11_Comercial/retainers-y-mantenimiento.md`.
+- Qué hace el cerebro: `esqueleto/guias/guia-del-cerebro.md` (y su versión en inglés en `esqueleto/idiomas/en/guias/`).
+- Promesa de privacidad: `knowledge/11_Comercial/promesa-de-privacidad-del-cerebro-digital.md`. Va literal, sin tocar.
+- Marca: `knowledge/01_Empresa/identidad-y-marca.md` (azul `#0463FE`, negro, fondo blanco).
 
-## Development
+## Stack
+
+- Next.js 16 (App Router, Turbopack), React 19, TypeScript
+- Tailwind CSS 4 (tokens de marca en `app/globals.css`)
+- next-intl (`es` por defecto, `en` bajo `/en`; las rutas son las mismas en los dos idiomas)
+- marked, para los textos largos de `content/`
+- Resend para el formulario de contacto
+- Vercel (hosting y Web Analytics, sin cookies)
+
+## Desarrollo
 
 ```bash
 pnpm install
-cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+## Variables de entorno
 
-## Build
+| Variable | Dónde | Para qué |
+|----------|-------|----------|
+| `RESEND_API_KEY` | Producción | Enviar los correos del formulario de contacto |
+| `CONTACT_EMAIL` | Opcional | Buzón del formulario (por defecto info@pymaticlabs.com) |
+| `NEXT_PUBLIC_SITE_URL` | Opcional | URL pública (por defecto https://pymaticlabs.com) |
 
-```bash
-pnpm build
-pnpm start
-```
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `RESEND_API_KEY` | Production | Resend API key for sending contact form emails |
-| `CONTACT_EMAIL` | Optional | Email to receive contact form submissions (default: hola@pymaticlabs.com) |
-| `NEXT_PUBLIC_SITE_URL` | Optional | Full site URL (default: https://pymaticlabs.com) |
-
-## Project Structure
+## Estructura
 
 ```
 app/
-  [locale]/          # All pages with i18n routing
-    layout.tsx       # Root layout with Navbar/Footer
-    page.tsx         # Landing page
-    servicios/       # Services page
-    casos/           # Case studies
-    blog/            # Blog listing + posts
-    sobre-nosotros/  # About page
-    contacto/        # Contact page
-    aviso-legal/     # Legal notice
-    politica-privacidad/
-    politica-cookies/
-  api/contact/       # Contact form API route
-  robots.ts          # robots.txt
-  sitemap.ts         # sitemap.xml
+  [locale]/
+    page.tsx            # Home
+    como-funciona/      # Qué es y todo lo que sabe hacer
+    precios/            # Modalidades, mensual, Pack España y A medida
+    seguridad/          # Promesa de privacidad y política de vulnerabilidades
+    contacto/
+    aviso-legal/, politica-privacidad/, politica-cookies/
+  api/contact/          # Formulario de contacto (Resend)
 components/
-  navbar.tsx
-  footer.tsx
-  sections/          # Landing page sections
-  ui/                # shadcn/ui components
-content/
-  blog/              # MDX blog posts
-  cases/             # Case study data
+  home/                 # Secciones de la home (la demo es home/demo.tsx)
+  pricing/              # Tarjeta de modalidad
+  ui/                   # Primitivas shadcn/ui
+content/legal/{es,en}/  # Textos largos en Markdown
 lib/
-  i18n.ts            # Locale config
-  utils.ts           # cn() utility
-  metadata.ts        # Metadata helpers
-  schemas.ts         # JSON-LD schema generators
-  blog.ts            # Blog post utilities
-messages/
-  es.json            # Spanish translations
-  en.json            # English translations
+  offer.ts              # Precios y modalidades
+  markdown.ts           # Renderiza content/
+messages/{es,en}.json   # Textos de la web
+public/.well-known/security.txt
 ```
 
-## Launch Checklist
-
-- [ ] Set `RESEND_API_KEY` in Vercel environment variables
-- [ ] Set `NEXT_PUBLIC_SITE_URL=https://pymaticlabs.com` in Vercel
-- [ ] Set `CONTACT_EMAIL` in Vercel
-- [ ] Add OG image at `/public/og-image.png` (1200x630px)
-- [ ] Add logo at `/public/logo.png`
-- [ ] Add blog cover images at `/public/blog/covers/`
-- [ ] Update `[RAZÓN SOCIAL PENDIENTE]` in legal pages with real company name
-- [ ] Update `[PENDIENTE]` CIF in aviso-legal
-- [ ] Create Cal.com account and update URL in contact section
-- [ ] Create LinkedIn company page and update URLs in footer
-- [ ] Create GitHub organization and update URLs in footer
-- [ ] Add Google Analytics or Plausible (optional)
-- [ ] Set up Google Search Console and submit sitemap
-- [ ] Verify Google My Business listing
-- [ ] Test contact form end-to-end in production
-- [ ] Test all pages on mobile
-- [ ] Run Lighthouse audit (aim for 90+ on all metrics)
+Las URL de la web de agencia (`/servicios`, `/casos`, `/blog`, `/sobre-nosotros`) redirigen con 301 a la home (`next.config.mjs`).

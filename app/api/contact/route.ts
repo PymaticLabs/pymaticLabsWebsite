@@ -1,65 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { CONTACT_INTERESTS } from '@/lib/contact'
 
 const contactSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
-  businessType: z.string().optional(),
-  message: z.string().min(20, 'Message must be at least 20 characters'),
+  name: z.string().trim().min(2).max(200),
+  email: z.string().trim().email().max(320),
+  company: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(50).optional(),
+  interest: z.union([z.enum(CONTACT_INTERESTS), z.literal('')]).optional(),
+  message: z.string().trim().min(20).max(5000),
+  locale: z.enum(['es', 'en']).optional(),
 })
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const parsed = contactSchema.safeParse(body)
+    const parsed = contactSchema.safeParse(await request.json())
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || 'Validation error' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation error' }, { status: 400 })
     }
 
-    const { name, email, phone, businessType, message } = parsed.data
+    const { name, email, company, phone, interest, message, locale } = parsed.data
     const contactEmail = process.env.CONTACT_EMAIL || 'info@pymaticlabs.com'
 
     if (process.env.RESEND_API_KEY) {
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY)
 
-      await resend.emails.send({
+      const rows = [
+        ['Nombre', name],
+        ['Correo', email],
+        ['Empresa', company],
+        ['Teléfono', phone],
+        ['Le interesa', interest],
+        ['Idioma de la web', locale],
+      ]
+        .filter(([, value]) => value)
+        .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value as string)}</p>`)
+        .join('')
+
+      const { error } = await resend.emails.send({
         from: 'Pymatic Labs <no-reply@pymaticlabs.com>',
         to: [contactEmail],
-        subject: `Nuevo mensaje de contacto de ${name}`,
-        html: `
-          <h2>Nuevo mensaje de contacto</h2>
-          <p><strong>Nombre:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          ${phone ? `<p><strong>Teléfono:</strong> ${phone}</p>` : ''}
-          ${businessType ? `<p><strong>Tipo de negocio:</strong> ${businessType}</p>` : ''}
-          <p><strong>Mensaje:</strong></p>
-          <p>${message.replace(/\n/g, '<br/>')}</p>
-        `,
+        subject: `Contacto web: ${name}${company ? ` (${company})` : ''}`,
+        html: `<h2>Nuevo mensaje de contacto</h2>${rows}<p><strong>Mensaje:</strong></p><p>${escapeHtml(message).replace(/\n/g, '<br/>')}</p>`,
         replyTo: email,
       })
+      if (error) throw new Error(error.message)
     } else {
-      // Dev mode: log to console
-      console.log('📧 [DEV MODE] New contact form submission:', {
-        name,
-        email,
-        phone,
-        businessType,
-        message,
-      })
+      console.log('[contacto] RESEND_API_KEY sin configurar; mensaje no enviado:', { name, email, interest })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Contact form error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

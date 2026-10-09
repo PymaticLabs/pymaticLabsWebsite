@@ -1,246 +1,443 @@
 {
+  "meta": {
+    "siteTitle": "Pymatic Labs · Digital Brain",
+    "homeTitle": "Digital Brain · Your company's memory, with AI",
+    "homeDescription": "We digitize your company's knowledge, indexed so any AI can look it up, and that AI can also run your processes. It lives on your computers and works with Claude.",
+    "howTitle": "How the Digital Brain works",
+    "howDescription": "What it is, how to talk to it, everything it can do and what it never does. No jargon.",
+    "pricingTitle": "Digital Brain pricing",
+    "pricingDescription": "One-off payment and a perpetual license per company. Do it yourself from €500 (launch price), excluding VAT.",
+    "securityTitle": "Security and privacy",
+    "securityDescription": "Your brain lives on your computers. Our privacy promise, what is behind it and the Digital Brain vulnerability policy.",
+    "contactTitle": "Contact",
+    "contactDescription": "Tell us what your company does and we will tell you which Digital Brain option fits."
+  },
   "nav": {
-    "servicios": "Services",
-    "casos": "Cases",
-    "blog": "Blog",
-    "sobre": "About us",
-    "cta": "Talk to us",
-    "langSwitch": "ES"
+    "home": "Pymatic Labs, home",
+    "comoFunciona": "How it works",
+    "precios": "Pricing",
+    "seguridad": "Security",
+    "contacto": "Contact",
+    "cta": "See pricing",
+    "langSwitch": "ES",
+    "langLabel": "Leer en castellano",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
-    "title": "AI Automation for SMBs",
-    "subtitle": "We automate invoices, Google reviews, accounting and repetitive processes so you can focus on what matters: growing your business.",
-    "cta1": "See how we work",
-    "cta2": "Talk to us",
-    "metric1": "8 automations",
-    "metric1sub": "delivered",
-    "metric2": "~10 hours/week",
-    "metric2sub": "saved per client",
-    "metric3": "100%",
-    "metric3sub": "projects delivered"
+    "eyebrow": "Digital Brain · works with Claude",
+    "title": "Your company's memory, with an AI that looks it up and does the work",
+    "subtitle": "We digitize your company's knowledge, indexed so any AI can look it up. And that AI can also run your processes, just by asking.",
+    "ctaPrimary": "See pricing",
+    "ctaSecondary": "See the demo",
+    "badges": ["Lives on your computers", "No terminal needed", "For Mac and Windows"],
+    "note": "For businesses and professionals. Launch price for the first 10 customers."
   },
-  "problems": {
-    "title": "Do any of these problems sound familiar?",
-    "subtitle": "These are the most common pain points we hear from SMBs like yours.",
-    "p1title": "Invoices from email one by one",
-    "p1desc": "You manually download invoices every month, copy data by hand, and errors creep in.",
-    "p2title": "Google reviews going unanswered",
-    "p2desc": "Opinions pile up without responses. Every ignored review is a customer who won't return.",
-    "p3title": "Data between spreadsheets",
-    "p3desc": "You spend hours copying data from one Excel to another. Repetitive tasks a script would do in seconds.",
-    "p4title": "Manual accounting",
-    "p4desc": "Your accounting depends on repetitive tasks that consume hours every week."
+  "whatIs": {
+    "eyebrow": "The product",
+    "title": "What it is and what it is not",
+    "subtitle": "You talk to it through Claude, the AI assistant, on your computer. Like a coworker who has read everything.",
+    "isTitle": "What it is",
+    "is": [
+      "Your company's memory: how things are done, the criteria, the reference data and where each document is.",
+      "It answers with what your documents say and tells you which one it comes from.",
+      "It does tasks: if one is written down step by step, the assistant follows it for you. If it does not know how, you teach it once and it remembers.",
+      "It lives on your computers, not on the internet. It is yours."
+    ],
+    "isNotTitle": "What it is not",
+    "isNot": [
+      "It is not an internet search engine: if something is not in your brain, it tells you.",
+      "It is not a file store: your PDF, Excel and Word files stay where they are.",
+      "It is not a program you have to learn: there are no menus, you talk and it answers.",
+      "It does not replace your accountant, your safety officer or your lawyer. It saves you searching and repeating."
+    ]
   },
-  "services": {
-    "title": "What do we automate?",
-    "subtitle": "We use Python, n8n and AI to eliminate repetitive work from your business.",
-    "s1title": "Python Automations",
-    "s1desc": "Custom scripts that read emails, process PDFs, fill spreadsheets and more.",
-    "s2title": "n8n Workflows",
-    "s2desc": "Connect your favorite tools without code: Gmail, Notion, Google Sheets, WhatsApp...",
-    "s3title": "AI-powered Reviews",
-    "s3desc": "We automatically respond to all your Google reviews with AI, personalized in your tone.",
-    "learnMore": "Learn more"
+  "demo": {
+    "title": "This is how you work with it",
+    "subtitle": "A made-up carpentry workshop. Pick what you want to see.",
+    "disclaimer": "Simulated demo with made-up data. Nothing is downloaded or installed.",
+    "replay": "Replay",
+    "windowTitle": "Claude · Digital Brain",
+    "you": "You",
+    "assistant": "Claude",
+    "scenarios": [
+      {
+        "id": "ask",
+        "label": "Ask",
+        "messages": [
+          { "role": "user", "text": "Which varnish do we use for exterior doors?" },
+          {
+            "role": "assistant",
+            "text": "For exterior we use a water-based varnish with UV filter: two coats, with a light sanding between them. We buy it from Levante Varnishes, who deliver in 48 hours.",
+            "source": "Source: Finishes and varnishes · reviewed on 12 Sep"
+          }
+        ]
+      },
+      {
+        "id": "task",
+        "label": "Ask for a task",
+        "messages": [
+          { "role": "user", "text": "Prepare the quote for the kitchen of the customer on Main Street." },
+          {
+            "role": "assistant",
+            "text": "I am following the procedure “How to prepare a quote”. With the measurements you took on Tuesday it comes to 3.20 linear metres with an island, oak worktop and soft-close hinges. Shall I make it a PDF with your logo?"
+          },
+          { "role": "user", "text": "Yes, go ahead." },
+          {
+            "role": "assistant",
+            "text": "Done: quote-main-street.pdf, in the task folder.",
+            "source": "Procedure: How to prepare a quote"
+          }
+        ]
+      },
+      {
+        "id": "change",
+        "label": "Change what it knows",
+        "messages": [
+          { "role": "user", "text": "We now buy the exterior varnish from Turia Timber." },
+          {
+            "role": "assistant",
+            "text": "I will change one document, “Finishes and varnishes”: the exterior varnish supplier becomes Turia Timber. The previous version stays in the history. Shall I confirm?"
+          },
+          { "role": "user", "text": "Yes." },
+          {
+            "role": "assistant",
+            "text": "Done. From now on the brain only says what is true today.",
+            "source": "Change saved in the history"
+          }
+        ]
+      }
+    ]
   },
-  "cases": {
-    "title": "Real cases",
-    "subtitle": "Projects already saving time for businesses like yours.",
-    "featured": {
-      "tag": "Accounting automation",
-      "title": "Family service station + bar · Castellón",
-      "challenge": "The challenge",
-      "challengeText": "A family-owned SMB with a service station and bar spent hours every week on manual tasks: downloading invoices from email one by one, renaming them, copying data into spreadsheets and updating the daily POS cash report. Scattered processes, slow and constantly prone to mistakes.",
-      "built": "What we built",
-      "builtText": "A set of automations covering the full operational cycle: automatic invoice download and renaming from email, daily POS sales spreadsheet formatting, monthly journal updating and recurring office task management.",
-      "result": "The result",
-      "result1": "~10 hours/week saved",
-      "result2": "0 manual errors in the accounting process",
-      "result3": "Daily operations automated end-to-end",
-      "stack": "Stack",
-      "cta": "Read full case",
-      "proximity": "Coming soon"
+  "features": {
+    "eyebrow": "Features",
+    "title": "Everything it can do",
+    "subtitle": "What it knows depends on what your company teaches it. This is what it does with that.",
+    "more": "See how it works",
+    "items": [
+      { "id": "answers", "title": "Answers from your documents", "text": "Ask in your own words and it answers, citing the document it comes from. If it does not know, it says so and notes the question." },
+      { "id": "tasks", "title": "Does tasks step by step", "text": "Quotes, work reports, entries in your spreadsheets. It follows the procedure the same way every time, with the permissions you approve." },
+      { "id": "learn", "title": "Learns new tasks", "text": "Explain something that repeats and it proposes it in writing. Once you approve it, it stays in the brain." },
+      { "id": "ingest", "title": "Uses what you already have", "text": "It reads your usual folders (PDF, Word, Excel, emails, scans) without you tidying anything. Your originals are never touched." },
+      { "id": "pdf", "title": "PDFs with your logo", "text": "Quotes, work reports and order sheets with your company's look, filled in with your data." },
+      { "id": "connect", "title": "Connects your software", "text": "If part of the work lives in another program, it uses it through verified connectors. It first tries without connecting anything." },
+      { "id": "vault", "title": "Password vault", "text": "Passwords live encrypted on your computer. The assistant never sees them." },
+      { "id": "backup", "title": "Automatic backups", "text": "Every week, verified, to the drive or folder you choose. The last four are kept." },
+      { "id": "mobile", "title": "From your phone too", "text": "Use it from your phone or another computer, with Claude, while the computer it lives on is on and Claude is open." },
+      { "id": "health", "title": "Health report", "text": "Every month it tells you what has not been reviewed and, above all, which questions it could not answer: what is left to document." }
+    ]
+  },
+  "different": {
+    "eyebrow": "Why this one",
+    "title": "Built for companies that are not in IT",
+    "items": [
+      { "id": "noTerminal", "title": "No terminal needed", "text": "An extension for Claude Desktop on Mac and Windows. A double click, three questions and a few windows to accept." },
+      { "id": "local", "title": "Your data, on your machines", "text": "The brain and your documents live on your computers. We never receive your brain or your passwords. Under GDPR, that matters." },
+      { "id": "spain", "title": "Speaks your language", "text": "Set up in English or Spanish, and each person can ask in their own language: the assistant answers in the language of the conversation." },
+      { "id": "team", "title": "For the whole team", "text": "Up to 10 people on the same brain, with locked areas: Production sees how Health & Safety works, not its data." },
+      { "id": "permissions", "title": "Nothing behind your back", "text": "Before changing anything it shows you what it will do and waits for your “yes”. Health information it does not even open." },
+      { "id": "yours", "title": "Yours for good", "text": "Perpetual license: if you drop the monthly plan, you lose support, not the use." }
+    ]
+  },
+  "promise": {
+    "eyebrow": "Privacy promise",
+    "title": "Your information is yours",
+    "quote": "Your information is yours. Your brain lives on your computers and procedures run on them. When the assistant needs something, it looks up only what it needs, answers you and that is it: it is not used to train any model and it does not stay in Claude's memory. The only thing left is your conversation, in your Claude account, and you delete it whenever you want. To make it so, during setup we show you how to turn off Claude's training and memory; with Claude Team, training is off by contract and memory comes off by default.",
+    "footnote": "Our promise, word for word.",
+    "link": "See security and privacy"
+  },
+  "howToBuy": {
+    "eyebrow": "How to buy",
+    "title": "From purchase to a working brain",
+    "steps": [
+      { "title": "Pick an option and pay once", "text": "Do it yourself: by card on the website. Guided: invoice first, then bank transfer or card." },
+      { "title": "Get everything right away", "text": "Your license, the download link, the terms and the link to book your sessions arrive by email." },
+      { "title": "Two setup sessions", "text": "Two 1-hour video calls, 18:00 to 22:00 Spanish peninsular time, to set it up with you." },
+      { "title": "Setup guarantee", "text": "If it is not set up after the two sessions, we refund you if you ask in writing within 14 days of purchase." }
+    ]
+  },
+  "offer": {
+    "launch": "Launch",
+    "list": "List price",
+    "noVat": "excl. VAT",
+    "oneOff": "one-off payment",
+    "launchNote": "Launch price for the first 10 customers. After that, the list price applies.",
+    "modalities": {
+      "hazlo-tu": { "name": "Do it yourself", "tagline": "For those who set up and grow their brain on their own.", "people": "1 person" },
+      "hazlo-tu-equipo": { "name": "Do it yourself, team", "tagline": "The same, for several people.", "people": "Up to 10 people" },
+      "acompanado": { "name": "Guided", "tagline": "To start with your processes already set up.", "people": "1 person" },
+      "acompanado-equipo": { "name": "Guided, team", "tagline": "To start with your processes already set up, with a team.", "people": "Up to 10 people" }
+    },
+    "plans": {
+      "esencial": "Essential",
+      "pro": "Pro",
+      "premium": "Premium"
     }
   },
-  "about": {
-    "title": "Who we are",
-    "subtitle": "Two UJI engineers obsessed with eliminating repetitive work.",
-    "sergioName": "Sergio J. Pérez",
-    "sergioRole": "Co-founder · Backend & Automation",
-    "sergioDesc": "Video Game Design and Development Engineer from UJI. Passionate about programming, process automation and building tools that save real time.",
-    "ericName": "Eric Ollé",
-    "ericRole": "Co-founder · AI & Automation",
-    "ericDesc": "Video Game Design and Development Engineer from UJI. Specialized in tool integrations, artificial intelligence and business workflow automation.",
-    "location": "Based in Castellón, we work with all of Spain."
-  },
-  "howWeWork": {
-    "title": "How we work",
-    "subtitle": "A clear process with no surprises.",
-    "step1title": "Free 30-min call",
-    "step1desc": "You tell us your problem, we explain if and how we can solve it.",
-    "step2title": "Written proposal",
-    "step2desc": "You receive a detailed quote with scope, timelines and fixed price. No surprises.",
-    "step3title": "Build + test",
-    "step3desc": "We develop the solution, test it thoroughly and keep you updated on progress.",
-    "step4title": "Delivery + support",
-    "step4desc": "We deliver with documentation, train you and offer post-delivery support."
+  "pricingTeaser": {
+    "eyebrow": "Pricing",
+    "title": "Pay once. It is yours.",
+    "subtitle": "Perpetual license per company. Prices in euros, excluding VAT.",
+    "cta": "See all the details"
   },
   "faq": {
     "title": "Frequently asked questions",
-    "q1": "How much does an automation cost?",
-    "a1": "The price depends on complexity. A simple automation (read emails + Excel) can be between €500 and €1,500. More complex projects with integrated AI between €2,000 and €5,000. Always a fixed quote before starting.",
-    "q2": "How long does delivery take?",
-    "a2": "A standard automation takes 1 to 3 weeks from budget approval. More complex projects may take 4-6 weeks. Always with intermediate milestones so you can see progress.",
-    "q3": "Do I need technical knowledge?",
-    "a3": "No. We handle everything: analysis, development, testing and launch. You just need to explain the process you want to automate.",
-    "q4": "What if something breaks after delivery?",
-    "a4": "We include 30 days post-delivery warranty. If something fails due to development issues, we fix it at no extra cost.",
-    "q5": "Do you only work with companies in Castellón?",
-    "a5": "No, we work with SMBs throughout Spain. The entire process is 100% remote: calls, demos and delivery are done by video call.",
-    "q6": "Can I request monthly maintenance?",
-    "a6": "Yes. We offer monthly maintenance plans for automations in production: monitoring, updates and priority support.",
-    "q7": "What tools do you use?",
-    "a7": "Primarily Python (pdfplumber, openpyxl, imaplib), n8n for no-code flows, and AI models like Claude or GPT-4 for natural language processing.",
-    "q8": "Do you sign an NDA?",
-    "a8": "Of course. We sign a confidentiality agreement before you share any sensitive business data."
+    "items": [
+      { "q": "Do I need to know about computers?", "a": "No. It is set up with a Claude Desktop extension, no terminal, and you talk to it in your own words. You do not need to know what the documents are called." },
+      { "q": "What do I need to use it?", "a": "A Windows or Mac computer, Claude Desktop and a paid Claude account. If you will work with personal data, Claude Team or Enterprise." },
+      { "q": "Do I need the internet?", "a": "Yes, to talk to Claude. The brain and your documents are on your computers." },
+      { "q": "What happens if I stop paying the monthly plan?", "a": "The brain keeps working: the license is perpetual. You lose maintenance and support, not the use." },
+      { "q": "Do security fixes cost extra?", "a": "No. Every customer gets them free during their version's support period, with or without a monthly plan." },
+      { "q": "Can it damage my folders?", "a": "No. It only reads the company folder. When it organizes, it makes a separate copy." },
+      { "q": "Does it see my workers' health information?", "a": "No. It neither opens nor names it." },
+      { "q": "How many people can use it?", "a": "Without a team, one. With a team, up to 10. For more, we quote it as a custom project." },
+      { "q": "What if it tells me something wrong?", "a": "Tell it: “that has changed, now it is like this”. It offers to correct the document." },
+      { "q": "Do you sell to consumers?", "a": "No. Only to businesses and professionals." }
+    ]
+  },
+  "finalCta": {
+    "title": "Start with your brain",
+    "subtitle": "Launch price for the first 10 customers. Any questions, write to us.",
+    "primary": "See pricing",
+    "secondary": "Talk to us"
+  },
+  "howItWorks": {
+    "eyebrow": "How it works",
+    "title": "Everything it does, without jargon",
+    "subtitle": "The Digital Brain is your company's memory, organized and always at hand. You talk to it through Claude and it also does tasks for you.",
+    "talk": {
+      "title": "How to talk to it",
+      "askTitle": "Ask",
+      "askText": "Ask in your own words, the way you would say it in the workshop or at the office. It answers and tells you which document it comes from.",
+      "askExamples": [
+        "Which papers does the accountant need to register a freelancer?",
+        "How often is the workshop lift inspected?",
+        "What do we do if a customer disputes an invoice?",
+        "How do we close the till at the end of the day?"
+      ],
+      "doTitle": "Ask it to do things",
+      "doText": "If the task is already in the brain, it follows it step by step. If not, it offers to learn it.",
+      "doExamples": [
+        "Prepare the quote for a kitchen for this customer.",
+        "Add today's order to the orders spreadsheet.",
+        "The compressor service is now every six months.",
+        "Organize the office folders according to the standards."
+      ]
+    },
+    "permissions": {
+      "title": "It asks before it acts",
+      "subtitle": "The brain changes nothing behind your back. It asks in three ways:",
+      "items": [
+        { "title": "It shows you what it will do", "text": "Before changing or adding anything, it tells you in plain words what will change. You confirm once and it does it in one go." },
+        { "title": "It opens a window for you to choose", "text": "When it needs one of your folders or files, a window opens for you to pick it. It never asks you to type where something is." },
+        { "title": "It asks you to approve permissions", "text": "The first time a task needs to touch something on your computer, a window says in normal words what it will be able to do. Risky items are flagged and reject is the default button." }
+      ]
+    },
+    "capabilities": {
+      "title": "Everything it can do",
+      "items": [
+        { "title": "Find answers", "text": "It searches everything it knows and tells you where it got it from. It also answers about a document's history: what changed, who and why." },
+        { "title": "Do tasks and learn new ones", "text": "It follows written procedures the same way every time. If something repeats, explain it, it proposes it in writing and, once you approve it, it learns it." },
+        { "title": "Change what it knows", "text": "A new supplier, a different price: tell it. It shows you the change before making it and the previous version stays in the history." },
+        { "title": "Take in your company's documents", "text": "You choose the folder, it proposes the areas it sees and writes their documents. It reads PDF, Word, Excel, PowerPoint, emails, scans and photos. It does not make one document per file: 400 quotes become a summary and an inventory." },
+        { "title": "Organize your folders", "text": "It proposes an order based on your industry's standards and makes an organized copy. Sensitive files go to a separate folder it does not open." },
+        { "title": "Find the original", "text": "It does not store your files, but it knows where each one is: it tells you the folder and the name." },
+        { "title": "PDFs with your logo", "text": "Set it up once with your template or logo, and the documents you make over and over come out with your look." },
+        { "title": "Connect software you already use", "text": "It first tries with your files. If needed, it uses verified connectors and you decide what it can do alone and what it asks you first." },
+        { "title": "Password vault", "text": "Encrypted and opened with your master password. Tasks take what they need from it; the assistant never sees them." },
+        { "title": "Several people and locked areas", "text": "With a team, up to 10 people. Add and remove people with a sentence, and locked areas are only seen by whoever you say." },
+        { "title": "Backups", "text": "They run by themselves every week, are verified and the last four are kept. If one fails, it tells you." },
+        { "title": "From your phone and in other languages", "text": "Use it from your phone with Claude. It is set up in English or Spanish, and each person can ask in their own language." }
+      ]
+    },
+    "never": {
+      "title": "What it never does",
+      "subtitle": "The underlying rule: the brain keeps the know-how, not the sensitive data.",
+      "items": [
+        { "title": "Health", "text": "It never opens medical check-ups, medical reports or sick leave, and never writes a person next to an illness in any document." },
+        { "title": "Passwords", "text": "It does not open files that look like passwords. If it finds one written down, it does not copy it: it warns you. It never asks for one in the conversation." },
+        { "title": "Personal data", "text": "Payslips, contracts or IDs are only opened if you allow it for that folder, and even then without writing people's names." },
+        { "title": "Your originals", "text": "They are never modified. Nothing is installed or connected without your permission, and nothing moves from one brain to another without your “yes”." }
+      ]
+    },
+    "setup": {
+      "title": "How it is set up",
+      "steps": [
+        "You install the Digital Brain extension in Claude Desktop with a double click.",
+        "The assistant asks you three questions: the company name, your name and where your brain will live.",
+        "You click through a few windows and create the vault's master password.",
+        "You start adding your company's documents."
+      ],
+      "guides": "Every brain comes with two guides, as PDFs in your language: one for everyday use, with no IT at all, and a technical one."
+    },
+    "cta": "See pricing"
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "title": "One-off payment, perpetual license",
+    "subtitle": "One license per company, in its name. Prices in euros, excluding VAT.",
+    "includedTitle": "Included in all four",
+    "included": [
+      "Perpetual license in your company's name",
+      "Two 1-hour setup sessions by video call",
+      "14-day setup guarantee",
+      "Free security fixes during the support period"
+    ],
+    "extras": {
+      "hazlo-tu": ["For 1 person", "You set up and grow your brain on your own"],
+      "hazlo-tu-equipo": ["Up to 10 people on the same brain", "Add and remove people, invitations", "Locked areas", "3 months of the Pro plan included"],
+      "acompanado": ["For 1 person", "Kick-off with your processes: 3 to 5 of your processes set up", "Your documents loaded", "1 month of the Essential plan included"],
+      "acompanado-equipo": ["Up to 10 people on the same brain", "3 to 5 of your processes set up and your documents loaded", "People added and locked areas prepared", "3 months of the Pro plan included"]
+    },
+    "payWith": {
+      "card": "Pay by card on the website",
+      "invoice": "Invoice first; pay by bank transfer or card"
+    },
+    "buy": "Buy",
+    "requestInvoice": "Request an invoice",
+    "comingSoon": "Coming soon",
+    "comingSoonNote": "Online purchase opens soon. Meanwhile, write to us and we will let you know.",
+    "notifyMe": "Let me know",
+    "sessions": {
+      "title": "Setup sessions and guarantee",
+      "items": [
+        "All four options include two 1-hour setup sessions by video call, between 18:00 and 22:00 Spanish peninsular time.",
+        "If you do not show up to a session, that session is lost.",
+        "If the brain is not set up after the two sessions, we refund the payment if you ask in writing within 14 days of purchase, and the license ends.",
+        "It is a setup guarantee, not a satisfaction guarantee."
+      ]
+    },
+    "monthly": {
+      "title": "Monthly plan, if you want it",
+      "subtitle": "Service only: keeping your brain up to date, improvements, packs, connector catalogue and support. Cancel whenever you want; without it you lose support, not the use.",
+      "perMonth": "/month",
+      "feature": "What it includes",
+      "rows": [
+        { "label": "New versions of the brain, with their improvements", "values": [true, true, true] },
+        { "label": "Reviewed connector catalogue", "values": [true, true, true] },
+        { "label": "Health report", "values": [true, true, true] },
+        { "label": "Email support within 48 h", "values": [true, false, false] },
+        { "label": "Priority support within 24 h", "values": [false, true, true] },
+        { "label": "Packs kept up to date with regulations and connectors", "values": [false, true, true] },
+        { "label": "We review your health report every month and apply the fixes", "values": [false, true, true] },
+        { "label": "Monthly 1-hour session", "values": [false, false, true] },
+        { "label": "One simple automation per month, at most", "values": [false, false, true] },
+        { "label": "One community connector verified every quarter", "values": [false, false, true] }
+      ],
+      "premiumNote": "The monthly session is for reviewing what has changed in the company and spotting automation opportunities. If a candidate is identified in the session that fits within the scope of the existing corpus and is classed as simple, it is implemented within the plan. Those of medium or higher complexity, or that require new systems or integrations, are quoted separately. At most one implemented per month, not cumulative.",
+      "securityNote": "Security fixes are not part of the monthly plan: every customer gets them free during their version's support period.",
+      "included": "With a team, the first 3 months of Pro are included. Guided without a team comes with the first month of Essential."
+    },
+    "apart": {
+      "title": "Separately",
+      "packEspana": {
+        "name": "Spain Pack",
+        "text": "Spanish tax, employment and health & safety procedures, and Spanish connectors, each with its procedure.",
+        "badge": "In preparation"
+      },
+      "custom": {
+        "name": "Custom",
+        "from": "from",
+        "text": "We build the brain for you, with the Spain Pack. Only if you ask. It includes the Essential plan, which is mandatory in this case.",
+        "cta": "Talk to us"
+      },
+      "moreThan10": "More than 10 people? We quote it as a custom project."
+    },
+    "markets": "Prices for Spain and the rest of Europe. In North America, the same numbers in US dollars (USD).",
+    "b2b": "Sold only to businesses and professionals.",
+    "faqTitle": "Questions about buying",
+    "faq": [
+      { "q": "What is the license?", "a": "A file signed by Pymatic Labs, in your company's name, without which the brain cannot be set up. It is perpetual. It states until when you have maintenance and support; after that date nothing is blocked." },
+      { "q": "Does the license need the internet?", "a": "No. It is checked on your computer, without connecting anywhere. There is no remote kill switch." },
+      { "q": "Is Guided a number of consulting hours?", "a": "No: it is an outcome. At the end you have 3 to 5 of your processes set up and your documents loaded. With a team, also the people added and the locked areas prepared." },
+      { "q": "Can I start without a team and upgrade later?", "a": "Yes. Write to us and we will tell you how; you get a new license and give it to the brain." },
+      { "q": "What does “team” mean?", "a": "Up to 10 people use the same brain, each on their own computer, with adding and removing people, invitations and locked areas. Without a team, the brain belongs to one person." },
+      { "q": "Do prices include VAT?", "a": "No. Prices exclude VAT; the invoice includes whatever VAT applies." }
+    ]
+  },
+  "security": {
+    "eyebrow": "Security and privacy",
+    "title": "Your data, on your computers",
+    "subtitle": "What happens to your information when you use the Digital Brain, and how to report a security flaw to us.",
+    "promiseTitle": "Our promise",
+    "behindTitle": "What is behind it",
+    "behind": [
+      "The brain's content and the passwords live on your computers. Pymatic Labs does not receive them.",
+      "What the assistant reads travels to Anthropic, the company behind Claude, and stays in your Claude history until you delete it.",
+      "With Claude Team or Enterprise, Anthropic does not train on that data, by contract, and Claude's memory comes off.",
+      "With Claude Pro or Max, memory comes on and training is decided in Claude's privacy settings. That is why during setup we show you how to turn both off."
+    ],
+    "behindNote": "Setup cannot check those Claude settings: it shows you how to set them. Anthropic also sets two exceptions: response ratings you send it and whatever its safety filters flag.",
+    "alsoTitle": "Also",
+    "also": [
+      "Your originals are never modified: the brain only reads them.",
+      "Nothing is installed or connected without your permission.",
+      "The license is checked on your computer, offline: there is no remote kill switch.",
+      "Updates are only accepted if they are signed by Pymatic Labs.",
+      "Security fixes are free during your version's support period, with or without a monthly plan."
+    ],
+    "policyTitle": "Vulnerability policy",
+    "draftBadge": "Draft",
+    "draftNote": "Draft pending legal review. It may change before its final version.",
+    "reportTitle": "Found a security flaw?",
+    "reportText": "Write to info@pymaticlabs.com with \"Security\" in the subject.",
+    "reportCta": "Email security"
   },
   "contact": {
     "title": "Let's talk",
-    "subtitle": "Tell us your problem. First consultation is free.",
+    "subtitle": "Tell us what your company does and we will tell you which option fits.",
     "name": "Name",
     "email": "Email",
+    "company": "Company",
     "phone": "Phone (optional)",
-    "businessType": "Business type",
-    "businessOptions": {
-      "hosteleria": "Hospitality / Restaurants",
-      "retail": "Retail / Commerce",
-      "servicios": "Professional services",
-      "industria": "Industry / Manufacturing",
-      "construccion": "Construction / Renovation",
-      "otro": "Other"
+    "interest": "What are you interested in?",
+    "interestOptions": {
+      "hazlo-tu": "Do it yourself",
+      "hazlo-tu-equipo": "Do it yourself, team",
+      "acompanado": "Guided",
+      "acompanado-equipo": "Guided, team",
+      "a-medida": "Custom",
+      "no-lo-se": "Not sure yet"
     },
-    "message": "Tell us about your repetitive process",
-    "submit": "Send message",
+    "message": "Message",
+    "submit": "Send",
     "sending": "Sending...",
-    "successTitle": "Message sent!",
-    "successMsg": "We'll get back to you within 24 hours.",
-    "errorMsg": "Error sending. Try again or write to us directly.",
-    "orSchedule": "Or book a call directly:",
-    "scheduleCta": "Book free call →",
+    "successTitle": "Received!",
+    "successMsg": "We will reply within 24 hours.",
+    "errorMsg": "It could not be sent. Write to us at info@pymaticlabs.com.",
+    "privacyNote": "We only use your data to reply to you.",
+    "privacyLink": "Privacy policy",
+    "orSchedule": "Prefer a video call?",
+    "scheduleCta": "Book a call",
     "emailLabel": "Email:",
-    "locationLabel": "Location:",
-    "locationValue": "Castellón, Spain (remote-first)"
+    "locationLabel": "Where:",
+    "locationValue": "Castellón de la Plana, Spain"
   },
   "footer": {
-    "tagline": "AI automation for Spanish SMBs.",
-    "quickLinks": "Navigation",
+    "tagline": "Digital Brain: your company's memory, with AI.",
+    "product": "Product",
     "legal": "Legal",
-    "connect": "Contact",
-    "copyright": "© 2026 Pymatic Labs. All rights reserved.",
+    "contact": "Contact",
     "links": {
-      "servicios": "Services",
-      "casos": "Cases",
-      "blog": "Blog",
-      "sobre": "About us",
+      "comoFunciona": "How it works",
+      "precios": "Pricing",
+      "seguridad": "Security",
       "contacto": "Contact"
     },
     "legalLinks": {
       "aviso": "Legal notice",
       "privacidad": "Privacy policy",
       "cookies": "Cookie policy"
-    }
-  },
-  "blog": {
-    "title": "Blog",
-    "subtitle": "Technical articles on automation, Python and AI for SMBs.",
-    "readMore": "Read article →",
-    "by": "By",
-    "back": "← Back to blog"
-  },
-  "servicios": {
-    "title": "Automation services",
-    "subtitle": "Custom solutions to eliminate repetitive work from your company.",
-    "python": {
-      "title": "Python Automations",
-      "what": "Custom Python scripts that integrate with your current systems.",
-      "for": "Who it's for",
-      "forText": "SMBs with repetitive processes: invoice processing, data extraction, automatic reports.",
-      "includes": "What's included",
-      "includesList": ["Current process analysis", "Script development", "Unit tests", "Documentation", "30-day support"],
-      "examples": "Examples",
-      "examplesList": ["PDF invoice extraction → Excel", "Automatic email sending with reports", "Data synchronization between systems", "Automatic report generation"],
-      "price": "From €100",
-      "cta": "Request quote"
     },
-    "n8n": {
-      "title": "n8n Workflows",
-      "what": "Visual no-code automations that connect your tools.",
-      "for": "Who it's for",
-      "forText": "Companies using cloud tools: Gmail, Google Sheets, Notion, Slack, WhatsApp Business...",
-      "includes": "What's included",
-      "includesList": ["Flow design", "Integration configuration", "Tests and validation", "Documentation", "30-day support"],
-      "examples": "Examples",
-      "examplesList": ["Automatic order notifications", "CRM-billing synchronization", "Low stock alerts", "Automatic customer onboarding"],
-      "price": "From €100/month",
-      "cta": "Request quote"
-    },
-    "reviews": {
-      "title": "Google Reviews with AI",
-      "what": "Automatic personalized responses to all your Google reviews.",
-      "for": "Who it's for",
-      "forText": "Hospitality, retail and any business with an active Google My Business profile.",
-      "includes": "What's included",
-      "includesList": ["AI configuration with your brand tone", "Automatic response to new reviews", "Monthly report", "Adjustments and improvements included"],
-      "examples": "Examples",
-      "examplesList": ["Grateful responses to positive reviews", "Professional handling of negative criticism", "Personalization by customer name", "Adaptation to sector (restaurant, hotel...)"],
-      "price": "From €20/month",
-      "cta": "Request quote"
-    },
-    "faq": {
-      "q1": "How long does it take to implement an n8n flow?",
-      "a1": "A standard flow (3-5 steps) is usually ready in 3-5 business days.",
-      "q2": "Do I need to have n8n installed?",
-      "a2": "No. We handle cloud server hosting for n8n if you don't have your own infrastructure.",
-      "q3": "Do AI responses sound natural?",
-      "a3": "Yes. We train the model with examples from your business so the tone is consistent with your brand."
-    }
-  },
-  "casos": {
-    "title": "Success cases",
-    "subtitle": "Real projects already working.",
-    "readCase": "Read full case →"
-  },
-  "sobre": {
-    "title": "About Pymatic Labs",
-    "subtitle": "Two UJI engineers with an obsession for automation.",
-    "story": "Story",
-    "storyText": "Pymatic Labs was born from a conversation between Sergio and Eric while studying at the Universitat Jaume I de Castellón. Both saw how family businesses around them were losing hours every week to repetitive tasks that technology could solve. They decided to do something about it.",
-    "methodology": "Methodology",
-    "methodologyText": "We believe in pragmatic automation: simple solutions that work, are maintainable and solve real problems. No over-engineering, no empty promises.",
-    "tools": "Tools",
-    "principles": "Principles",
-    "p1": "Full transparency in budgets and timelines",
-    "p2": "Clean, documented code",
-    "p3": "No lock-in clauses: the code is yours",
-    "p4": "Direct communication, no intermediaries"
-  },
-  "contacto": {
-    "title": "Contact",
-    "subtitle": "First consultation free. Tell us your problem.",
-    "faqTitle": "Frequently asked questions about the process",
-    "faq1q": "What is the first call like?",
-    "faq1a": "It's a 30-minute video call where you tell us your current process. No commitment.",
-    "faq2q": "When will I receive the quote?",
-    "faq2a": "We send the written proposal within 48 hours of the call.",
-    "faq3q": "Is there a cost for the initial consultation?",
-    "faq3a": "No. The first call is completely free and with no commitment."
+    "b2b": "Sold only to businesses and professionals.",
+    "copyright": "PYMATICLABS, S.L. All rights reserved."
   },
   "legal": {
-    "avisoTitle": "Legal Notice",
-    "privacidadTitle": "Privacy Policy",
-    "cookiesTitle": "Cookie Policy",
-    "pending": "[COMPANY NAME PENDING]",
-    "denominacionSocial": "Sergio Juan Pérez Jiménez / Eric Ollé Lluch",
-    "CIF/NIF": "48705519Y / 73404720J",
-    "lastUpdated": "Last updated: April 2026"
+    "avisoTitle": "Legal notice",
+    "privacidadTitle": "Privacy policy",
+    "cookiesTitle": "Cookie policy",
+    "lastUpdated": "Last updated: October 2026",
+    "denominacionSocial": "PYMATICLABS, SOCIEDAD LIMITADA",
+    "CIF/NIF": "B88781745"
   }
 }

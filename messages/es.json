@@ -1,246 +1,443 @@
 {
+  "meta": {
+    "siteTitle": "Pymatic Labs · Cerebro Digital",
+    "homeTitle": "Cerebro Digital · La memoria de tu empresa, con IA",
+    "homeDescription": "Digitalizamos el conocimiento de tu empresa, indexado para que cualquier IA lo consulte, y esa IA puede además ejecutar tus procesos. Vive en tus equipos y funciona con Claude.",
+    "howTitle": "Cómo funciona el Cerebro Digital",
+    "howDescription": "Qué es, cómo se le habla, todo lo que sabe hacer y lo que nunca hace. Sin tecnicismos.",
+    "pricingTitle": "Precios del Cerebro Digital",
+    "pricingDescription": "Pago único y licencia perpetua por empresa. Hazlo tú desde 500 € (precio de lanzamiento), sin IVA.",
+    "securityTitle": "Seguridad y privacidad",
+    "securityDescription": "Tu cerebro vive en tus equipos. Nuestra promesa de privacidad, lo que hay detrás y la política de vulnerabilidades del Cerebro Digital.",
+    "contactTitle": "Contacto",
+    "contactDescription": "Cuéntanos qué hace tu empresa y te decimos qué modalidad del Cerebro Digital te encaja."
+  },
   "nav": {
-    "servicios": "Servicios",
-    "casos": "Casos",
-    "blog": "Blog",
-    "sobre": "Sobre nosotros",
-    "cta": "Hablar con nosotros",
-    "langSwitch": "EN"
+    "home": "Pymatic Labs, inicio",
+    "comoFunciona": "Cómo funciona",
+    "precios": "Precios",
+    "seguridad": "Seguridad",
+    "contacto": "Contacto",
+    "cta": "Ver precios",
+    "langSwitch": "EN",
+    "langLabel": "Read in English",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "hero": {
-    "title": "Automatización con IA para pymes",
-    "subtitle": "Automatizamos facturas, reseñas de Google, contabilidad y procesos repetitivos para que puedas centrarte en lo que importa: hacer crecer tu negocio.",
-    "cta1": "Ver cómo trabajamos",
-    "cta2": "Hablar con nosotros",
-    "metric1": "8 automatizaciones",
-    "metric1sub": "entregadas",
-    "metric2": "~10 horas/semana",
-    "metric2sub": "ahorradas por cliente",
-    "metric3": "100%",
-    "metric3sub": "proyectos entregados"
+    "eyebrow": "Cerebro Digital · funciona con Claude",
+    "title": "La memoria de tu empresa, con una IA que la consulta y hace el trabajo",
+    "subtitle": "Digitalizamos el conocimiento de tu empresa, indexado para que cualquier IA lo consulte. Y esa IA puede, además, ejecutar tus procesos con solo pedírselo.",
+    "ctaPrimary": "Ver precios",
+    "ctaSecondary": "Ver la demo",
+    "badges": ["Vive en tus equipos", "Se monta sin terminal", "Para Mac y Windows"],
+    "note": "Para pymes y profesionales. Precio de lanzamiento para los 10 primeros clientes."
   },
-  "problems": {
-    "title": "¿Te suena alguno de estos problemas?",
-    "subtitle": "Estos son los dolores más comunes que escuchamos de pymes como la tuya.",
-    "p1title": "Facturas del correo una a una",
-    "p1desc": "Descargas las facturas manualmente cada mes, copias los datos a mano y siempre hay errores.",
-    "p2title": "Reseñas de Google sin responder",
-    "p2desc": "Las opiniones se acumulan sin respuesta. Cada una ignorada es un cliente que no vuelve.",
-    "p3title": "Datos entre Excels",
-    "p3desc": "Pasas horas copiando datos de un Excel a otro. Tareas repetitivas que un script haría en segundos.",
-    "p4title": "Contabilidad manual",
-    "p4desc": "Tu contabilidad depende de tareas repetitivas que consumen horas cada semana."
+  "whatIs": {
+    "eyebrow": "El producto",
+    "title": "Qué es y qué no es",
+    "subtitle": "Le hablas a través de Claude, el asistente de IA, en tu ordenador. Como a un compañero que se ha leído todo.",
+    "isTitle": "Qué es",
+    "is": [
+      "La memoria de tu empresa: cómo se hacen las cosas, los criterios, los datos de referencia y dónde está cada documento.",
+      "Contesta con lo que dicen tus documentos y te dice de cuál lo saca.",
+      "Hace tareas: si está escrita paso a paso, el asistente la sigue por ti. Si no sabe, se la enseñas una vez y la recuerda.",
+      "Vive en tus equipos, no en internet. Es tuyo."
+    ],
+    "isNotTitle": "Qué no es",
+    "isNot": [
+      "No es un buscador de internet: si algo no está en tu cerebro, te lo dice.",
+      "No es un almacén de ficheros: tus PDF, Excel y Word se quedan donde están.",
+      "No es un programa que haya que aprender: no hay menús, hablas y te contesta.",
+      "No sustituye a tu asesoría, a tu técnico de prevención ni a tu abogado. Te ahorra buscar y repetir."
+    ]
   },
-  "services": {
-    "title": "¿Qué automatizamos?",
-    "subtitle": "Usamos Python, n8n e IA para eliminar el trabajo repetitivo de tu negocio.",
-    "s1title": "Automatizaciones Python",
-    "s1desc": "Scripts a medida que leen correos, procesan PDFs, rellenan hojas de cálculo y más.",
-    "s2title": "Flujos n8n",
-    "s2desc": "Conectamos tus herramientas favoritas sin código: Gmail, Notion, Google Sheets, WhatsApp...",
-    "s3title": "Reseñas con IA",
-    "s3desc": "Respondemos automáticamente todas tus reseñas de Google con IA, personalizadas y en tu tono.",
-    "learnMore": "Ver más"
+  "demo": {
+    "title": "Así se trabaja con él",
+    "subtitle": "Una carpintería inventada. Elige qué quieres ver.",
+    "disclaimer": "Demo simulada con datos inventados. No descarga ni instala nada.",
+    "replay": "Repetir",
+    "windowTitle": "Claude · Cerebro Digital",
+    "you": "Tú",
+    "assistant": "Claude",
+    "scenarios": [
+      {
+        "id": "ask",
+        "label": "Preguntar",
+        "messages": [
+          { "role": "user", "text": "¿Qué barniz usamos para las puertas de exterior?" },
+          {
+            "role": "assistant",
+            "text": "Para exterior usamos barniz al agua con filtro UV: dos manos, con un lijado fino entre una y otra. Lo compramos a Barnices Levante, que entrega en 48 horas.",
+            "source": "Fuente: Acabados y barnices · revisado el 12-09"
+          }
+        ]
+      },
+      {
+        "id": "task",
+        "label": "Pedir una tarea",
+        "messages": [
+          { "role": "user", "text": "Prepárame el presupuesto de la cocina del cliente de la calle Mayor." },
+          {
+            "role": "assistant",
+            "text": "Sigo el procedimiento «Cómo preparar un presupuesto». Con las medidas que tomaste el martes salen 3,20 m lineales con isla, tablero de roble y herrajes de cierre suave. ¿Lo saco en PDF con vuestro logo?"
+          },
+          { "role": "user", "text": "Sí, adelante." },
+          {
+            "role": "assistant",
+            "text": "Hecho: presupuesto-calle-mayor.pdf, en la carpeta de la tarea.",
+            "source": "Procedimiento: Cómo preparar un presupuesto"
+          }
+        ]
+      },
+      {
+        "id": "change",
+        "label": "Cambiar lo que sabe",
+        "messages": [
+          { "role": "user", "text": "El barniz de exterior ahora lo compramos a Maderas del Turia." },
+          {
+            "role": "assistant",
+            "text": "Voy a cambiar un documento, «Acabados y barnices»: el proveedor del barniz de exterior pasa a ser Maderas del Turia. Lo anterior queda en el historial. ¿Lo confirmo?"
+          },
+          { "role": "user", "text": "Sí." },
+          {
+            "role": "assistant",
+            "text": "Hecho. Desde ahora el cerebro dice solo lo que vale hoy.",
+            "source": "Cambio guardado en el historial"
+          }
+        ]
+      }
+    ]
   },
-  "cases": {
-    "title": "Casos reales",
-    "subtitle": "Proyectos que ya están ahorrando tiempo a empresas como la tuya.",
-    "featured": {
-      "tag": "Automatización contable",
-      "title": "Estación de servicio + bar familiar · Castellón",
-      "challenge": "El reto",
-      "challengeText": "Una pyme familiar con estación de servicio y bar dedicaba horas cada semana a tareas manuales: descargar facturas del correo una a una, renombrarlas, copiar datos a excels y actualizar el diario de caja del TPV. Procesos dispersos, lentos y con margen de error constante.",
-      "built": "Lo que construimos",
-      "builtText": "Un conjunto de automatizaciones que cubren todo el ciclo operativo: descarga y renombrado automático de facturas desde el correo, formateo del Excel de ventas diarias del TPV, actualización del diario mensual y gestión de tareas recurrentes de oficina.",
-      "result": "El resultado",
-      "result1": "~10 horas/semana ahorradas",
-      "result2": "0 errores manuales en el proceso contable",
-      "result3": "Operativa diaria automatizada end-to-end",
-      "stack": "Stack",
-      "cta": "Leer caso completo",
-      "proximity": "Próximamente"
+  "features": {
+    "eyebrow": "Funciones",
+    "title": "Todo lo que sabe hacer",
+    "subtitle": "Lo que sabe depende de lo que tu empresa le enseñe. Esto es lo que hace con ello.",
+    "more": "Ver cómo funciona",
+    "items": [
+      { "id": "answers", "title": "Responde con tus documentos", "text": "Preguntas con tus palabras y contesta citando de qué documento sale. Si no lo sabe, te lo dice y apunta la pregunta." },
+      { "id": "tasks", "title": "Hace tareas paso a paso", "text": "Presupuestos, partes, apuntes en tus Excel. Sigue el procedimiento igual cada vez, con los permisos que tú apruebas." },
+      { "id": "learn", "title": "Aprende tareas nuevas", "text": "Explícale algo que se repite y te lo propone escrito. Cuando lo apruebas, queda en el cerebro." },
+      { "id": "ingest", "title": "Aprovecha lo que ya tienes", "text": "Lee tus carpetas de siempre (PDF, Word, Excel, correos, escaneados) sin que ordenes nada. Tus originales no se tocan." },
+      { "id": "pdf", "title": "PDF con tu logo", "text": "Presupuestos, partes y hojas de encargo con la imagen de tu empresa, rellenos con tus datos." },
+      { "id": "connect", "title": "Conecta tus programas", "text": "Si parte del trabajo vive en otro programa, lo usa con conectores verificados. Antes intenta hacerlo sin conectar nada." },
+      { "id": "vault", "title": "Caja fuerte de contraseñas", "text": "Las contraseñas viven cifradas en tu equipo. El asistente nunca las ve." },
+      { "id": "backup", "title": "Copias de seguridad solas", "text": "Cada semana, comprobadas, al disco o la carpeta que elijas. Se guardan las cuatro últimas." },
+      { "id": "mobile", "title": "También desde el móvil", "text": "Úsalo desde el móvil u otro ordenador, con Claude, mientras el equipo donde vive esté encendido y con Claude abierto." },
+      { "id": "health", "title": "Informe de salud", "text": "Cada mes te dice qué está sin revisar y, sobre todo, qué preguntas no supo contestar: lo que falta por documentar." }
+    ]
+  },
+  "different": {
+    "eyebrow": "Por qué este",
+    "title": "Pensado para empresas que no son de informática",
+    "items": [
+      { "id": "noTerminal", "title": "Se monta sin terminal", "text": "Una extensión de Claude Desktop para Mac y Windows. Doble clic, tres preguntas y unas ventanas que aceptar." },
+      { "id": "local", "title": "Tus datos, en tus máquinas", "text": "El cerebro y tus documentos viven en tus equipos. Nosotros no recibimos ni tu cerebro ni tus contraseñas." },
+      { "id": "spain", "title": "Hecho en España, para España", "text": "En castellano y con la normativa española en mente. Aparte, el Pack España: fiscal, laboral, PRL y conectores como Holded." },
+      { "id": "team", "title": "Para todo el equipo", "text": "Hasta 10 personas en el mismo cerebro, con áreas con llave: Producción ve cómo funciona la PRL, no sus datos." },
+      { "id": "permissions", "title": "Nada a tus espaldas", "text": "Antes de cambiar algo te enseña qué va a hacer y espera tu «sí». Lo de salud ni lo abre." },
+      { "id": "yours", "title": "Tuyo para siempre", "text": "Licencia perpetua: si dejas el mensual, pierdes el soporte, no el uso." }
+    ]
+  },
+  "promise": {
+    "eyebrow": "Promesa de privacidad",
+    "title": "Tu información es tuya",
+    "quote": "Tu información es tuya. Tu cerebro vive en tus equipos y los procedimientos se ejecutan en ellos. Cuando el asistente necesita algo, consulta solo lo que le hace falta, te responde y ya: no se usa para entrenar ningún modelo y no se queda en la memoria de Claude. Lo único que queda es tu conversación, en tu cuenta de Claude, y la borras cuando quieras. Para que sea así, en el montaje te enseñamos a apagar el entrenamiento y la memoria de Claude; con Claude Team, el entrenamiento está apagado por contrato y la memoria viene apagada de serie.",
+    "footnote": "Nuestra promesa, palabra por palabra.",
+    "link": "Ver seguridad y privacidad"
+  },
+  "howToBuy": {
+    "eyebrow": "Cómo se compra",
+    "title": "De la compra al cerebro montado",
+    "steps": [
+      { "title": "Eliges modalidad y pagas una vez", "text": "Hazlo tú, con tarjeta en la web. Acompañado, con factura previa y pago por transferencia o con tarjeta." },
+      { "title": "Lo recibes todo al momento", "text": "Tu licencia, el enlace de descarga, las condiciones y el enlace para reservar las sesiones llegan a tu correo." },
+      { "title": "Dos sesiones de montaje", "text": "Dos videollamadas de 1 hora, de 18:00 a 22:00 (hora peninsular), para dejarlo montado contigo." },
+      { "title": "Garantía de montaje", "text": "Si tras las dos sesiones no queda montado, te devolvemos el pago si lo pides por escrito en los 14 días siguientes a la compra." }
+    ]
+  },
+  "offer": {
+    "launch": "Lanzamiento",
+    "list": "Precio de lista",
+    "noVat": "sin IVA",
+    "oneOff": "pago único",
+    "launchNote": "Precio de lanzamiento para los 10 primeros clientes. Después, rige el de lista.",
+    "modalities": {
+      "hazlo-tu": { "name": "Hazlo tú", "tagline": "Para quien monta y hace crecer su cerebro por su cuenta.", "people": "1 persona" },
+      "hazlo-tu-equipo": { "name": "Hazlo tú con equipo", "tagline": "Lo mismo, para varias personas.", "people": "Hasta 10 personas" },
+      "acompanado": { "name": "Acompañado", "tagline": "Para empezar con tus procesos ya montados.", "people": "1 persona" },
+      "acompanado-equipo": { "name": "Acompañado con equipo", "tagline": "Para empezar con tus procesos ya montados, con equipo.", "people": "Hasta 10 personas" }
+    },
+    "plans": {
+      "esencial": "Esencial",
+      "pro": "Pro",
+      "premium": "Premium"
     }
   },
-  "about": {
-    "title": "Quiénes somos",
-    "subtitle": "Dos ingenieros de la UJI obsesionados con eliminar el trabajo repetitivo.",
-    "sergioName": "Sergio J. Pérez",
-    "sergioRole": "Co-fundador · Backend & Automatización",
-    "sergioDesc": "Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Apasionado por la programación, la automatización de procesos y la creación de herramientas que ahorran tiempo real.",
-    "ericName": "Eric Ollé",
-    "ericRole": "Co-fundador · IA & Automatización",
-    "ericDesc": "Ingeniero en Diseño y Desarrollo de Videojuegos por la UJI. Especializado en integraciones de herramientas, inteligencia artificial y automatización de flujos de negocio.",
-    "location": "Basados en Castellón, trabajamos con toda España."
-  },
-  "howWeWork": {
-    "title": "Cómo trabajamos",
-    "subtitle": "Un proceso claro y sin sorpresas.",
-    "step1title": "Llamada gratuita 30min",
-    "step1desc": "Nos cuentas tu problema, nosotros te explicamos si podemos resolverlo y cómo.",
-    "step2title": "Propuesta por escrito",
-    "step2desc": "Recibes un presupuesto detallado con alcance, plazos y precio fijo. Sin sorpresas.",
-    "step3title": "Construcción + test",
-    "step3desc": "Desarrollamos la solución, la testeamos a fondo y te informamos del progreso.",
-    "step4title": "Entrega + soporte",
-    "step4desc": "Entregamos con documentación, te formamos y ofrecemos soporte post-entrega."
+  "pricingTeaser": {
+    "eyebrow": "Precios",
+    "title": "Pagas una vez. Es tuyo.",
+    "subtitle": "Licencia perpetua por empresa. Precios en euros, sin IVA.",
+    "cta": "Ver todos los detalles"
   },
   "faq": {
     "title": "Preguntas frecuentes",
-    "q1": "¿Cuánto cuesta una automatización?",
-    "a1": "El precio depende de la complejidad. Una automatización sencilla (leer correos + Excel) puede estar entre 500 y 1.500 €. Proyectos más complejos con IA integrada entre 2.000 y 5.000 €. Siempre presupuesto fijo antes de empezar.",
-    "q2": "¿Cuánto tiempo tardáis en entregar?",
-    "a2": "Una automatización estándar tarda entre 1 y 3 semanas desde que aprobamos el presupuesto. Proyectos más complejos pueden tardar 4-6 semanas. Siempre con hitos intermedios para que veas el avance.",
-    "q3": "¿Necesito conocimientos técnicos?",
-    "a3": "No. Nos encargamos de todo: análisis, desarrollo, pruebas y puesta en marcha. Solo necesitas explicarnos el proceso que quieres automatizar.",
-    "q4": "¿Qué pasa si algo falla después de la entrega?",
-    "a4": "Incluimos 30 días de garantía post-entrega. Si algo falla por causas del desarrollo, lo solucionamos sin coste adicional.",
-    "q5": "¿Trabajáis solo con empresas de Castellón?",
-    "a5": "No, trabajamos con pymes de toda España. Todo el proceso es 100% remoto: llamadas, demos y entrega se hacen por videollamada.",
-    "q6": "¿Puedo pediros mantenimiento mensual?",
-    "a6": "Sí. Ofrecemos planes de mantenimiento mensual para automatizaciones en producción: monitorización, actualizaciones y soporte prioritario.",
-    "q7": "¿Qué herramientas usáis?",
-    "a7": "Principalmente Python (pdfplumber, openpyxl, imaplib), n8n para flujos sin código, y modelos de IA como Claude o GPT-4 para procesamiento de lenguaje natural.",
-    "q8": "¿Firmáis un NDA?",
-    "a8": "Por supuesto. Firmamos acuerdo de confidencialidad antes de que compartas cualquier dato sensible de tu negocio."
+    "items": [
+      { "q": "¿Tengo que saber de informática?", "a": "No. Se monta con una extensión de Claude Desktop, sin terminal, y se le habla con tus palabras. No hace falta saber cómo se llaman los documentos." },
+      { "q": "¿Qué necesito para usarlo?", "a": "Un ordenador con Windows o Mac, Claude Desktop y una cuenta de Claude de pago. Si vas a trabajar con datos personales, Claude Team o Enterprise." },
+      { "q": "¿Necesito internet?", "a": "Sí, para hablar con Claude. El cerebro y tus documentos están en tus equipos." },
+      { "q": "¿Qué pasa si dejo de pagar el mensual?", "a": "El cerebro sigue funcionando: la licencia es perpetua. Pierdes el mantenimiento y el soporte, no el uso." },
+      { "q": "¿Las correcciones de seguridad son de pago?", "a": "No. Llegan gratis a todos los clientes durante el periodo de soporte de su versión, con o sin mensual." },
+      { "q": "¿Puede estropear mis carpetas?", "a": "No. Solo lee la carpeta de la empresa. Cuando ordena, hace una copia aparte." },
+      { "q": "¿Ve lo de salud de mis trabajadores?", "a": "No. No lo abre ni lo nombra." },
+      { "q": "¿Cuántas personas pueden usarlo?", "a": "Sin equipo, una. Con equipo, hasta 10. Para más, lo presupuestamos a medida." },
+      { "q": "¿Y si me dice algo equivocado?", "a": "Díselo: «eso ha cambiado, ahora es así». Te propone corregir el documento." },
+      { "q": "¿Lo vendéis a particulares?", "a": "No. Solo a empresas y profesionales." }
+    ]
+  },
+  "finalCta": {
+    "title": "Empieza con tu cerebro",
+    "subtitle": "Precio de lanzamiento para los 10 primeros clientes. Si tienes dudas, escríbenos.",
+    "primary": "Ver precios",
+    "secondary": "Hablar con nosotros"
+  },
+  "howItWorks": {
+    "eyebrow": "Cómo funciona",
+    "title": "Todo lo que hace, sin tecnicismos",
+    "subtitle": "El Cerebro Digital es la memoria de tu empresa, ordenada y siempre a mano. Le hablas a través de Claude y además hace tareas por ti.",
+    "talk": {
+      "title": "Cómo se le habla",
+      "askTitle": "Preguntar",
+      "askText": "Pregunta con tus palabras, como lo dirías en el taller o en la oficina. Te contesta y te dice de qué documento sale.",
+      "askExamples": [
+        "¿Qué papeles pide la gestoría para dar de alta a un autónomo?",
+        "¿Cada cuánto se revisa el elevador del taller?",
+        "¿Qué hacemos si un cliente reclama una factura?",
+        "¿Cómo se cierra la caja al final del día?"
+      ],
+      "doTitle": "Pedir que haga cosas",
+      "doText": "Si la tarea ya está en el cerebro, la sigue paso a paso. Si no está, te propone aprenderla.",
+      "doExamples": [
+        "Prepárame el presupuesto de una cocina para este cliente.",
+        "Apunta en el Excel de pedidos el de hoy.",
+        "La revisión del compresor pasa a ser cada seis meses.",
+        "Ordena las carpetas de la oficina según las normas."
+      ]
+    },
+    "permissions": {
+      "title": "Te pide permiso antes de actuar",
+      "subtitle": "El cerebro no cambia nada a tus espaldas. Lo hace de tres formas:",
+      "items": [
+        { "title": "Te enseña lo que va a hacer", "text": "Antes de cambiar o añadir algo, te cuenta en llano qué va a cambiar. Lo confirmas una vez y lo hace de tirón." },
+        { "title": "Te abre una ventana para que elijas", "text": "Cuando hace falta una carpeta o un fichero tuyo, te sale una ventana para elegirlo. Nunca te pide que escribas dónde está algo." },
+        { "title": "Te pide aprobar permisos", "text": "La primera vez que una tarea necesita tocar algo de tu ordenador, una ventana dice en palabras normales qué podrá hacer. Lo arriesgado va marcado y rechazar es el botón por defecto." }
+      ]
+    },
+    "capabilities": {
+      "title": "Todo lo que sabe hacer",
+      "items": [
+        { "title": "Encontrar respuestas", "text": "Busca en todo lo que sabe y te dice de dónde lo saca. También responde sobre la historia de un documento: qué cambió, quién y por qué." },
+        { "title": "Hacer tareas y aprender nuevas", "text": "Sigue los procedimientos escritos igual cada vez. Si algo se repite, se lo explicas, te lo propone escrito y, cuando lo apruebas, lo aprende." },
+        { "title": "Cambiar lo que sabe", "text": "Un proveedor nuevo, un precio distinto: díselo. Te enseña el cambio antes de hacerlo y lo anterior queda en el historial." },
+        { "title": "Meter los documentos de tu empresa", "text": "Eliges la carpeta, te propone las áreas que ve y redacta sus documentos. Lee PDF, Word, Excel, PowerPoint, correos, escaneados y fotos. No hace un documento por fichero: 400 presupuestos son un resumen y un inventario." },
+        { "title": "Ordenar tus carpetas", "text": "Te propone un orden según las normas de tu sector y hace una copia ordenada. Lo sensible va a una carpeta aparte que no abre." },
+        { "title": "Encontrar el original", "text": "No guarda tus ficheros, pero sabe dónde está cada uno: te dice la carpeta y el nombre." },
+        { "title": "PDF con tu logo", "text": "Lo configuras una vez con tu plantilla o tu logo, y los documentos que haces una y otra vez salen con tu imagen." },
+        { "title": "Conectar programas que ya usas", "text": "Primero intenta hacerlo con tus ficheros. Si hace falta, usa conectores verificados y tú decides qué puede hacer solo y qué te pregunta." },
+        { "title": "Caja fuerte de contraseñas", "text": "Cifrada y abierta con tu contraseña maestra. Las tareas sacan de ahí lo que necesitan; el asistente nunca las ve." },
+        { "title": "Varias personas y áreas con llave", "text": "Con equipo, hasta 10 personas. Das de alta y de baja con una frase, y las áreas con llave solo las ven quienes tú digas." },
+        { "title": "Copias de seguridad", "text": "Se hacen solas cada semana, se comprueban y se guardan las cuatro últimas. Si una falla, te lo dice." },
+        { "title": "Desde el móvil y en otro idioma", "text": "Lo usas desde el móvil con Claude. Se monta en castellano o en inglés, y cada persona puede preguntarle en su idioma." }
+      ]
+    },
+    "never": {
+      "title": "Lo que nunca hace",
+      "subtitle": "La regla de fondo: el cerebro guarda el saber, no los datos sensibles.",
+      "items": [
+        { "title": "Salud", "text": "Nunca abre reconocimientos, informes médicos ni bajas, ni escribe en un documento a una persona junto a una dolencia." },
+        { "title": "Contraseñas", "text": "No abre ficheros que parecen de contraseñas. Si encuentra una escrita, no la copia: te avisa. Nunca te pide una en la conversación." },
+        { "title": "Datos personales", "text": "Nóminas, contratos o DNI solo se abren si lo permites para esa carpeta, y aun así sin escribir nombres de personas." },
+        { "title": "Tus originales", "text": "Nunca se modifican. Nada se instala ni se conecta sin tu permiso, y nada pasa de un cerebro a otro sin tu «sí»." }
+      ]
+    },
+    "setup": {
+      "title": "Cómo se monta",
+      "steps": [
+        "Instalas la extensión Cerebro Digital en Claude Desktop con un doble clic.",
+        "El asistente te hace tres preguntas: el nombre de la empresa, cómo te llamas y dónde estará tu cerebro.",
+        "Pulsas en algunas ventanas y creas la contraseña maestra de la caja fuerte.",
+        "Empiezas a meterle los documentos de tu empresa."
+      ],
+      "guides": "Con cada cerebro van dos guías, en PDF y en tu idioma: una para el día a día, sin nada de informática, y otra técnica."
+    },
+    "cta": "Ver precios"
+  },
+  "pricing": {
+    "eyebrow": "Precios",
+    "title": "Pago único, licencia perpetua",
+    "subtitle": "Una licencia por empresa, a su nombre. Precios en euros, sin IVA.",
+    "includedTitle": "Incluido en las cuatro",
+    "included": [
+      "Licencia perpetua a nombre de tu empresa",
+      "Dos sesiones de montaje de 1 hora por videollamada",
+      "Garantía de montaje de 14 días",
+      "Correcciones de seguridad gratis durante el periodo de soporte"
+    ],
+    "extras": {
+      "hazlo-tu": ["Para 1 persona", "Montas y haces crecer tu cerebro por tu cuenta"],
+      "hazlo-tu-equipo": ["Hasta 10 personas en el mismo cerebro", "Altas, bajas e invitaciones", "Áreas con llave", "3 meses del plan Pro incluidos"],
+      "acompanado": ["Para 1 persona", "Arranque con tus procesos: de 3 a 5 procesos tuyos montados", "Tus documentos cargados", "1 mes del plan Esencial incluido"],
+      "acompanado-equipo": ["Hasta 10 personas en el mismo cerebro", "De 3 a 5 procesos tuyos montados y tus documentos cargados", "Personas dadas de alta y áreas con llave preparadas", "3 meses del plan Pro incluidos"]
+    },
+    "payWith": {
+      "card": "Pago con tarjeta en la web",
+      "invoice": "Factura previa; pagas por transferencia o con tarjeta"
+    },
+    "buy": "Comprar",
+    "requestInvoice": "Pedir factura",
+    "comingSoon": "Próximamente",
+    "comingSoonNote": "La compra en línea abre en breve. Mientras, escríbenos y te avisamos.",
+    "notifyMe": "Avísame",
+    "sessions": {
+      "title": "Sesiones de montaje y garantía",
+      "items": [
+        "Las cuatro modalidades incluyen dos sesiones de montaje de 1 hora, por videollamada, de 18:00 a 22:00, hora peninsular española.",
+        "Si no te presentas a una sesión, esa sesión se pierde.",
+        "Si tras las dos sesiones el cerebro no queda montado, te devolvemos el pago si lo pides por escrito en los 14 días siguientes a la compra, y la licencia se extingue.",
+        "Es una garantía de montaje, no de satisfacción."
+      ]
+    },
+    "monthly": {
+      "title": "Mensual, si lo quieres",
+      "subtitle": "Solo servicio: mantener tu cerebro al día, mejoras, packs, catálogo de conectores y soporte. Se cancela cuando quieras; sin él pierdes el soporte, no el uso.",
+      "perMonth": "/mes",
+      "feature": "Qué incluye",
+      "rows": [
+        { "label": "Versiones nuevas del cerebro, con sus mejoras", "values": [true, true, true] },
+        { "label": "Catálogo de conectores revisado", "values": [true, true, true] },
+        { "label": "Informe de salud", "values": [true, true, true] },
+        { "label": "Soporte por correo en 48 h", "values": [true, false, false] },
+        { "label": "Soporte prioritario en 24 h", "values": [false, true, true] },
+        { "label": "Packs al día con la normativa y los conectores", "values": [false, true, true] },
+        { "label": "Revisamos tu informe de salud cada mes y aplicamos las correcciones", "values": [false, true, true] },
+        { "label": "Sesión mensual de 1 hora", "values": [false, false, true] },
+        { "label": "Una automatización sencilla al mes, como mucho", "values": [false, false, true] },
+        { "label": "Un conector de la comunidad verificado cada trimestre", "values": [false, false, true] }
+      ],
+      "premiumNote": "La sesión mensual sirve para revisar qué ha cambiado en la empresa y detectar oportunidades de automatización. Si en la sesión se identifica una candidata que encaje en el alcance del corpus existente y clasifique como sencilla, se implementa dentro del plan. Las de complejidad media o superior, o las que requieran sistemas o integraciones nuevos, se presupuestan aparte. Máximo una implementada al mes, no acumulable.",
+      "securityNote": "Las correcciones de seguridad no son del mensual: llegan gratis a todos los clientes durante el periodo de soporte de su versión.",
+      "included": "Con equipo, los 3 primeros meses de Pro van incluidos. El Acompañado sin equipo trae el primer mes de Esencial."
+    },
+    "apart": {
+      "title": "Aparte",
+      "packEspana": {
+        "name": "Pack España",
+        "text": "Procedimientos fiscales, laborales y de PRL, y conectores españoles, cada uno con su procedimiento.",
+        "badge": "En preparación"
+      },
+      "custom": {
+        "name": "A medida",
+        "from": "desde",
+        "text": "Te hacemos nosotros el cerebro, con el Pack España. Solo si lo pides. Incluye el plan Esencial, obligatorio en este caso.",
+        "cta": "Hablar con nosotros"
+      },
+      "moreThan10": "¿Más de 10 personas? Lo presupuestamos a medida."
+    },
+    "markets": "Precios para España y el resto de Europa. En Norteamérica, los mismos números en dólares (USD).",
+    "b2b": "Venta solo a empresas y profesionales.",
+    "faqTitle": "Dudas sobre la compra",
+    "faq": [
+      { "q": "¿Qué es la licencia?", "a": "Un fichero firmado por Pymatic Labs, a nombre de tu empresa, sin el que el cerebro no se monta. Es perpetua. Dice hasta cuándo tienes mantenimiento y soporte; pasada esa fecha no se bloquea nada." },
+      { "q": "¿La licencia necesita internet?", "a": "No. Se comprueba en tu equipo, sin conectarse a ningún sitio. No hay ningún interruptor remoto." },
+      { "q": "¿El Acompañado son horas de consultoría?", "a": "No: es un resultado. Al terminar tienes de 3 a 5 procesos tuyos montados y tus documentos cargados. Con equipo, además, las personas dadas de alta y las áreas con llave preparadas." },
+      { "q": "¿Puedo empezar sin equipo y ampliar después?", "a": "Sí. Escríbenos y te decimos cómo; te llega una licencia nueva y se la das al cerebro." },
+      { "q": "¿Qué es «con equipo»?", "a": "Hasta 10 personas usan el mismo cerebro, cada una en su ordenador, con altas, bajas, invitaciones y áreas con llave. Sin equipo, el cerebro es de una persona." },
+      { "q": "¿Los precios llevan IVA?", "a": "No. Los precios son sin IVA; la factura lleva el IVA que corresponda." }
+    ]
+  },
+  "security": {
+    "eyebrow": "Seguridad y privacidad",
+    "title": "Tus datos, en tus equipos",
+    "subtitle": "Qué pasa con tu información cuando usas el Cerebro Digital, y cómo reportarnos un fallo de seguridad.",
+    "promiseTitle": "Nuestra promesa",
+    "behindTitle": "Lo que hay detrás",
+    "behind": [
+      "El contenido del cerebro y las contraseñas viven en tus equipos. Pymatic Labs no los recibe.",
+      "Lo que el asistente lee viaja a Anthropic, la empresa de Claude, y queda en el historial de Claude hasta que lo borras.",
+      "Con Claude Team o Enterprise, Anthropic no entrena con esos datos, por contrato, y la memoria de Claude viene apagada.",
+      "Con Claude Pro o Max, la memoria viene encendida y el entrenamiento se decide en los ajustes de privacidad de Claude. Por eso en el montaje te enseñamos a apagar los dos."
+    ],
+    "behindNote": "El montaje no puede comprobar esos ajustes de Claude: te indica cómo ponerlos. Anthropic fija además dos excepciones: las valoraciones de respuestas que le envíes y lo que marquen sus filtros de seguridad.",
+    "alsoTitle": "Además",
+    "also": [
+      "Tus originales nunca se modifican: el cerebro solo los lee.",
+      "Nada se instala ni se conecta sin tu permiso.",
+      "La licencia se comprueba en tu equipo, sin internet: no hay interruptor remoto.",
+      "Las actualizaciones solo se aceptan si van firmadas por Pymatic Labs.",
+      "Las correcciones de seguridad son gratis durante el periodo de soporte de tu versión, con o sin mensual."
+    ],
+    "policyTitle": "Política de vulnerabilidades",
+    "draftBadge": "Borrador",
+    "draftNote": "Borrador pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
+    "reportTitle": "¿Has encontrado un fallo de seguridad?",
+    "reportText": "Escríbenos a info@pymaticlabs.com con «Seguridad» en el asunto.",
+    "reportCta": "Escribir a seguridad"
   },
   "contact": {
     "title": "Hablemos",
-    "subtitle": "Cuéntanos tu problema. Primera consulta gratuita.",
+    "subtitle": "Cuéntanos qué hace tu empresa y te decimos qué modalidad te encaja.",
     "name": "Nombre",
-    "email": "Email",
+    "email": "Correo electrónico",
+    "company": "Empresa",
     "phone": "Teléfono (opcional)",
-    "businessType": "Tipo de negocio",
-    "businessOptions": {
-      "hosteleria": "Hostelería / Restauración",
-      "retail": "Retail / Comercio",
-      "servicios": "Servicios profesionales",
-      "industria": "Industria / Manufactura",
-      "construccion": "Construcción / Reformas",
-      "otro": "Otro"
+    "interest": "¿Qué te interesa?",
+    "interestOptions": {
+      "hazlo-tu": "Hazlo tú",
+      "hazlo-tu-equipo": "Hazlo tú con equipo",
+      "acompanado": "Acompañado",
+      "acompanado-equipo": "Acompañado con equipo",
+      "a-medida": "A medida",
+      "no-lo-se": "Aún no lo sé"
     },
-    "message": "Cuéntanos tu proceso repetitivo",
-    "submit": "Enviar mensaje",
+    "message": "Mensaje",
+    "submit": "Enviar",
     "sending": "Enviando...",
-    "successTitle": "¡Mensaje enviado!",
+    "successTitle": "¡Recibido!",
     "successMsg": "Te responderemos en menos de 24 horas.",
-    "errorMsg": "Error al enviar. Inténtalo de nuevo o escríbenos directamente.",
-    "orSchedule": "O reserva una llamada directamente:",
-    "scheduleCta": "Reservar llamada gratuita →",
-    "emailLabel": "Email:",
-    "locationLabel": "Ubicación:",
-    "locationValue": "Castellón, España (remote-first)"
+    "errorMsg": "No se ha podido enviar. Escríbenos a info@pymaticlabs.com.",
+    "privacyNote": "Usamos tus datos solo para contestarte.",
+    "privacyLink": "Política de privacidad",
+    "orSchedule": "¿Prefieres una videollamada?",
+    "scheduleCta": "Reservar una llamada",
+    "emailLabel": "Correo:",
+    "locationLabel": "Dónde:",
+    "locationValue": "Castellón de la Plana, España"
   },
   "footer": {
-    "tagline": "Automatización con IA para pymes españolas.",
-    "quickLinks": "Navegación",
+    "tagline": "Cerebro Digital: la memoria de tu empresa, con IA.",
+    "product": "Producto",
     "legal": "Legal",
-    "connect": "Contacto",
-    "copyright": "© 2026 Pymatic Labs. Todos los derechos reservados.",
+    "contact": "Contacto",
     "links": {
-      "servicios": "Servicios",
-      "casos": "Casos",
-      "blog": "Blog",
-      "sobre": "Sobre nosotros",
+      "comoFunciona": "Cómo funciona",
+      "precios": "Precios",
+      "seguridad": "Seguridad",
       "contacto": "Contacto"
     },
     "legalLinks": {
       "aviso": "Aviso legal",
       "privacidad": "Política de privacidad",
       "cookies": "Política de cookies"
-    }
-  },
-  "blog": {
-    "title": "Blog",
-    "subtitle": "Artículos técnicos sobre automatización, Python e IA para pymes.",
-    "readMore": "Leer artículo →",
-    "by": "Por",
-    "back": "← Volver al blog"
-  },
-  "servicios": {
-    "title": "Servicios de automatización",
-    "subtitle": "Soluciones a medida para eliminar el trabajo repetitivo de tu empresa.",
-    "python": {
-      "title": "Automatizaciones Python",
-      "what": "Scripts Python a medida que se integran con tus sistemas actuales.",
-      "for": "Para quién",
-      "forText": "Pymes con procesos repetitivos: procesado de facturas, extracción de datos, reportes automáticos.",
-      "includes": "Qué incluye",
-      "includesList": ["Análisis del proceso actual", "Desarrollo del script", "Tests unitarios", "Documentación", "Soporte 30 días"],
-      "examples": "Ejemplos",
-      "examplesList": ["Extracción de facturas PDF → Excel", "Envío automático de emails con reportes", "Sincronización de datos entre sistemas", "Generación de informes automáticos"],
-      "price": "Desde 100 €",
-      "cta": "Solicitar presupuesto"
     },
-    "n8n": {
-      "title": "Flujos n8n",
-      "what": "Automatizaciones visuales sin código que conectan tus herramientas.",
-      "for": "Para quién",
-      "forText": "Empresas que usan herramientas cloud: Gmail, Google Sheets, Notion, Slack, WhatsApp Business...",
-      "includes": "Qué incluye",
-      "includesList": ["Diseño del flujo", "Configuración de integraciones", "Tests y validación", "Documentación", "Soporte 30 días"],
-      "examples": "Ejemplos",
-      "examplesList": ["Notificaciones automáticas de pedidos", "Sincronización CRM-facturación", "Alertas de stock bajo", "Onboarding automático de clientes"],
-      "price": "Desde 100 €/mes",
-      "cta": "Solicitar presupuesto"
-    },
-    "reviews": {
-      "title": "Reseñas Google con IA",
-      "what": "Respuestas automáticas personalizadas a todas tus reseñas de Google.",
-      "for": "Para quién",
-      "forText": "Hostelería, retail y cualquier negocio con perfil de Google My Business activo.",
-      "includes": "Qué incluye",
-      "includesList": ["Configuración de la IA con tu tono de marca", "Respuesta automática a nuevas reseñas", "Informe mensual", "Ajustes y mejoras incluidos"],
-      "examples": "Ejemplos",
-      "examplesList": ["Respuestas a reseñas positivas agradeciendo", "Gestión profesional de críticas negativas", "Personalización por nombre del cliente", "Adaptación al sector (restaurante, hotel...)"],
-      "price": "Desde 20 €/mes",
-      "cta": "Solicitar presupuesto"
-    },
-    "faq": {
-      "q1": "¿Cuánto tiempo lleva implementar un flujo n8n?",
-      "a1": "Un flujo estándar (3-5 pasos) suele estar listo en 3-5 días laborables.",
-      "q2": "¿Necesito tener n8n instalado?",
-      "a2": "No. Nos encargamos del hosting del servidor n8n en la nube si no tienes infraestructura propia.",
-      "q3": "¿Las respuestas de IA suenan naturales?",
-      "a3": "Sí. Entrenamos el modelo con ejemplos de tu negocio para que el tono sea coherente con tu marca."
-    }
-  },
-  "casos": {
-    "title": "Casos de éxito",
-    "subtitle": "Proyectos reales que ya están funcionando.",
-    "readCase": "Leer caso completo →"
-  },
-  "sobre": {
-    "title": "Sobre Pymatic Labs",
-    "subtitle": "Dos ingenieros de la UJI con obsesión por la automatización.",
-    "story": "Historia",
-    "storyText": "Pymatic Labs nació de una conversación entre Sergio y Eric mientras estudiaban en la Universitat Jaume I de Castellón. Ambos veían cómo los negocios familiares de sus entornos perdían horas cada semana en tareas repetitivas que la tecnología podía resolver. Decidieron hacer algo al respecto.",
-    "methodology": "Metodología",
-    "methodologyText": "Creemos en la automatización pragmática: soluciones simples que funcionan, son mantenibles y resuelven problemas reales. No sobre-ingeniería, no promesas vacías.",
-    "tools": "Herramientas",
-    "principles": "Principios",
-    "p1": "Transparencia total en presupuestos y plazos",
-    "p2": "Código limpio y documentado",
-    "p3": "Sin cláusulas de dependencia: el código es tuyo",
-    "p4": "Comunicación directa, sin intermediarios"
-  },
-  "contacto": {
-    "title": "Contacto",
-    "subtitle": "Primera consulta gratuita. Cuéntanos tu problema.",
-    "faqTitle": "Preguntas frecuentes sobre el proceso",
-    "faq1q": "¿Cómo es la primera llamada?",
-    "faq1a": "Es una videollamada de 30 minutos donde nos cuentas tu proceso actual. Sin compromiso.",
-    "faq2q": "¿Cuándo recibiré el presupuesto?",
-    "faq2a": "Enviamos la propuesta por escrito en menos de 48 horas tras la llamada.",
-    "faq3q": "¿Hay coste por la consulta inicial?",
-    "faq3a": "No. La primera llamada es completamente gratuita y sin compromiso."
+    "b2b": "Venta solo a empresas y profesionales.",
+    "copyright": "PYMATICLABS, S.L. Todos los derechos reservados."
   },
   "legal": {
-    "avisoTitle": "Aviso Legal",
-    "privacidadTitle": "Política de Privacidad",
-    "cookiesTitle": "Política de Cookies",
-    "pending": "[RAZÓN SOCIAL PENDIENTE]",
-    "denominacionSocial": "Sergio Juan Pérez Jiménez / Eric Ollé Lluch",
-    "CIF/NIF": "48705519Y / 73404720J",
-    "lastUpdated": "Última actualización: abril 2026"
+    "avisoTitle": "Aviso legal",
+    "privacidadTitle": "Política de privacidad",
+    "cookiesTitle": "Política de cookies",
+    "lastUpdated": "Última actualización: octubre de 2026",
+    "denominacionSocial": "PYMATICLABS, SOCIEDAD LIMITADA",
+    "CIF/NIF": "B88781745"
   }
 }

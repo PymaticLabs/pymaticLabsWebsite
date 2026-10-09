@@ -4,29 +4,29 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-[#1E3A5F] text-white hover:bg-[#162d4a]",
+          "bg-brand text-white hover:bg-brand-dark",
         destructive:
           "bg-red-500 text-white hover:bg-red-600",
         outline:
-          "border border-[#E2E8F0] bg-white hover:bg-gray-50 text-[#0F172A]",
+          "border border-line bg-white hover:bg-paper-2 text-ink",
         secondary:
-          "bg-gray-100 text-[#0F172A] hover:bg-gray-200",
+          "bg-paper-2 text-ink hover:bg-line",
         ghost:
-          "hover:bg-gray-100 text-[#0F172A]",
+          "hover:bg-paper-2 text-ink",
         link:
-          "text-[#1E3A5F] underline-offset-4 hover:underline",
+          "text-ink underline-offset-4 hover:underline",
         accent:
-          "bg-[#F4B860] text-[#0F172A] hover:bg-[#f0a840] font-semibold",
+          "bg-ink text-white hover:bg-ink/85 font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        sm: "h-9 rounded-full px-4",
+        lg: "h-12 rounded-full px-7 text-base",
         icon: "h-10 w-10",
       },
     },
