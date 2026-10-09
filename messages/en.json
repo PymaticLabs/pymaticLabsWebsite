@@ -368,6 +368,7 @@
       "With Claude Pro or Max, memory comes on and training is decided in Claude's privacy settings. That is why during setup we show you how to turn both off."
     ],
     "behindNote": "Setup cannot check those Claude settings: it shows you how to set them. Anthropic also sets two exceptions: response ratings you send it and whatever its safety filters flag.",
+    "privacyLink": "Read the Digital Brain privacy policy",
     "alsoTitle": "Also",
     "also": [
       "Your originals are never modified: the brain only reads them.",
@@ -426,18 +427,32 @@
     },
     "legalLinks": {
       "aviso": "Legal notice",
-      "privacidad": "Privacy policy",
-      "cookies": "Cookie policy"
+      "privacidad": "Website privacy",
+      "cookies": "Cookie policy",
+      "condiciones": "Terms of use and sale",
+      "privacidadProducto": "Digital Brain privacy"
     },
     "b2b": "Sold only to businesses and professionals.",
     "copyright": "PYMATICLABS, S.L. All rights reserved."
   },
   "legal": {
-    "avisoTitle": "Legal notice",
-    "privacidadTitle": "Privacy policy",
-    "cookiesTitle": "Cookie policy",
+    "titles": {
+      "aviso-legal": "Legal notice",
+      "politica-privacidad": "Website privacy policy",
+      "politica-cookies": "Cookie policy",
+      "condiciones": "Digital Brain terms of use and sale",
+      "privacidad-producto": "Digital Brain privacy policy"
+    },
+    "descriptions": {
+      "aviso-legal": "Details of PYMATICLABS, S.L., owner of pymaticlabs.com, and terms of use of the website.",
+      "politica-privacidad": "Which personal data we process when you visit pymaticlabs.com or write to us from it.",
+      "politica-cookies": "pymaticlabs.com does not use cookies. Here is why.",
+      "condiciones": "Terms of use and sale of the Digital Brain, for businesses and professionals.",
+      "privacidad-producto": "Which personal data Pymatic Labs processes when selling the Digital Brain and providing support, and which it does not."
+    },
     "lastUpdated": "Last updated: October 2026",
-    "denominacionSocial": "PYMATICLABS, SOCIEDAD LIMITADA",
-    "CIF/NIF": "B88781745"
+    "draftBadge": "Draft",
+    "draftNote": "Draft pending legal review. It may change before its final version.",
+    "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."
   }
 }

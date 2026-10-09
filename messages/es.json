@@ -368,6 +368,7 @@
       "Con Claude Pro o Max, la memoria viene encendida y el entrenamiento se decide en los ajustes de privacidad de Claude. Por eso en el montaje te enseñamos a apagar los dos."
     ],
     "behindNote": "El montaje no puede comprobar esos ajustes de Claude: te indica cómo ponerlos. Anthropic fija además dos excepciones: las valoraciones de respuestas que le envíes y lo que marquen sus filtros de seguridad.",
+    "privacyLink": "Leer la política de privacidad del Cerebro Digital",
     "alsoTitle": "Además",
     "also": [
       "Tus originales nunca se modifican: el cerebro solo los lee.",
@@ -426,18 +427,32 @@
     },
     "legalLinks": {
       "aviso": "Aviso legal",
-      "privacidad": "Política de privacidad",
-      "cookies": "Política de cookies"
+      "privacidad": "Privacidad de la web",
+      "cookies": "Política de cookies",
+      "condiciones": "Condiciones de uso y venta",
+      "privacidadProducto": "Privacidad del Cerebro Digital"
     },
     "b2b": "Venta solo a empresas y profesionales.",
     "copyright": "PYMATICLABS, S.L. Todos los derechos reservados."
   },
   "legal": {
-    "avisoTitle": "Aviso legal",
-    "privacidadTitle": "Política de privacidad",
-    "cookiesTitle": "Política de cookies",
+    "titles": {
+      "aviso-legal": "Aviso legal",
+      "politica-privacidad": "Política de privacidad de la web",
+      "politica-cookies": "Política de cookies",
+      "condiciones": "Condiciones de uso y venta del Cerebro Digital",
+      "privacidad-producto": "Política de privacidad del Cerebro Digital"
+    },
+    "descriptions": {
+      "aviso-legal": "Datos de PYMATICLABS, S.L., titular de pymaticlabs.com, y condiciones de uso del sitio web.",
+      "politica-privacidad": "Qué datos personales tratamos cuando visitas pymaticlabs.com o nos escribes desde ella.",
+      "politica-cookies": "pymaticlabs.com no usa cookies. Aquí te lo explicamos.",
+      "condiciones": "Condiciones de uso y venta del Cerebro Digital, para empresas y profesionales.",
+      "privacidad-producto": "Qué datos personales trata Pymatic Labs al vender el Cerebro Digital y dar soporte, y cuáles no."
+    },
     "lastUpdated": "Última actualización: octubre de 2026",
-    "denominacionSocial": "PYMATICLABS, SOCIEDAD LIMITADA",
-    "CIF/NIF": "B88781745"
+    "draftBadge": "Borrador",
+    "draftNote": "Borrador pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
+    "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."
   }
 }

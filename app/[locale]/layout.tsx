@@ -9,6 +9,8 @@ import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 import '@/app/globals.css'
 
+const CLIENT_NAMESPACES = ['nav', 'demo', 'contact'] as const
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -67,11 +69,13 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale)
   const messages = await getMessages()
+  // Al navegador solo van los textos de los componentes de cliente.
+  const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]))
 
   return (
     <html lang={locale} className={inter.variable}>
       <body className="min-h-screen flex flex-col">
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider messages={clientMessages}>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

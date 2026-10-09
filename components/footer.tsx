@@ -18,6 +18,8 @@ export default function Footer() {
     { href: localePath(locale, '/aviso-legal'), label: t('legalLinks.aviso') },
     { href: localePath(locale, '/politica-privacidad'), label: t('legalLinks.privacidad') },
     { href: localePath(locale, '/politica-cookies'), label: t('legalLinks.cookies') },
+    { href: localePath(locale, '/condiciones'), label: t('legalLinks.condiciones') },
+    { href: localePath(locale, '/privacidad-producto'), label: t('legalLinks.privacidadProducto') },
   ]
 
   return (

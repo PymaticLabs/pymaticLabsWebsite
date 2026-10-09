@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Check, Mail, ShieldCheck } from 'lucide-react'
 import SectionHeader from '@/components/section-header'
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { generatePageMetadata } from '@/lib/metadata'
 import { renderContent } from '@/lib/markdown'
+import { localePath } from '@/lib/i18n'
 
 export async function generateMetadata({
   params,
@@ -34,7 +36,7 @@ export default async function SeguridadPage({
 
   const behind = t.raw('behind') as string[]
   const also = t.raw('also') as string[]
-  const policyHtml = renderContent('legal', locale, 'politica-de-vulnerabilidades')
+  const { html: policyHtml } = renderContent('legal', locale, 'politica-de-vulnerabilidades')
 
   return (
     <>
@@ -67,6 +69,12 @@ export default async function SeguridadPage({
               ))}
             </ul>
             <p className="mt-4 text-sm text-muted leading-relaxed">{t('behindNote')}</p>
+            <Link
+              href={localePath(locale, '/privacidad-producto')}
+              className="mt-3 inline-block text-sm font-semibold text-brand underline-offset-4 hover:underline"
+            >
+              {t('privacyLink')}
+            </Link>
           </div>
 
           <div>
