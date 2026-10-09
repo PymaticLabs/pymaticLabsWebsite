@@ -5,4 +5,6 @@ export const routing = defineRouting({
   defaultLocale: 'es',
   localePrefix: 'as-needed',
   localeDetection: false,
+  // Sin cookie de idioma: la web no pone ninguna cookie (ver /politica-cookies).
+  localeCookie: false,
 })

@@ -1,42 +1,63 @@
 import type { Metadata } from 'next'
-import Hero from '@/components/sections/hero'
-import Problems from '@/components/sections/problems'
-import ServicesSummary from '@/components/sections/services-summary'
-import CaseStudyFeatured from '@/components/sections/case-study-featured'
-import About from '@/components/sections/about'
-import HowWeWork from '@/components/sections/how-we-work'
-import FAQ from '@/components/sections/faq'
-import Contact from '@/components/sections/contact'
-import { getOrganizationSchema, getWebSiteSchema } from '@/lib/schemas'
+import { getTranslations } from 'next-intl/server'
+import Hero from '@/components/home/hero'
+import WhatIs from '@/components/home/what-is'
+import Features from '@/components/home/features'
+import Different from '@/components/home/different'
+import PrivacyPromise from '@/components/home/promise'
+import HowToBuy from '@/components/home/how-to-buy'
+import PricingTeaser from '@/components/home/pricing-teaser'
+import FaqList from '@/components/faq-list'
+import FinalCta from '@/components/final-cta'
+import { generatePageMetadata } from '@/lib/metadata'
+import { getOrganizationSchema, getProductSchema, getWebSiteSchema } from '@/lib/schemas'
 
-export const metadata: Metadata = {
-  title: 'Pymatic Labs · Automatización con IA para pymes españolas',
-  description:
-    'Automatizamos facturas, reseñas de Google, contabilidad y procesos repetitivos para pymes españolas con Python, n8n e IA.',
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'meta' })
+  return generatePageMetadata({
+    title: { absolute: t('homeTitle') },
+    description: t('homeDescription'),
+    locale,
+  })
 }
 
-export default function HomePage() {
-  const orgSchema = getOrganizationSchema()
-  const webSchema = getWebSiteSchema()
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'faq' })
+  const tMeta = await getTranslations({ locale, namespace: 'meta' })
+  const schemas = [
+    getOrganizationSchema(),
+    getWebSiteSchema(),
+    getProductSchema({ locale, description: tMeta('homeDescription') }),
+  ]
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSchema) }}
-      />
+      {schemas.map((schema) => (
+        <script
+          key={schema['@type']}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
       <Hero />
-      <Problems />
-      <ServicesSummary />
-      <CaseStudyFeatured />
-      <About />
-      <HowWeWork />
-      <FAQ />
-      <Contact />
+      <WhatIs />
+      <Features />
+      <Different />
+      <PrivacyPromise />
+      <HowToBuy />
+      <PricingTeaser />
+      <FaqList title={t('title')} items={t.raw('items')} id="faq" />
+      <FinalCta />
     </>
   )
 }

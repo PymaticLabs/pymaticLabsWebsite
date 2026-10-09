@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
-import Contact from '@/components/sections/contact'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { CalendarClock, Mail, MapPin } from 'lucide-react'
+import ContactForm from '@/components/contact-form'
+import SectionHeader from '@/components/section-header'
+import { Button } from '@/components/ui/button'
+import { generatePageMetadata } from '@/lib/metadata'
+import { isContactInterest } from '@/lib/contact'
 
 export async function generateMetadata({
   params,
@@ -14,48 +13,65 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'contacto' })
-  return { title: t('title'), description: t('subtitle') }
+  const t = await getTranslations({ locale, namespace: 'meta' })
+  return generatePageMetadata({
+    title: t('contactTitle'),
+    description: t('contactDescription'),
+    path: '/contacto',
+    locale,
+  })
 }
 
 export default async function ContactoPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ interes?: string }>
 }) {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'contacto' })
-
-  const faqs = [
-    { q: t('faq1q'), a: t('faq1a') },
-    { q: t('faq2q'), a: t('faq2a') },
-    { q: t('faq3q'), a: t('faq3a') },
-  ]
+  const { interes } = await searchParams
+  setRequestLocale(locale)
+  const t = await getTranslations({ locale, namespace: 'contact' })
 
   return (
-    <div className="pt-16">
-      <Contact />
+    <section className="pt-32 pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
-      {/* Mini FAQ */}
-      <section className="py-16 bg-[#FAFAF9]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-[#1E3A5F] mb-8 text-center">
-            {t('faqTitle')}
-          </h2>
-          <Accordion type="single" collapsible>
-            {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-left font-medium text-[#1E3A5F]">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-[#64748B]">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 max-w-5xl mx-auto">
+          <ContactForm defaultInterest={isContactInterest(interes) ? interes : undefined} />
+
+          <div className="space-y-8">
+            <div className="rounded-2xl bg-paper-2 p-6 space-y-4">
+              <h2 className="flex items-center gap-2 font-semibold text-ink">
+                <CalendarClock className="h-5 w-5 text-brand" aria-hidden="true" />
+                {t('orSchedule')}
+              </h2>
+              <Button variant="outline" size="lg" className="w-full" asChild>
+                <a href="https://cal.com/pymaticlabs" target="_blank" rel="noopener noreferrer">
+                  {t('scheduleCta')}
+                </a>
+              </Button>
+            </div>
+
+            <div className="space-y-4 text-sm">
+              <p className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-brand" aria-hidden="true" />
+                <span className="text-muted">{t('emailLabel')}</span>
+                <a href="mailto:info@pymaticlabs.com" className="font-medium text-ink hover:text-brand">
+                  info@pymaticlabs.com
+                </a>
+              </p>
+              <p className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-brand" aria-hidden="true" />
+                <span className="text-muted">{t('locationLabel')}</span>
+                <span className="text-ink">{t('locationValue')}</span>
+              </p>
+            </div>
+          </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   )
 }

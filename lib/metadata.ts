@@ -3,11 +3,12 @@ import type { Metadata } from 'next'
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pymaticlabs.com'
 
 interface PageMetadataOptions {
-  title: string
+  title: string | { absolute: string }
   description: string
   path?: string
   locale?: string
   image?: string
+  noindex?: boolean
 }
 
 export function generatePageMetadata({
@@ -16,42 +17,37 @@ export function generatePageMetadata({
   path = '',
   locale = 'es',
   image = '/og-image.png',
+  noindex = false,
 }: PageMetadataOptions): Metadata {
-  const alternateLocale = locale === 'es' ? 'en' : 'es'
-  const alternatePath = alternateLocale === 'en' ? `/en${path}` : path
+  const url = locale === 'es' ? path || '/' : `/en${path}`
+  const plainTitle = typeof title === 'string' ? title : title.absolute
 
   return {
     title,
     description,
-    metadataBase: new URL(baseUrl),
     alternates: {
-      canonical: locale === 'es' ? path || '/' : `/en${path}`,
+      canonical: url,
       languages: {
         es: path || '/',
         en: `/en${path}`,
+        'x-default': path || '/',
       },
     },
     openGraph: {
-      title,
+      title: plainTitle,
       description,
-      url: `${baseUrl}${locale === 'es' ? path : `/en${path}`}`,
+      url: `${baseUrl}${url}`,
       siteName: 'Pymatic Labs',
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
+      images: [{ url: image, width: 1200, height: 630, alt: plainTitle }],
       locale: locale === 'es' ? 'es_ES' : 'en_US',
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: plainTitle,
       description,
       images: [image],
     },
+    ...(noindex && { robots: { index: false, follow: true } }),
   }
 }

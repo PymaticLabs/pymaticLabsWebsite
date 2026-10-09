@@ -1,0 +1,5 @@
+Contact: mailto:info@pymaticlabs.com
+Expires: 2027-09-30T00:00:00.000Z
+Preferred-Languages: es, en
+Policy: https://pymaticlabs.com/seguridad
+Canonical: https://pymaticlabs.com/.well-known/security.txt

@@ -1,64 +1,120 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Marca Pymatic Labs (knowledge/01_Empresa/identidad-y-marca.md): azul #0463FE, negro y fondo blanco. */
+@theme {
+  --color-brand: #0463FE;
+  --color-brand-dark: #0350D0;
+  --color-brand-soft: #EBF2FF;
+  --color-brand-light: #6AA4FF;
+  --color-ink: #000000;
+  --color-body: #333842;
+  --color-muted: #6B7280;
+  --color-line: #E5E7EB;
+  --color-paper: #FFFFFF;
+  --color-paper-2: #F6F7F9;
 
-:root {
-  --primary: #1E3A5F;
-  --accent: #F4B860;
-  --foreground: #0F172A;
-  --muted: #64748B;
-  --background: #FAFAF9;
-  --surface: #FFFFFF;
-  --border: #E2E8F0;
-  --radius: 0.5rem;
-}
-
-.dark {
-  --primary: #93B4D9;
-  --accent: #F4B860;
-  --foreground: #F1F5F9;
-  --muted: #94A3B8;
-  --background: #0B1220;
-  --surface: #0F172A;
-  --border: #1E293B;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
-  border-color: var(--border);
+  border-color: var(--color-line);
 }
 
 html {
-  background-color: var(--background);
+  background-color: var(--color-paper);
   color-scheme: light;
-}
-
-html.dark {
-  color-scheme: dark;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter, sans-serif);
+  background-color: var(--color-paper);
+  color: var(--color-body);
+  font-family: var(--font-sans);
 }
 
-/* Dark-mode overrides for hardcoded hex literals used across components.
-   Long-term: migrate components to semantic tokens (var(--surface), etc.). */
-.dark .bg-white { background-color: var(--surface); }
-.dark .bg-\[\#FAFAF9\] { background-color: var(--background); }
-.dark .bg-\[\#FFFFFF\] { background-color: var(--surface); }
-.dark .bg-\[\#F8FAFC\] { background-color: var(--background); }
-.dark .bg-\[\#F1F5F9\] { background-color: var(--surface); }
-.dark .bg-\[\#E2E8F0\] { background-color: #1E293B; }
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
 
-.dark .text-\[\#0F172A\] { color: var(--foreground); }
-.dark .text-\[\#1E3A5F\] { color: var(--primary); }
-.dark .text-\[\#475569\] { color: var(--muted); }
-.dark .text-\[\#64748B\] { color: var(--muted); }
-.dark .text-\[\#7A5C2E\] { color: var(--accent); }
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
-.dark .border-\[\#E2E8F0\] { border-color: var(--border); }
-.dark .border-\[\#F1F5F9\] { border-color: var(--border); }
-
-.dark .bg-white\/90 { background-color: rgb(15 23 42 / 0.9); }
-.dark .bg-white\/80 { background-color: rgb(15 23 42 / 0.8); }
+/* Textos largos renderizados desde Markdown (content/legal). */
+.prose-content {
+  color: var(--color-body);
+  line-height: 1.75;
+}
+.prose-content > * + * {
+  margin-top: 1rem;
+}
+.prose-content h2 {
+  margin-top: 2.5rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.prose-content h3 {
+  margin-top: 1.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.prose-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.prose-content ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.prose-content li + li {
+  margin-top: 0.375rem;
+}
+.prose-content a {
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-content strong {
+  color: var(--color-ink);
+}
+.prose-content code {
+  font-size: 0.875em;
+  background: var(--color-paper-2);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+}
+.prose-content blockquote {
+  border-left: 4px solid var(--color-brand);
+  background: var(--color-brand-soft);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1rem;
+  color: var(--color-ink);
+}
+.prose-content table {
+  width: 100%;
+  font-size: 0.9375rem;
+  border-collapse: collapse;
+}
+.prose-content th,
+.prose-content td {
+  border: 1px solid var(--color-line);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-content th {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}

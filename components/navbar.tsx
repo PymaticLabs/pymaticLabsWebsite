@@ -2,110 +2,118 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
-import ThemeToggle from '@/components/theme-toggle'
+import { localePath } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 
 export default function Navbar() {
   const t = useTranslations('nav')
   const locale = useLocale()
+  const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10)
+    handleScroll()
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const prefix = locale === 'en' ? '/en' : ''
+  // La misma pagina en el otro idioma: las rutas no cambian, solo el prefijo /en.
+  const barePath = pathname.replace(/^\/en(?=\/|$)/, '') || ''
   const altLocale = locale === 'en' ? 'es' : 'en'
-  const altPrefix = altLocale === 'en' ? '/en' : ''
+  const altHref = localePath(altLocale, barePath === '/' ? '' : barePath)
 
   const navLinks = [
-    { href: `${prefix}/servicios`, label: t('servicios') },
-    { href: `${prefix}/casos`, label: t('casos') },
-    { href: `${prefix}/blog`, label: t('blog') },
-    { href: `${prefix}/sobre-nosotros`, label: t('sobre') },
+    { href: localePath(locale, '/como-funciona'), label: t('comoFunciona') },
+    { href: localePath(locale, '/precios'), label: t('precios') },
+    { href: localePath(locale, '/seguridad'), label: t('seguridad') },
+    { href: localePath(locale, '/contacto'), label: t('contacto') },
   ]
+
+  const isActive = (href: string) => pathname === href
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-[#E2E8F0]'
-          : 'bg-transparent'
-      }`}
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
+        isScrolled || isMobileOpen ? 'bg-white/90 backdrop-blur-md border-b border-line' : 'bg-transparent'
+      )}
     >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href={prefix || '/'} className="flex items-center">
-          <span className="text-xl font-bold text-[#1E3A5F]">Pymatic Labs</span>
+      <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <Link href={localePath(locale)} className="flex items-center gap-2" aria-label={t('home')}>
+          <span className="text-lg font-bold text-ink">Pymatic Labs</span>
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-7">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-[#0F172A] hover:text-[#1E3A5F] transition-colors"
+              aria-current={isActive(link.href) ? 'page' : undefined}
+              className={cn(
+                'text-sm transition-colors hover:text-brand',
+                isActive(link.href) ? 'text-brand font-medium' : 'text-ink'
+              )}
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <ThemeToggle />
           <Link
-            href={`${altPrefix}/`}
-            className="text-sm font-medium text-[#475569] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
+            href={altHref}
+            hrefLang={altLocale}
+            aria-label={t('langLabel')}
+            className="text-sm font-medium text-muted hover:text-ink border border-line rounded-full px-3 py-1"
           >
             {t('langSwitch')}
           </Link>
-          <Button variant="accent" size="sm" asChild>
-            <a href="#contacto">{t('cta')}</a>
+          <Button size="sm" asChild>
+            <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
           </Button>
         </div>
 
-        {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 text-[#0F172A]"
+          className="md:hidden p-2 text-ink"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          aria-label="Toggle menu"
+          aria-label={isMobileOpen ? t('closeMenu') : t('openMenu')}
+          aria-expanded={isMobileOpen}
         >
           {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </nav>
 
-      {/* Mobile Menu */}
       {isMobileOpen && (
-        <div className="md:hidden bg-white border-t border-[#E2E8F0] px-4 py-4 space-y-3">
+        <div className="md:hidden bg-white border-t border-line px-4 py-4 space-y-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="block text-sm text-[#0F172A] hover:text-[#1E3A5F] py-2"
+              className="block text-base text-ink hover:text-brand py-2"
               onClick={() => setIsMobileOpen(false)}
             >
               {link.label}
             </Link>
           ))}
-          <div className="pt-2 flex items-center gap-3">
-            <ThemeToggle />
+          <div className="pt-3 flex items-center gap-3">
             <Link
-              href={`${altPrefix}/`}
-              className="text-sm font-medium text-[#475569] hover:text-[#1E3A5F] border border-[#E2E8F0] rounded px-2 py-1"
+              href={altHref}
+              hrefLang={altLocale}
+              aria-label={t('langLabel')}
+              className="text-sm font-medium text-muted border border-line rounded-full px-3 py-1"
             >
               {t('langSwitch')}
             </Link>
-            <Button variant="accent" size="sm" asChild>
-              <a href="#contacto" onClick={() => setIsMobileOpen(false)}>
+            <Button size="sm" asChild>
+              <Link href={localePath(locale, '/precios')} onClick={() => setIsMobileOpen(false)}>
                 {t('cta')}
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

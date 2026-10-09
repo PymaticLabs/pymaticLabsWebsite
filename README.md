@@ -1,97 +1,96 @@
-# Pymatic Labs Website
+# Pymatic Labs · Cerebro Digital
 
-Official website for Pymatic Labs — AI automation agency for Spanish SMBs.
+Web de pymaticlabs.com, rehecha solo para el Cerebro Digital (Eric, 02-10-2026). Castellano (fuente) e inglés.
 
-## Tech Stack
+Las fuentes de verdad del contenido están en el repo `cerebro-pymaticlabs`:
 
-- Next.js 15 (App Router + Turbopack)
-- TypeScript (strict mode)
-- Tailwind CSS v4
-- shadcn/ui (manual components)
-- next-intl (es default, en with /en/ prefix)
-- lucide-react
-- MDX for blog posts
-- Resend for contact form emails
-- Zod v4 for form validation
+- Oferta y precios: `knowledge/11_Comercial/oferta-del-cerebro-digital.md` → aquí, `lib/offer.ts` (único sitio con cifras).
+- Mensual: `knowledge/11_Comercial/retainers-y-mantenimiento.md`.
+- Qué hace el cerebro: `esqueleto/guias/guia-del-cerebro.md` (y su versión en inglés en `esqueleto/idiomas/en/guias/`).
+- Promesa de privacidad: `knowledge/11_Comercial/promesa-de-privacidad-del-cerebro-digital.md`. Va literal, sin tocar.
+- Marca: `knowledge/01_Empresa/identidad-y-marca.md` (azul `#0463FE`, negro, fondo blanco).
 
-## Development
+## Stack
+
+- Next.js 16 (App Router, Turbopack), React 19, TypeScript
+- Tailwind CSS 4 (tokens de marca en `app/globals.css`)
+- next-intl (`es` por defecto, `en` bajo `/en`; las rutas son las mismas en los dos idiomas)
+- marked, para los textos largos de `content/`
+- Resend para el formulario de contacto
+- Vercel (hosting y Web Analytics, sin cookies)
+
+## Desarrollo
 
 ```bash
 pnpm install
-cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+## Variables de entorno
 
-## Build
+| Variable | Dónde | Para qué |
+|----------|-------|----------|
+| `RESEND_API_KEY` | Producción | Enviar los correos del formulario de contacto |
+| `CONTACT_EMAIL` | Opcional | Buzón del formulario (por defecto info@pymaticlabs.com) |
+| `NEXT_PUBLIC_SITE_URL` | Opcional | URL pública (por defecto https://pymaticlabs.com) |
+| `CHECKOUT_OPEN` | Cobro | `true` enseña los botones de compra. Apagado hasta que el abogado revise las condiciones. Se lee al construir: cambiarlo pide redesplegar. |
+| `STRIPE_PAYMENT_LINKS` | Cobro | JSON `{"hazlo-tu": {"url": "https://buy.stripe.com/...", "id": "plink_..."}, "hazlo-tu-equipo": {...}}` |
+| `STRIPE_SECRET_KEY` | Entrega | Clave secreta de Stripe (`sk_test_...` en pruebas) |
+| `STRIPE_WEBHOOK_SECRET` | Entrega | Secreto del endpoint `/api/stripe/webhook` (`whsec_...`) |
+| `LICENSE_SIGNING_KEY` | Entrega | Privada de licencias: base64 de la semilla de 32 bytes, la que crea `firmar_licencia.py --crear-clave`. Secreto. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Entrega | Secuencia de ids de licencia y entregas hechas |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Entrega | Cuenta de servicio con acceso a la carpeta de la versión (JSON o base64) |
+| `DRIVE_RELEASE_FOLDER_ID` | Entrega | Carpeta de Drive de la versión vigente |
+| `BOOKING_URL` | Opcional | Reserva de las sesiones de montaje (por defecto https://cal.com/pymaticlabs) |
+
+## Cobro y entrega
+
+Hazlo tú: enlace de pago de Stripe → `/api/stripe/webhook` firma la licencia (`lib/license.ts`, igual byte a byte que `firmar_licencia.py`), comparte la carpeta de Drive con el correo del cliente y le manda la licencia por Resend. A info@ llega un aviso para emitir la factura en Holded. Acompañado: factura de Holded primero (el botón lleva al contacto).
+
+Configurar cada enlace de pago en Stripe:
+
+- Casilla de condiciones obligatoria (*Require customers to accept your terms of service*).
+- Recoger el nombre de la empresa y el número fiscal (*Tax ID collection*). Si no, campos propios con clave `empresa` y `nif`.
+- Tras el pago, redirigir a `https://pymaticlabs.com/gracias` (`/en/gracias` en inglés).
+- Endpoint del webhook: `https://pymaticlabs.com/api/stripe/webhook` con los eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded` y `charge.dispute.created`.
+
+Antes de abrir:
+
+1. Llevar la secuencia de ids del Mac de Eric a Redis: `SET licencias:secuencia:2026 <último número usado>`.
+2. Compra de 1 € en modo de prueba de Stripe y comprobar en un cerebro que la licencia recibida verifica (`licencia.py`).
+3. Abrir con `CHECKOUT_OPEN=true` cuando el abogado haya revisado las condiciones.
+
+## Tests
 
 ```bash
-pnpm build
-pnpm start
+pnpm test
 ```
 
-## Environment Variables
+`lib/license.test.mts` comprueba la firma contra una licencia real emitida por `firmar_licencia.py`.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `RESEND_API_KEY` | Production | Resend API key for sending contact form emails |
-| `CONTACT_EMAIL` | Optional | Email to receive contact form submissions (default: hola@pymaticlabs.com) |
-| `NEXT_PUBLIC_SITE_URL` | Optional | Full site URL (default: https://pymaticlabs.com) |
-
-## Project Structure
+## Estructura
 
 ```
 app/
-  [locale]/          # All pages with i18n routing
-    layout.tsx       # Root layout with Navbar/Footer
-    page.tsx         # Landing page
-    servicios/       # Services page
-    casos/           # Case studies
-    blog/            # Blog listing + posts
-    sobre-nosotros/  # About page
-    contacto/        # Contact page
-    aviso-legal/     # Legal notice
-    politica-privacidad/
-    politica-cookies/
-  api/contact/       # Contact form API route
-  robots.ts          # robots.txt
-  sitemap.ts         # sitemap.xml
+  [locale]/
+    page.tsx            # Home
+    como-funciona/      # Qué es y todo lo que sabe hacer
+    precios/            # Modalidades, mensual, Pack España y A medida
+    seguridad/          # Promesa de privacidad y política de vulnerabilidades
+    contacto/
+    aviso-legal/, politica-privacidad/, politica-cookies/
+  api/contact/          # Formulario de contacto (Resend)
+  api/stripe/webhook/   # Entrega tras el pago
 components/
-  navbar.tsx
-  footer.tsx
-  sections/          # Landing page sections
-  ui/                # shadcn/ui components
-content/
-  blog/              # MDX blog posts
-  cases/             # Case study data
+  home/                 # Secciones de la home (la demo es home/demo.tsx)
+  pricing/              # Tarjeta de modalidad
+  ui/                   # Primitivas shadcn/ui
+content/legal/{es,en}/  # Textos largos en Markdown
 lib/
-  i18n.ts            # Locale config
-  utils.ts           # cn() utility
-  metadata.ts        # Metadata helpers
-  schemas.ts         # JSON-LD schema generators
-  blog.ts            # Blog post utilities
-messages/
-  es.json            # Spanish translations
-  en.json            # English translations
+  offer.ts              # Precios y modalidades
+  markdown.ts           # Renderiza content/
+messages/{es,en}.json   # Textos de la web
+public/.well-known/security.txt
 ```
 
-## Launch Checklist
-
-- [ ] Set `RESEND_API_KEY` in Vercel environment variables
-- [ ] Set `NEXT_PUBLIC_SITE_URL=https://pymaticlabs.com` in Vercel
-- [ ] Set `CONTACT_EMAIL` in Vercel
-- [ ] Add OG image at `/public/og-image.png` (1200x630px)
-- [ ] Add logo at `/public/logo.png`
-- [ ] Add blog cover images at `/public/blog/covers/`
-- [ ] Update `[RAZÓN SOCIAL PENDIENTE]` in legal pages with real company name
-- [ ] Update `[PENDIENTE]` CIF in aviso-legal
-- [ ] Create Cal.com account and update URL in contact section
-- [ ] Create LinkedIn company page and update URLs in footer
-- [ ] Create GitHub organization and update URLs in footer
-- [ ] Add Google Analytics or Plausible (optional)
-- [ ] Set up Google Search Console and submit sitemap
-- [ ] Verify Google My Business listing
-- [ ] Test contact form end-to-end in production
-- [ ] Test all pages on mobile
-- [ ] Run Lighthouse audit (aim for 90+ on all metrics)
+Las URL de la web de agencia (`/servicios`, `/casos`, `/blog`, `/sobre-nosotros`) redirigen con 301 a la home (`next.config.mjs`).

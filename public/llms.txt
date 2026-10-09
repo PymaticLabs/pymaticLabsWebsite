@@ -1,34 +1,33 @@
-# Pymatic Labs
+# Pymatic Labs · Cerebro Digital (Digital Brain)
 
-## What we do
-Pymatic Labs is a Spanish automation agency specializing in AI-powered automation for SMBs (pymes). We help small and medium businesses eliminate repetitive manual work using Python, n8n, and AI.
+> Pymatic Labs (PYMATICLABS, S.L., Castellón de la Plana, Spain) makes the Cerebro Digital / Digital Brain: a company's knowledge, digitized and indexed so any AI can look it up, and an AI (Claude) that can also run the company's processes on request. It lives on the customer's own computers. Sold only to businesses and professionals (B2B).
 
-## Our services
-- **Python Automations**: Custom scripts that process invoices from email, extract PDF data, fill spreadsheets, and automate repetitive data tasks.
-- **n8n Workflows**: No-code automation flows connecting tools like Gmail, Google Sheets, Notion, Slack, and WhatsApp Business.
-- **Google Reviews with AI**: Automatic personalized responses to all Google Business reviews using AI trained on the business tone.
+## What it is
+- The company's memory: how things are done, criteria, reference data and where each document is. It answers citing the source document.
+- It runs written procedures step by step and learns new ones when the user approves them.
+- It lives on the customer's computers (Mac and Windows), not in the cloud. Pymatic Labs never receives the brain or the passwords.
+- It works with Claude (Claude Desktop and Cowork, also from a phone). It is set up without a terminal, through a Claude Desktop extension.
+- Teams: up to 10 people on the same brain, with locked areas.
+- It never opens health files, never copies passwords and asks for approval before changing anything.
 
-## Our case studies
-- Automated 167 quarterly invoices for a family service station in Castellón: Python script with pdfplumber, openpyxl, Claude API. Saves 10 hours/quarter.
+## Pricing (EUR, excluding VAT, one-off payment, perpetual license per company)
+- Do it yourself (Hazlo tú): €990 list, €500 launch price.
+- Do it yourself, team: €1,990 list, €1,000 launch price.
+- Guided (Acompañado): €1,990 list, €1,000 launch price. Outcome: 3 to 5 of the customer's processes set up and documents loaded.
+- Guided, team: €3,490 list, €2,000 launch price.
+- Launch prices apply to the first 10 customers.
+- All include two 1-hour setup sessions and a 14-day setup guarantee (not a satisfaction guarantee).
+- Optional monthly service plans: Essential €99, Pro €199, Premium €299 per month. Cancel anytime; the brain keeps working without them.
+- Security fixes are free for every customer during the version's support period.
+- Spain Pack: €1,990. Custom builds: from €10,000.
+- North America: the same numbers in USD.
 
-## Who we are
-- Sergio J. Pérez - Co-founder, Backend & Automation Engineer (Universitat Jaume I)
-- Eric Ollé - Co-founder, AI & n8n specialist (Universitat Jaume I)
-- Based in Castellón, Spain. Work remotely with all of Spain.
-
-## Technology stack
-Python, pdfplumber, openpyxl, pandas, imaplib, n8n, Claude API, GPT-4, FastAPI, Next.js, TypeScript
+## Pages
+- Home: https://pymaticlabs.com/ (English: https://pymaticlabs.com/en)
+- How it works: https://pymaticlabs.com/como-funciona
+- Pricing: https://pymaticlabs.com/precios
+- Security and privacy: https://pymaticlabs.com/seguridad
+- Contact: https://pymaticlabs.com/contacto
 
 ## Contact
-- Email: hola@pymaticlabs.com
-- Website: https://pymaticlabs.com
-- Location: Castellón, Spain (remote-first)
-
-## Pricing (approximate)
-- Python automations: from €500
-- n8n workflows: from €800
-- Google Reviews AI: from €150/month
-- All projects include 30-day post-delivery warranty
-
-## Content policy
-We welcome AI crawlers and language models indexing our content. We publish technical blog posts about automation, Python, n8n, and AI for SMBs in Spanish and English.
+- Email: info@pymaticlabs.com
