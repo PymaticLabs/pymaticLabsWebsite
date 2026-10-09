@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
+import { isCheckoutOpen, paymentLinks } from '@/lib/checkout'
 import {
   CUSTOM_FROM_PRICE,
   PACK_ESPANA_PRICE,
@@ -80,7 +81,7 @@ export default async function PreciosPage({
           </div>
 
           <div className="mt-6 space-y-1 text-center text-sm text-muted">
-            <p className="font-medium text-ink">{t('comingSoonNote')}</p>
+            {!isCheckoutOpen() && <p className="font-medium text-ink">{t('comingSoonNote')}</p>}
             <p>{t('markets')}</p>
             <p>{t('b2b')}</p>
           </div>
@@ -204,6 +205,25 @@ function BuyAction({
   locale: string
   t: Awaited<ReturnType<typeof getTranslations<'pricing'>>>
 }) {
+  const contactHref = `${localePath(locale, '/contacto')}?interes=${modality.id}`
+  const paymentLink = paymentLinks()[modality.id]
+
+  // Hazlo tu: enlace de pago de Stripe. Acompañado: factura de Holded primero.
+  if (isCheckoutOpen() && (modality.guided || paymentLink)) {
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-muted">{modality.guided ? t('payWith.invoice') : t('payWith.card')}</p>
+        <Button className="w-full" asChild>
+          {modality.guided || !paymentLink ? (
+            <Link href={contactHref}>{t('requestInvoice')}</Link>
+          ) : (
+            <a href={paymentLink.url}>{t('buy')}</a>
+          )}
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted">{modality.guided ? t('payWith.invoice') : t('payWith.card')}</p>
@@ -211,7 +231,7 @@ function BuyAction({
         {t('comingSoon')}
       </Button>
       <Button className="w-full" asChild>
-        <Link href={`${localePath(locale, '/contacto')}?interes=${modality.id}`}>{t('notifyMe')}</Link>
+        <Link href={contactHref}>{t('notifyMe')}</Link>
       </Button>
     </div>
   )

@@ -384,6 +384,18 @@
     "reportText": "Write to info@pymaticlabs.com with \"Security\" in the subject.",
     "reportCta": "Email security"
   },
+  "thanks": {
+    "title": "Payment received. Thank you!",
+    "subtitle": "In a few minutes you will get an email with everything you need to set up your Digital Brain.",
+    "steps": [
+      "The link to the download, shared with your email address.",
+      "Your license, attached. Keep it: setup will ask you for it.",
+      "The link to book your two setup sessions.",
+      "The invoice, in a separate email."
+    ],
+    "help": "Not arriving? Check your spam folder or write to info@pymaticlabs.com.",
+    "cta": "See how it works"
+  },
   "contact": {
     "title": "Let's talk",
     "subtitle": "Tell us what your company does and we will tell you which option fits.",

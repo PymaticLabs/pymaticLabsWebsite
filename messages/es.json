@@ -384,6 +384,18 @@
     "reportText": "Escríbenos a info@pymaticlabs.com con «Seguridad» en el asunto.",
     "reportCta": "Escribir a seguridad"
   },
+  "thanks": {
+    "title": "Pago recibido. ¡Gracias!",
+    "subtitle": "En unos minutos te llega un correo con todo lo necesario para montar tu Cerebro Digital.",
+    "steps": [
+      "El enlace a la descarga, compartida con tu correo.",
+      "Tu licencia, adjunta. Guárdala: el montaje te la pedirá.",
+      "El enlace para reservar tus dos sesiones de montaje.",
+      "La factura, en un correo aparte."
+    ],
+    "help": "¿No te llega? Mira en la carpeta de correo no deseado o escríbenos a info@pymaticlabs.com.",
+    "cta": "Ver cómo funciona"
+  },
   "contact": {
     "title": "Hablemos",
     "subtitle": "Cuéntanos qué hace tu empresa y te decimos qué modalidad te encaja.",
