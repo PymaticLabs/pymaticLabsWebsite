@@ -34,7 +34,6 @@
       "chatUser": "Claude, check the books and make sure everything adds up.",
       "chatReply": "September checked: 46 invoices match the bank. One is duplicated, F-118. Shall I flag it?",
       "chatSource": "Based on: Month-end close",
-      "example": "Example",
       "scroll": "Scroll"
     },
     "scenes": [
@@ -106,64 +105,6 @@
       }
     ],
     "more": "See all features",
-    "visual": {
-      "yourComputers": "Your computers",
-      "onlyNeeded": "only what is needed",
-      "docTitle": "Finishes and varnishes",
-      "versions": [
-        {
-          "who": "Marta",
-          "when": "today",
-          "what": "New varnish supplier"
-        },
-        {
-          "who": "Jordi",
-          "when": "12 Sep",
-          "what": "Drying: 24 h"
-        },
-        {
-          "who": "Marta",
-          "when": "3 Jun",
-          "what": "First version"
-        }
-      ],
-      "lockedArea": "Payroll",
-      "reading": "Reading 12,000 of 30,000 files",
-      "folders": [
-        "01 Customers",
-        "02 Tax",
-        "03 Payroll",
-        "_Sensitive",
-        "_Review"
-      ],
-      "taskTitle": "Quote · Main Street kitchen",
-      "taskSteps": [
-        "Tuesday's measurements",
-        "Materials and prices",
-        "Fitting and lead time"
-      ],
-      "permission": "Shall I make the PDF with your logo?",
-      "yes": "Yes",
-      "no": "No",
-      "files": [
-        {
-          "name": "kitchen-quote.pdf",
-          "status": "read"
-        },
-        {
-          "name": "prices-2026.xlsx",
-          "status": "read"
-        },
-        {
-          "name": "workshop-plan.dxf",
-          "status": "read"
-        },
-        {
-          "name": "medical-checkup.pdf",
-          "status": "not opened"
-        }
-      ]
-    },
     "closing": {
       "title": "Pay once. It is yours.",
       "text": "A license for good. Launch price for the first 10 customers.",

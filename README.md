@@ -82,7 +82,7 @@ app/
   api/contact/          # Formulario de contacto (Resend)
   api/stripe/webhook/   # Entrega tras el pago
 components/
-  home/                 # Home: scrolly.tsx (recorrido con scroll) y laptop.tsx (el portátil animado)
+  home/                 # Home: scrolly.tsx (recorrido con scroll) y core-scene.tsx (el núcleo 3D)
   pricing/              # Tarjeta de modalidad
   ui/                   # Primitivas shadcn/ui
 content/legal/{es,en}/  # Textos largos en Markdown

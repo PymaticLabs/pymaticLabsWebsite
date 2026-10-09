@@ -42,9 +42,7 @@ export default async function HomePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <div className="pt-16">
-        <Scrolly />
-      </div>
+      <Scrolly />
       <Closing />
     </>
   )

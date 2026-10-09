@@ -34,7 +34,6 @@
       "chatUser": "Claude, revísame la contabilidad, que cuadre todo.",
       "chatReply": "Septiembre revisado: 46 facturas cuadran con el banco. Hay una repetida, la F-118. ¿Te la marco?",
       "chatSource": "Según: Cierre de mes",
-      "example": "Ejemplo",
       "scroll": "Desliza"
     },
     "scenes": [
@@ -106,64 +105,6 @@
       }
     ],
     "more": "Ver todas las funciones",
-    "visual": {
-      "yourComputers": "Tus equipos",
-      "onlyNeeded": "solo lo necesario",
-      "docTitle": "Acabados y barnices",
-      "versions": [
-        {
-          "who": "Marta",
-          "when": "hoy",
-          "what": "Nuevo proveedor de barniz"
-        },
-        {
-          "who": "Jordi",
-          "when": "12 sep",
-          "what": "Secado: 24 h"
-        },
-        {
-          "who": "Marta",
-          "when": "3 jun",
-          "what": "Primera versión"
-        }
-      ],
-      "lockedArea": "Laboral",
-      "reading": "Leyendo 12.000 de 30.000 ficheros",
-      "folders": [
-        "01 Clientes",
-        "02 Fiscal",
-        "03 Laboral",
-        "_Sensible",
-        "_Revisar"
-      ],
-      "taskTitle": "Presupuesto · cocina calle Mayor",
-      "taskSteps": [
-        "Medidas del martes",
-        "Materiales y precios",
-        "Montaje y plazo"
-      ],
-      "permission": "¿Saco el PDF con vuestro logo?",
-      "yes": "Sí",
-      "no": "No",
-      "files": [
-        {
-          "name": "presupuesto-cocina.pdf",
-          "status": "leído"
-        },
-        {
-          "name": "tarifas-2026.xlsx",
-          "status": "leído"
-        },
-        {
-          "name": "plano-taller.dxf",
-          "status": "leído"
-        },
-        {
-          "name": "reconocimiento-medico.pdf",
-          "status": "no se abre"
-        }
-      ]
-    },
     "closing": {
       "title": "Pagas una vez. Es tuyo.",
       "text": "Licencia para siempre. Precio de lanzamiento para los 10 primeros clientes.",
