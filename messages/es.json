@@ -1,10 +1,10 @@
 {
   "meta": {
     "siteTitle": "Pymatic Labs · Cerebro Digital",
-    "homeTitle": "Cerebro Digital · La memoria de tu empresa, con IA",
-    "homeDescription": "Digitalizamos el conocimiento de tu empresa, indexado para que cualquier IA lo consulte, y esa IA puede además ejecutar tus procesos. Vive en tus equipos y funciona con Claude.",
-    "howTitle": "Cómo funciona el Cerebro Digital",
-    "howDescription": "Qué es, cómo se le habla, todo lo que sabe hacer y lo que nunca hace. Sin tecnicismos.",
+    "homeTitle": "Cerebro Digital · Tu conocimiento, privado en todo momento",
+    "homeDescription": "Todo lo que sabe tu empresa, en tu ordenador. Le preguntas a Claude y te contesta con tus documentos. Y hace tus tareas.",
+    "howTitle": "Funciones del Cerebro Digital",
+    "howDescription": "Todo lo que hace el Cerebro Digital y lo que necesitas para usarlo, de un vistazo.",
     "pricingTitle": "Precios del Cerebro Digital",
     "pricingDescription": "Pago único y licencia perpetua por empresa. Hazlo tú desde 500 € (precio de lanzamiento), sin IVA.",
     "securityTitle": "Seguridad y privacidad",
@@ -14,7 +14,7 @@
   },
   "nav": {
     "home": "Pymatic Labs, inicio",
-    "comoFunciona": "Cómo funciona",
+    "comoFunciona": "Funciones",
     "precios": "Precios",
     "seguridad": "Seguridad",
     "contacto": "Contacto",
@@ -24,120 +24,346 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
   },
-  "hero": {
-    "eyebrow": "Cerebro Digital · funciona con Claude",
-    "title": "La memoria de tu empresa, con una IA que la consulta y hace el trabajo",
-    "subtitle": "Digitalizamos el conocimiento de tu empresa, indexado para que cualquier IA lo consulte. Y esa IA puede, además, ejecutar tus procesos con solo pedírselo.",
-    "ctaPrimary": "Ver precios",
-    "ctaSecondary": "Ver la demo",
-    "badges": ["Vive en tus equipos", "Se monta sin terminal", "Para Mac y Windows"],
-    "note": "Para pymes y profesionales. Precio de lanzamiento para los 10 primeros clientes."
-  },
-  "whatIs": {
-    "eyebrow": "El producto",
-    "title": "Qué es y qué no es",
-    "subtitle": "Le hablas a través de Claude, el asistente de IA, en tu ordenador. Como a un compañero que se ha leído todo.",
-    "isTitle": "Qué es",
-    "is": [
-      "La memoria de tu empresa: cómo se hacen las cosas, los criterios, los datos de referencia y dónde está cada documento.",
-      "Contesta con lo que dicen tus documentos y te dice de cuál lo saca.",
-      "Hace tareas: si está escrita paso a paso, el asistente la sigue por ti. Si no sabe, se la enseñas una vez y la recuerda.",
-      "Vive en tus equipos, no en internet. Es tuyo."
-    ],
-    "isNotTitle": "Qué no es",
-    "isNot": [
-      "No es un buscador de internet: si algo no está en tu cerebro, te lo dice.",
-      "No es un almacén de ficheros: tus PDF, Excel y Word se quedan donde están.",
-      "No es un programa que haya que aprender: no hay menús, hablas y te contesta.",
-      "No sustituye a tu asesoría, a tu técnico de prevención ni a tu abogado. Te ahorra buscar y repetir."
-    ]
-  },
-  "demo": {
-    "title": "Así se trabaja con él",
-    "subtitle": "Una carpintería inventada. Elige qué quieres ver.",
-    "disclaimer": "Demo simulada con datos inventados. No descarga ni instala nada.",
-    "replay": "Repetir",
-    "windowTitle": "Claude · Cerebro Digital",
-    "you": "Tú",
-    "assistant": "Claude",
-    "scenarios": [
+  "home": {
+    "hero": {
+      "title": "Cerebro Digital",
+      "tagline": "Tu conocimiento, privado en todo momento.",
+      "text": "Todo lo que sabe tu empresa, en tu ordenador. Le preguntas a Claude y te contesta con tus documentos. Y hace tus tareas.",
+      "ctaPrimary": "Ver precios",
+      "ctaSecondary": "Ver funciones",
+      "chatUser": "Claude, revísame la contabilidad, que cuadre todo.",
+      "chatReply": "Septiembre revisado: 46 facturas cuadran con el banco. Hay una repetida, la F-118. ¿Te la marco?",
+      "chatSource": "Según: Cierre de mes",
+      "example": "Ejemplo",
+      "scroll": "Desliza"
+    },
+    "scenes": [
       {
-        "id": "ask",
-        "label": "Preguntar",
-        "messages": [
-          { "role": "user", "text": "¿Qué barniz usamos para las puertas de exterior?" },
-          {
-            "role": "assistant",
-            "text": "Para exterior usamos barniz al agua con filtro UV: dos manos, con un lijado fino entre una y otra. Lo compramos a Barnices Levante, que entrega en 48 horas.",
-            "source": "Fuente: Acabados y barnices · revisado el 12-09"
-          }
+        "id": "local",
+        "kicker": "Todo en local",
+        "title": "Vive en tu ordenador.",
+        "text": "Tus documentos y tu cerebro se quedan en tus equipos. Claude consulta solo lo que necesita para contestarte.",
+        "specs": [
+          "Nada en nuestros servidores",
+          "Contraseñas en una caja fuerte, en tu equipo",
+          "Mac y Windows"
         ]
       },
       {
-        "id": "task",
-        "label": "Pedir una tarea",
-        "messages": [
-          { "role": "user", "text": "Prepárame el presupuesto de la cocina del cliente de la calle Mayor." },
-          {
-            "role": "assistant",
-            "text": "Sigo el procedimiento «Cómo preparar un presupuesto». Con las medidas que tomaste el martes salen 3,20 m lineales con isla, tablero de roble y herrajes de cierre suave. ¿Lo saco en PDF con vuestro logo?"
-          },
-          { "role": "user", "text": "Sí, adelante." },
-          {
-            "role": "assistant",
-            "text": "Hecho: presupuesto-calle-mayor.pdf, en la carpeta de la tarea.",
-            "source": "Procedimiento: Cómo preparar un presupuesto"
-          }
+        "id": "history",
+        "kicker": "Historial",
+        "title": "Cada cambio, guardado para siempre.",
+        "text": "Sabes quién cambió qué, cuándo y por qué. Lo de antes nunca se pierde.",
+        "specs": [
+          "Quién, qué y cuándo",
+          "Nada se pierde",
+          "Copia de seguridad cada semana"
         ]
       },
       {
-        "id": "change",
-        "label": "Cambiar lo que sabe",
-        "messages": [
-          { "role": "user", "text": "El barniz de exterior ahora lo compramos a Maderas del Turia." },
-          {
-            "role": "assistant",
-            "text": "Voy a cambiar un documento, «Acabados y barnices»: el proveedor del barniz de exterior pasa a ser Maderas del Turia. Lo anterior queda en el historial. ¿Lo confirmo?"
-          },
-          { "role": "user", "text": "Sí." },
-          {
-            "role": "assistant",
-            "text": "Hecho. Desde ahora el cerebro dice solo lo que vale hoy.",
-            "source": "Cambio guardado en el historial"
-          }
+        "id": "team",
+        "kicker": "Equipos",
+        "title": "Todo tu equipo, el mismo cerebro.",
+        "text": "Cada persona en su ordenador. Lo delicado, solo para quien tú digas.",
+        "specs": [
+          "Hasta 10 personas",
+          "Áreas con llave",
+          "Altas y bajas con una frase"
+        ]
+      },
+      {
+        "id": "documents",
+        "kicker": "Tus documentos",
+        "title": "Aprende de lo que ya tienes.",
+        "text": "Le señalas la carpeta de la empresa y la lee. Sin ordenar, renombrar ni subir nada.",
+        "specs": [
+          "PDF, Word, Excel, correos y escaneados",
+          "Tus originales no se tocan",
+          "Lo de salud, ni lo abre"
+        ]
+      },
+      {
+        "id": "folders",
+        "kicker": "Carpetas",
+        "title": "Y te pone orden.",
+        "text": "Te propone cómo organizar tus carpetas y hace una copia ordenada. Las de siempre se quedan como están.",
+        "specs": [
+          "Copia ordenada",
+          "Lo sensible, aparte",
+          "Índice en Excel"
+        ]
+      },
+      {
+        "id": "tasks",
+        "kicker": "Tareas",
+        "title": "Lo que haces cada semana, lo hace él.",
+        "text": "Presupuestos, partes, apuntes en tus Excel. Se lo explicas una vez y lo repite igual. Antes de tocar nada, te pide el «sí».",
+        "specs": [
+          "Te pide permiso",
+          "Aprende tareas nuevas",
+          "PDF con tu logo"
         ]
       }
-    ]
+    ],
+    "more": "Ver todas las funciones",
+    "visual": {
+      "yourComputers": "Tus equipos",
+      "onlyNeeded": "solo lo necesario",
+      "docTitle": "Acabados y barnices",
+      "versions": [
+        {
+          "who": "Marta",
+          "when": "hoy",
+          "what": "Nuevo proveedor de barniz"
+        },
+        {
+          "who": "Jordi",
+          "when": "12 sep",
+          "what": "Secado: 24 h"
+        },
+        {
+          "who": "Marta",
+          "when": "3 jun",
+          "what": "Primera versión"
+        }
+      ],
+      "lockedArea": "Laboral",
+      "reading": "Leyendo 12.000 de 30.000 ficheros",
+      "folders": [
+        "01 Clientes",
+        "02 Fiscal",
+        "03 Laboral",
+        "_Sensible",
+        "_Revisar"
+      ],
+      "taskTitle": "Presupuesto · cocina calle Mayor",
+      "taskSteps": [
+        "Medidas del martes",
+        "Materiales y precios",
+        "Montaje y plazo"
+      ],
+      "permission": "¿Saco el PDF con vuestro logo?",
+      "yes": "Sí",
+      "no": "No",
+      "files": [
+        {
+          "name": "presupuesto-cocina.pdf",
+          "status": "leído"
+        },
+        {
+          "name": "tarifas-2026.xlsx",
+          "status": "leído"
+        },
+        {
+          "name": "plano-taller.dxf",
+          "status": "leído"
+        },
+        {
+          "name": "reconocimiento-medico.pdf",
+          "status": "no se abre"
+        }
+      ]
+    },
+    "closing": {
+      "title": "Pagas una vez. Es tuyo.",
+      "text": "Licencia para siempre. Precio de lanzamiento para los 10 primeros clientes.",
+      "from": "desde",
+      "noVat": "sin IVA",
+      "cta": "Ver precios",
+      "doubtsTitle": "¿Tienes dudas?",
+      "doubtsText": "Te contamos qué modalidad te encaja.",
+      "doubtsCta": "Habla con ventas"
+    }
   },
   "features": {
     "eyebrow": "Funciones",
-    "title": "Todo lo que sabe hacer",
-    "subtitle": "Lo que sabe depende de lo que tu empresa le enseñe. Esto es lo que hace con ello.",
-    "more": "Ver cómo funciona",
-    "items": [
-      { "id": "answers", "title": "Responde con tus documentos", "text": "Preguntas con tus palabras y contesta citando de qué documento sale. Si no lo sabe, te lo dice y apunta la pregunta." },
-      { "id": "tasks", "title": "Hace tareas paso a paso", "text": "Presupuestos, partes, apuntes en tus Excel. Sigue el procedimiento igual cada vez, con los permisos que tú apruebas." },
-      { "id": "learn", "title": "Aprende tareas nuevas", "text": "Explícale algo que se repite y te lo propone escrito. Cuando lo apruebas, queda en el cerebro." },
-      { "id": "ingest", "title": "Aprovecha lo que ya tienes", "text": "Lee tus carpetas de siempre (PDF, Word, Excel, correos, escaneados) sin que ordenes nada. Tus originales no se tocan." },
-      { "id": "pdf", "title": "PDF con tu logo", "text": "Presupuestos, partes y hojas de encargo con la imagen de tu empresa, rellenos con tus datos." },
-      { "id": "connect", "title": "Conecta tus programas", "text": "Si parte del trabajo vive en otro programa, lo usa con conectores verificados. Antes intenta hacerlo sin conectar nada." },
-      { "id": "vault", "title": "Caja fuerte de contraseñas", "text": "Las contraseñas viven cifradas en tu equipo. El asistente nunca las ve." },
-      { "id": "backup", "title": "Copias de seguridad solas", "text": "Cada semana, comprobadas, al disco o la carpeta que elijas. Se guardan las cuatro últimas." },
-      { "id": "mobile", "title": "También desde el móvil", "text": "Úsalo desde el móvil u otro ordenador, con Claude, mientras el equipo donde vive esté encendido y con Claude abierto." },
-      { "id": "health", "title": "Informe de salud", "text": "Cada mes te dice qué está sin revisar y, sobre todo, qué preguntas no supo contestar: lo que falta por documentar." }
-    ]
-  },
-  "different": {
-    "eyebrow": "Por qué este",
-    "title": "Pensado para empresas que no son de informática",
-    "items": [
-      { "id": "noTerminal", "title": "Se monta sin terminal", "text": "Una extensión de Claude Desktop para Mac y Windows. Doble clic, tres preguntas y unas ventanas que aceptar." },
-      { "id": "local", "title": "Tus datos, en tus máquinas", "text": "El cerebro y tus documentos viven en tus equipos. Nosotros no recibimos ni tu cerebro ni tus contraseñas." },
-      { "id": "spain", "title": "Hecho en España, para España", "text": "En castellano y con la normativa española en mente. Aparte, el Pack España: fiscal, laboral, PRL y conectores como Holded." },
-      { "id": "team", "title": "Para todo el equipo", "text": "Hasta 10 personas en el mismo cerebro, con áreas con llave: Producción ve cómo funciona la PRL, no sus datos." },
-      { "id": "permissions", "title": "Nada a tus espaldas", "text": "Antes de cambiar algo te enseña qué va a hacer y espera tu «sí». Lo de salud ni lo abre." },
-      { "id": "yours", "title": "Tuyo para siempre", "text": "Licencia perpetua: si dejas el mensual, pierdes el soporte, no el uso." }
-    ]
+    "title": "Todo lo que hace, de un vistazo.",
+    "groups": [
+      {
+        "title": "Le preguntas",
+        "items": [
+          {
+            "icon": "answers",
+            "title": "Responde con tus documentos",
+            "text": "Y te dice de cuál sale cada respuesta."
+          },
+          {
+            "icon": "unknown",
+            "title": "Si no lo sabe, lo dice",
+            "text": "No inventa. Apunta la pregunta para documentarla."
+          },
+          {
+            "icon": "history",
+            "title": "Historial completo",
+            "text": "Qué cambió, quién y cuándo. Nada se pierde."
+          },
+          {
+            "icon": "find",
+            "title": "Encuentra el original",
+            "text": "Te dice en qué carpeta está cada fichero."
+          }
+        ]
+      },
+      {
+        "title": "Trabaja por ti",
+        "items": [
+          {
+            "icon": "tasks",
+            "title": "Tareas paso a paso",
+            "text": "Las hace igual cada vez."
+          },
+          {
+            "icon": "learn",
+            "title": "Aprende tareas nuevas",
+            "text": "Se la explicas una vez y queda guardada."
+          },
+          {
+            "icon": "excel",
+            "title": "Apunta en tus Excel",
+            "text": "Y guarda la versión anterior antes de cada cambio."
+          },
+          {
+            "icon": "pdf",
+            "title": "PDF con tu logo",
+            "text": "Presupuestos y partes con tu imagen."
+          },
+          {
+            "icon": "connect",
+            "title": "Usa tus programas",
+            "text": "Si hace falta, se conecta a los que ya usas."
+          }
+        ]
+      },
+      {
+        "title": "Tus documentos",
+        "items": [
+          {
+            "icon": "read",
+            "title": "Lee lo que ya tienes",
+            "text": "PDF, Word, Excel, PowerPoint, correos, planos y escaneados."
+          },
+          {
+            "icon": "originals",
+            "title": "No toca tus originales",
+            "text": "Solo los lee."
+          },
+          {
+            "icon": "order",
+            "title": "Ordena tus carpetas",
+            "text": "En una copia aparte, con un índice en Excel."
+          },
+          {
+            "icon": "new",
+            "title": "Ve lo nuevo",
+            "text": "Te dice qué ha entrado o cambiado en la carpeta."
+          }
+        ]
+      },
+      {
+        "title": "En equipo",
+        "items": [
+          {
+            "icon": "people",
+            "title": "Hasta 10 personas",
+            "text": "Cada una en su ordenador."
+          },
+          {
+            "icon": "locked",
+            "title": "Áreas con llave",
+            "text": "Lo delicado, solo para quien tú digas."
+          },
+          {
+            "icon": "invite",
+            "title": "Altas y bajas con una frase",
+            "text": "«Da de alta a Laura, de la oficina.»"
+          },
+          {
+            "icon": "mobile",
+            "title": "Desde el móvil",
+            "text": "Con el ordenador del cerebro encendido."
+          }
+        ]
+      },
+      {
+        "title": "Privacidad y seguridad",
+        "items": [
+          {
+            "icon": "local",
+            "title": "Vive en tus equipos",
+            "text": "Nosotros no recibimos tu cerebro."
+          },
+          {
+            "icon": "vault",
+            "title": "Caja fuerte de contraseñas",
+            "text": "El asistente nunca las ve."
+          },
+          {
+            "icon": "permission",
+            "title": "Te pide permiso",
+            "text": "Nada cambia sin tu «sí»."
+          },
+          {
+            "icon": "health",
+            "title": "Lo de salud, ni lo abre",
+            "text": "Y nóminas o DNI, solo si lo permites."
+          },
+          {
+            "icon": "backup",
+            "title": "Copias cada semana",
+            "text": "Comprobadas. Se guardan las cuatro últimas."
+          },
+          {
+            "icon": "updates",
+            "title": "Actualizaciones firmadas",
+            "text": "Solo instala versiones de Pymatic Labs."
+          }
+        ]
+      }
+    ],
+    "specsTitle": "Especificaciones",
+    "specs": [
+      [
+        "Ordenadores",
+        "Mac y Windows"
+      ],
+      [
+        "Necesitas",
+        "Claude Desktop y una cuenta de Claude de pago. Con datos personales, Claude Team o Enterprise."
+      ],
+      [
+        "Montaje",
+        "Una extensión de Claude: doble clic y tres preguntas. Sin terminal."
+      ],
+      [
+        "Personas",
+        "1, o hasta 10 con equipo"
+      ],
+      [
+        "Lee",
+        "PDF, Word, Excel, PowerPoint, correos, planos DXF, escaneados y fotos"
+      ],
+      [
+        "Idiomas",
+        "Castellano e inglés. Cada persona pregunta en el suyo."
+      ],
+      [
+        "Copias de seguridad",
+        "Cada semana, a un disco o carpeta tuya. Se guardan 4."
+      ],
+      [
+        "Internet",
+        "Para hablar con Claude. Tus documentos se quedan en tus equipos."
+      ],
+      [
+        "Licencia",
+        "Para siempre. Se comprueba sin internet."
+      ],
+      [
+        "Guías",
+        "Dos, en PDF: una para el día a día y otra técnica."
+      ]
+    ],
+    "cta": "Ver precios"
   },
   "promise": {
     "eyebrow": "Promesa de privacidad",
@@ -146,16 +372,6 @@
     "footnote": "Nuestra promesa, palabra por palabra.",
     "link": "Ver seguridad y privacidad"
   },
-  "howToBuy": {
-    "eyebrow": "Cómo se compra",
-    "title": "De la compra al cerebro montado",
-    "steps": [
-      { "title": "Eliges modalidad y pagas una vez", "text": "Hazlo tú, con tarjeta en la web. Acompañado, con factura previa y pago por transferencia o con tarjeta." },
-      { "title": "Lo recibes todo al momento", "text": "Tu licencia, el enlace de descarga, las condiciones y el enlace para reservar las sesiones llegan a tu correo." },
-      { "title": "Dos sesiones de montaje", "text": "Dos videollamadas de 1 hora, de 18:00 a 22:00 (hora peninsular), para dejarlo montado contigo." },
-      { "title": "Garantía de montaje", "text": "Si tras las dos sesiones no queda montado, te devolvemos el pago si lo pides por escrito en los 14 días siguientes a la compra." }
-    ]
-  },
   "offer": {
     "launch": "Lanzamiento",
     "list": "Precio de lista",
@@ -163,10 +379,26 @@
     "oneOff": "pago único",
     "launchNote": "Precio de lanzamiento para los 10 primeros clientes. Después, rige el de lista.",
     "modalities": {
-      "hazlo-tu": { "name": "Hazlo tú", "tagline": "Para quien monta y hace crecer su cerebro por su cuenta.", "people": "1 persona" },
-      "hazlo-tu-equipo": { "name": "Hazlo tú con equipo", "tagline": "Lo mismo, para varias personas.", "people": "Hasta 10 personas" },
-      "acompanado": { "name": "Acompañado", "tagline": "Para empezar con tus procesos ya montados.", "people": "1 persona" },
-      "acompanado-equipo": { "name": "Acompañado con equipo", "tagline": "Para empezar con tus procesos ya montados, con equipo.", "people": "Hasta 10 personas" }
+      "hazlo-tu": {
+        "name": "Hazlo tú",
+        "tagline": "Lo montas tú.",
+        "people": "1 persona"
+      },
+      "hazlo-tu-equipo": {
+        "name": "Hazlo tú con equipo",
+        "tagline": "Lo montas tú, para tu equipo.",
+        "people": "Hasta 10 personas"
+      },
+      "acompanado": {
+        "name": "Acompañado",
+        "tagline": "Empiezas con tus tareas ya montadas.",
+        "people": "1 persona"
+      },
+      "acompanado-equipo": {
+        "name": "Acompañado con equipo",
+        "tagline": "Empiezas con tus tareas ya montadas, en equipo.",
+        "people": "Hasta 10 personas"
+      }
     },
     "plans": {
       "esencial": "Esencial",
@@ -174,124 +406,41 @@
       "premium": "Premium"
     }
   },
-  "pricingTeaser": {
-    "eyebrow": "Precios",
-    "title": "Pagas una vez. Es tuyo.",
-    "subtitle": "Licencia perpetua por empresa. Precios en euros, sin IVA.",
-    "cta": "Ver todos los detalles"
-  },
-  "faq": {
-    "title": "Preguntas frecuentes",
-    "items": [
-      { "q": "¿Tengo que saber de informática?", "a": "No. Se monta con una extensión de Claude Desktop, sin terminal, y se le habla con tus palabras. No hace falta saber cómo se llaman los documentos." },
-      { "q": "¿Qué necesito para usarlo?", "a": "Un ordenador con Windows o Mac, Claude Desktop y una cuenta de Claude de pago. Si vas a trabajar con datos personales, Claude Team o Enterprise." },
-      { "q": "¿Necesito internet?", "a": "Sí, para hablar con Claude. El cerebro y tus documentos están en tus equipos." },
-      { "q": "¿Qué pasa si dejo de pagar el mensual?", "a": "El cerebro sigue funcionando: la licencia es perpetua. Pierdes el mantenimiento y el soporte, no el uso." },
-      { "q": "¿Las correcciones de seguridad son de pago?", "a": "No. Llegan gratis a todos los clientes durante el periodo de soporte de su versión, con o sin mensual." },
-      { "q": "¿Puede estropear mis carpetas?", "a": "No. Solo lee la carpeta de la empresa. Cuando ordena, hace una copia aparte." },
-      { "q": "¿Ve lo de salud de mis trabajadores?", "a": "No. No lo abre ni lo nombra." },
-      { "q": "¿Cuántas personas pueden usarlo?", "a": "Sin equipo, una. Con equipo, hasta 10. Para más, lo presupuestamos a medida." },
-      { "q": "¿Y si me dice algo equivocado?", "a": "Díselo: «eso ha cambiado, ahora es así». Te propone corregir el documento." },
-      { "q": "¿Lo vendéis a particulares?", "a": "No. Solo a empresas y profesionales." }
-    ]
-  },
-  "finalCta": {
-    "title": "Empieza con tu cerebro",
-    "subtitle": "Precio de lanzamiento para los 10 primeros clientes. Si tienes dudas, escríbenos.",
-    "primary": "Ver precios",
-    "secondary": "Hablar con nosotros"
-  },
-  "howItWorks": {
-    "eyebrow": "Cómo funciona",
-    "title": "Todo lo que hace, sin tecnicismos",
-    "subtitle": "El Cerebro Digital es la memoria de tu empresa, ordenada y siempre a mano. Le hablas a través de Claude y además hace tareas por ti.",
-    "talk": {
-      "title": "Cómo se le habla",
-      "askTitle": "Preguntar",
-      "askText": "Pregunta con tus palabras, como lo dirías en el taller o en la oficina. Te contesta y te dice de qué documento sale.",
-      "askExamples": [
-        "¿Qué papeles pide la gestoría para dar de alta a un autónomo?",
-        "¿Cada cuánto se revisa el elevador del taller?",
-        "¿Qué hacemos si un cliente reclama una factura?",
-        "¿Cómo se cierra la caja al final del día?"
-      ],
-      "doTitle": "Pedir que haga cosas",
-      "doText": "Si la tarea ya está en el cerebro, la sigue paso a paso. Si no está, te propone aprenderla.",
-      "doExamples": [
-        "Prepárame el presupuesto de una cocina para este cliente.",
-        "Apunta en el Excel de pedidos el de hoy.",
-        "La revisión del compresor pasa a ser cada seis meses.",
-        "Ordena las carpetas de la oficina según las normas."
-      ]
-    },
-    "permissions": {
-      "title": "Te pide permiso antes de actuar",
-      "subtitle": "El cerebro no cambia nada a tus espaldas. Lo hace de tres formas:",
-      "items": [
-        { "title": "Te enseña lo que va a hacer", "text": "Antes de cambiar o añadir algo, te cuenta en llano qué va a cambiar. Lo confirmas una vez y lo hace de tirón." },
-        { "title": "Te abre una ventana para que elijas", "text": "Cuando hace falta una carpeta o un fichero tuyo, te sale una ventana para elegirlo. Nunca te pide que escribas dónde está algo." },
-        { "title": "Te pide aprobar permisos", "text": "La primera vez que una tarea necesita tocar algo de tu ordenador, una ventana dice en palabras normales qué podrá hacer. Lo arriesgado va marcado y rechazar es el botón por defecto." }
-      ]
-    },
-    "capabilities": {
-      "title": "Todo lo que sabe hacer",
-      "items": [
-        { "title": "Encontrar respuestas", "text": "Busca en todo lo que sabe y te dice de dónde lo saca. También responde sobre la historia de un documento: qué cambió, quién y por qué." },
-        { "title": "Hacer tareas y aprender nuevas", "text": "Sigue los procedimientos escritos igual cada vez. Si algo se repite, se lo explicas, te lo propone escrito y, cuando lo apruebas, lo aprende." },
-        { "title": "Cambiar lo que sabe", "text": "Un proveedor nuevo, un precio distinto: díselo. Te enseña el cambio antes de hacerlo y lo anterior queda en el historial." },
-        { "title": "Meter los documentos de tu empresa", "text": "Eliges la carpeta, te propone las áreas que ve y redacta sus documentos. Lee PDF, Word, Excel, PowerPoint, correos, escaneados y fotos. No hace un documento por fichero: 400 presupuestos son un resumen y un inventario." },
-        { "title": "Ordenar tus carpetas", "text": "Te propone un orden según las normas de tu sector y hace una copia ordenada. Lo sensible va a una carpeta aparte que no abre." },
-        { "title": "Encontrar el original", "text": "No guarda tus ficheros, pero sabe dónde está cada uno: te dice la carpeta y el nombre." },
-        { "title": "PDF con tu logo", "text": "Lo configuras una vez con tu plantilla o tu logo, y los documentos que haces una y otra vez salen con tu imagen." },
-        { "title": "Conectar programas que ya usas", "text": "Primero intenta hacerlo con tus ficheros. Si hace falta, usa conectores verificados y tú decides qué puede hacer solo y qué te pregunta." },
-        { "title": "Caja fuerte de contraseñas", "text": "Cifrada y abierta con tu contraseña maestra. Las tareas sacan de ahí lo que necesitan; el asistente nunca las ve." },
-        { "title": "Varias personas y áreas con llave", "text": "Con equipo, hasta 10 personas. Das de alta y de baja con una frase, y las áreas con llave solo las ven quienes tú digas." },
-        { "title": "Copias de seguridad", "text": "Se hacen solas cada semana, se comprueban y se guardan las cuatro últimas. Si una falla, te lo dice." },
-        { "title": "Desde el móvil y en otro idioma", "text": "Lo usas desde el móvil con Claude. Se monta en castellano o en inglés, y cada persona puede preguntarle en su idioma." }
-      ]
-    },
-    "never": {
-      "title": "Lo que nunca hace",
-      "subtitle": "La regla de fondo: el cerebro guarda el saber, no los datos sensibles.",
-      "items": [
-        { "title": "Salud", "text": "Nunca abre reconocimientos, informes médicos ni bajas, ni escribe en un documento a una persona junto a una dolencia." },
-        { "title": "Contraseñas", "text": "No abre ficheros que parecen de contraseñas. Si encuentra una escrita, no la copia: te avisa. Nunca te pide una en la conversación." },
-        { "title": "Datos personales", "text": "Nóminas, contratos o DNI solo se abren si lo permites para esa carpeta, y aun así sin escribir nombres de personas." },
-        { "title": "Tus originales", "text": "Nunca se modifican. Nada se instala ni se conecta sin tu permiso, y nada pasa de un cerebro a otro sin tu «sí»." }
-      ]
-    },
-    "setup": {
-      "title": "Cómo se monta",
-      "steps": [
-        "Instalas la extensión Cerebro Digital en Claude Desktop con un doble clic.",
-        "El asistente te hace tres preguntas: el nombre de la empresa, cómo te llamas y dónde estará tu cerebro.",
-        "Pulsas en algunas ventanas y creas la contraseña maestra de la caja fuerte.",
-        "Empiezas a meterle los documentos de tu empresa."
-      ],
-      "guides": "Con cada cerebro van dos guías, en PDF y en tu idioma: una para el día a día, sin nada de informática, y otra técnica."
-    },
-    "cta": "Ver precios"
-  },
   "pricing": {
-    "eyebrow": "Precios",
-    "title": "Pago único, licencia perpetua",
-    "subtitle": "Una licencia por empresa, a su nombre. Precios en euros, sin IVA.",
-    "includedTitle": "Incluido en las cuatro",
+    "title": "Pagas una vez. Es tuyo.",
+    "subtitle": "Licencia para siempre, a nombre de tu empresa. Precios sin IVA.",
+    "includedTitle": "En las cuatro",
     "included": [
-      "Licencia perpetua a nombre de tu empresa",
-      "Dos sesiones de montaje de 1 hora por videollamada",
+      "Licencia para siempre",
+      "2 sesiones de montaje de 1 h",
       "Garantía de montaje de 14 días",
-      "Correcciones de seguridad gratis durante el periodo de soporte"
+      "Seguridad al día, gratis"
     ],
     "extras": {
-      "hazlo-tu": ["Para 1 persona", "Montas y haces crecer tu cerebro por tu cuenta"],
-      "hazlo-tu-equipo": ["Hasta 10 personas en el mismo cerebro", "Altas, bajas e invitaciones", "Áreas con llave", "3 meses del plan Pro incluidos"],
-      "acompanado": ["Para 1 persona", "Arranque con tus procesos: de 3 a 5 procesos tuyos montados", "Tus documentos cargados", "1 mes del plan Esencial incluido"],
-      "acompanado-equipo": ["Hasta 10 personas en el mismo cerebro", "De 3 a 5 procesos tuyos montados y tus documentos cargados", "Personas dadas de alta y áreas con llave preparadas", "3 meses del plan Pro incluidos"]
+      "hazlo-tu": [
+        "1 persona"
+      ],
+      "hazlo-tu-equipo": [
+        "Hasta 10 personas",
+        "Áreas con llave",
+        "3 meses de Pro incluidos"
+      ],
+      "acompanado": [
+        "1 persona",
+        "De 3 a 5 tareas tuyas montadas",
+        "Tus documentos cargados",
+        "1 mes de Esencial incluido"
+      ],
+      "acompanado-equipo": [
+        "Hasta 10 personas",
+        "De 3 a 5 tareas tuyas montadas",
+        "Equipo y áreas con llave listos",
+        "3 meses de Pro incluidos"
+      ]
     },
     "payWith": {
-      "card": "Pago con tarjeta en la web",
-      "invoice": "Factura previa; pagas por transferencia o con tarjeta"
+      "card": "Pago con tarjeta",
+      "invoice": "Con factura previa"
     },
     "buy": "Comprar",
     "requestInvoice": "Pedir factura",
@@ -299,46 +448,115 @@
     "comingSoonNote": "La compra en línea abre en breve. Mientras, escríbenos y te avisamos.",
     "notifyMe": "Avísame",
     "sessions": {
-      "title": "Sesiones de montaje y garantía",
+      "title": "Montaje y garantía",
       "items": [
-        "Las cuatro modalidades incluyen dos sesiones de montaje de 1 hora, por videollamada, de 18:00 a 22:00, hora peninsular española.",
-        "Si no te presentas a una sesión, esa sesión se pierde.",
-        "Si tras las dos sesiones el cerebro no queda montado, te devolvemos el pago si lo pides por escrito en los 14 días siguientes a la compra, y la licencia se extingue.",
-        "Es una garantía de montaje, no de satisfacción."
+        "Dos videollamadas de 1 hora, de 18:00 a 22:00 (hora peninsular).",
+        "Si no queda montado, te devolvemos el dinero. Lo pides por escrito en los 14 días siguientes a la compra.",
+        "Es una garantía de montaje, no de satisfacción. Si faltas a una sesión, se pierde."
       ]
     },
     "monthly": {
       "title": "Mensual, si lo quieres",
-      "subtitle": "Solo servicio: mantener tu cerebro al día, mejoras, packs, catálogo de conectores y soporte. Se cancela cuando quieras; sin él pierdes el soporte, no el uso.",
+      "subtitle": "Mejoras, packs y soporte. Lo cancelas cuando quieras y el cerebro sigue funcionando.",
       "perMonth": "/mes",
       "feature": "Qué incluye",
       "rows": [
-        { "label": "Versiones nuevas del cerebro, con sus mejoras", "values": [true, true, true] },
-        { "label": "Catálogo de conectores revisado", "values": [true, true, true] },
-        { "label": "Informe de salud", "values": [true, true, true] },
-        { "label": "Soporte por correo en 48 h", "values": [true, false, false] },
-        { "label": "Soporte prioritario en 24 h", "values": [false, true, true] },
-        { "label": "Packs al día con la normativa y los conectores", "values": [false, true, true] },
-        { "label": "Revisamos tu informe de salud cada mes y aplicamos las correcciones", "values": [false, true, true] },
-        { "label": "Sesión mensual de 1 hora", "values": [false, false, true] },
-        { "label": "Una automatización sencilla al mes, como mucho", "values": [false, false, true] },
-        { "label": "Un conector de la comunidad verificado cada trimestre", "values": [false, false, true] }
+        {
+          "label": "Versiones nuevas con mejoras",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Catálogo de programas conectables, revisado",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Informe de salud mensual",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Soporte por correo en 48 h",
+          "values": [
+            true,
+            false,
+            false
+          ]
+        },
+        {
+          "label": "Soporte prioritario en 24 h",
+          "values": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Packs al día con la normativa",
+          "values": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Revisamos tu informe y lo corregimos",
+          "values": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Sesión mensual de 1 h",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Una automatización sencilla al mes",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Un programa nuevo verificado cada trimestre",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        }
       ],
       "premiumNote": "La sesión mensual sirve para revisar qué ha cambiado en la empresa y detectar oportunidades de automatización. Si en la sesión se identifica una candidata que encaje en el alcance del corpus existente y clasifique como sencilla, se implementa dentro del plan. Las de complejidad media o superior, o las que requieran sistemas o integraciones nuevos, se presupuestan aparte. Máximo una implementada al mes, no acumulable.",
-      "securityNote": "Las correcciones de seguridad no son del mensual: llegan gratis a todos los clientes durante el periodo de soporte de su versión.",
-      "included": "Con equipo, los 3 primeros meses de Pro van incluidos. El Acompañado sin equipo trae el primer mes de Esencial."
+      "securityNote": "Las correcciones de seguridad son gratis para todos, con o sin mensual.",
+      "included": "Con equipo, 3 meses de Pro incluidos. Acompañado sin equipo, 1 mes de Esencial."
     },
     "apart": {
       "title": "Aparte",
       "packEspana": {
         "name": "Pack España",
-        "text": "Procedimientos fiscales, laborales y de PRL, y conectores españoles, cada uno con su procedimiento.",
+        "text": "Tareas fiscales, laborales y de prevención, y conexión con programas españoles.",
         "badge": "En preparación"
       },
       "custom": {
         "name": "A medida",
         "from": "desde",
-        "text": "Te hacemos nosotros el cerebro, con el Pack España. Solo si lo pides. Incluye el plan Esencial, obligatorio en este caso.",
+        "text": "Te montamos el cerebro nosotros, con el Pack España y el plan Esencial.",
         "cta": "Hablar con nosotros"
       },
       "moreThan10": "¿Más de 10 personas? Lo presupuestamos a medida."
@@ -347,18 +565,36 @@
     "b2b": "Venta solo a empresas y profesionales.",
     "faqTitle": "Dudas sobre la compra",
     "faq": [
-      { "q": "¿Qué es la licencia?", "a": "Un fichero firmado por Pymatic Labs, a nombre de tu empresa, sin el que el cerebro no se monta. Es perpetua. Dice hasta cuándo tienes mantenimiento y soporte; pasada esa fecha no se bloquea nada." },
-      { "q": "¿La licencia necesita internet?", "a": "No. Se comprueba en tu equipo, sin conectarse a ningún sitio. No hay ningún interruptor remoto." },
-      { "q": "¿El Acompañado son horas de consultoría?", "a": "No: es un resultado. Al terminar tienes de 3 a 5 procesos tuyos montados y tus documentos cargados. Con equipo, además, las personas dadas de alta y las áreas con llave preparadas." },
-      { "q": "¿Puedo empezar sin equipo y ampliar después?", "a": "Sí. Escríbenos y te decimos cómo; te llega una licencia nueva y se la das al cerebro." },
-      { "q": "¿Qué es «con equipo»?", "a": "Hasta 10 personas usan el mismo cerebro, cada una en su ordenador, con altas, bajas, invitaciones y áreas con llave. Sin equipo, el cerebro es de una persona." },
-      { "q": "¿Los precios llevan IVA?", "a": "No. Los precios son sin IVA; la factura lleva el IVA que corresponda." }
+      {
+        "q": "¿Qué es la licencia?",
+        "a": "Un fichero a nombre de tu empresa que necesita el cerebro para montarse. Es para siempre."
+      },
+      {
+        "q": "¿Necesita internet?",
+        "a": "La licencia no: se comprueba en tu equipo. No hay ningún interruptor a distancia."
+      },
+      {
+        "q": "¿El Acompañado son horas?",
+        "a": "No, es un resultado: terminas con 3 a 5 tareas tuyas montadas y tus documentos cargados."
+      },
+      {
+        "q": "¿Puedo empezar solo y ampliar a equipo?",
+        "a": "Sí. Escríbenos y te pasamos una licencia nueva."
+      },
+      {
+        "q": "¿Y si dejo el mensual?",
+        "a": "El cerebro sigue funcionando. Pierdes el soporte, no el uso."
+      },
+      {
+        "q": "¿Los precios llevan IVA?",
+        "a": "No. La factura lleva el IVA que corresponda."
+      }
     ]
   },
   "security": {
     "eyebrow": "Seguridad y privacidad",
     "title": "Tus datos, en tus equipos",
-    "subtitle": "Qué pasa con tu información cuando usas el Cerebro Digital, y cómo reportarnos un fallo de seguridad.",
+    "subtitle": "Qué pasa con tu información y cómo avisarnos de un fallo.",
     "promiseTitle": "Nuestra promesa",
     "behindTitle": "Lo que hay detrás",
     "behind": [
@@ -432,7 +668,7 @@
     "legal": "Legal",
     "contact": "Contacto",
     "links": {
-      "comoFunciona": "Cómo funciona",
+      "comoFunciona": "Funciones",
       "precios": "Precios",
       "seguridad": "Seguridad",
       "contacto": "Contacto"

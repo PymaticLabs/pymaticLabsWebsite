@@ -44,7 +44,7 @@ export default async function GraciasPage({
         <p className="mt-6 text-sm text-muted">{t('help')}</p>
         <div className="mt-8">
           <Button size="lg" asChild>
-            <Link href={localePath(locale, '/como-funciona')}>{t('cta')}</Link>
+            <Link href={localePath(locale, '/funciones')}>{t('cta')}</Link>
           </Button>
         </div>
       </div>

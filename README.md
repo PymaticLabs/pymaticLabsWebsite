@@ -74,7 +74,7 @@ pnpm test
 app/
   [locale]/
     page.tsx            # Home
-    como-funciona/      # Qué es y todo lo que sabe hacer
+    funciones/          # Funciones y especificaciones
     precios/            # Modalidades, mensual, Pack España y A medida
     seguridad/          # Promesa de privacidad y política de vulnerabilidades
     contacto/
@@ -82,7 +82,7 @@ app/
   api/contact/          # Formulario de contacto (Resend)
   api/stripe/webhook/   # Entrega tras el pago
 components/
-  home/                 # Secciones de la home (la demo es home/demo.tsx)
+  home/                 # Home: scrolly.tsx (recorrido con scroll) y laptop.tsx (el portátil animado)
   pricing/              # Tarjeta de modalidad
   ui/                   # Primitivas shadcn/ui
 content/legal/{es,en}/  # Textos largos en Markdown

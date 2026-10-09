@@ -1,10 +1,10 @@
 {
   "meta": {
     "siteTitle": "Pymatic Labs · Digital Brain",
-    "homeTitle": "Digital Brain · Your company's memory, with AI",
-    "homeDescription": "We digitize your company's knowledge, indexed so any AI can look it up, and that AI can also run your processes. It lives on your computers and works with Claude.",
-    "howTitle": "How the Digital Brain works",
-    "howDescription": "What it is, how to talk to it, everything it can do and what it never does. No jargon.",
+    "homeTitle": "Digital Brain · Your knowledge, private at all times",
+    "homeDescription": "Everything your company knows, on your computer. Ask Claude and it answers from your documents. And it does your tasks.",
+    "howTitle": "Digital Brain features",
+    "howDescription": "Everything the Digital Brain does and what you need to use it, at a glance.",
     "pricingTitle": "Digital Brain pricing",
     "pricingDescription": "One-off payment and a perpetual license per company. Do it yourself from €500 (launch price), excluding VAT.",
     "securityTitle": "Security and privacy",
@@ -14,7 +14,7 @@
   },
   "nav": {
     "home": "Pymatic Labs, home",
-    "comoFunciona": "How it works",
+    "comoFunciona": "Features",
     "precios": "Pricing",
     "seguridad": "Security",
     "contacto": "Contact",
@@ -24,120 +24,346 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
-  "hero": {
-    "eyebrow": "Digital Brain · works with Claude",
-    "title": "Your company's memory, with an AI that looks it up and does the work",
-    "subtitle": "We digitize your company's knowledge, indexed so any AI can look it up. And that AI can also run your processes, just by asking.",
-    "ctaPrimary": "See pricing",
-    "ctaSecondary": "See the demo",
-    "badges": ["Lives on your computers", "No terminal needed", "For Mac and Windows"],
-    "note": "For businesses and professionals. Launch price for the first 10 customers."
-  },
-  "whatIs": {
-    "eyebrow": "The product",
-    "title": "What it is and what it is not",
-    "subtitle": "You talk to it through Claude, the AI assistant, on your computer. Like a coworker who has read everything.",
-    "isTitle": "What it is",
-    "is": [
-      "Your company's memory: how things are done, the criteria, the reference data and where each document is.",
-      "It answers with what your documents say and tells you which one it comes from.",
-      "It does tasks: if one is written down step by step, the assistant follows it for you. If it does not know how, you teach it once and it remembers.",
-      "It lives on your computers, not on the internet. It is yours."
-    ],
-    "isNotTitle": "What it is not",
-    "isNot": [
-      "It is not an internet search engine: if something is not in your brain, it tells you.",
-      "It is not a file store: your PDF, Excel and Word files stay where they are.",
-      "It is not a program you have to learn: there are no menus, you talk and it answers.",
-      "It does not replace your accountant, your safety officer or your lawyer. It saves you searching and repeating."
-    ]
-  },
-  "demo": {
-    "title": "This is how you work with it",
-    "subtitle": "A made-up carpentry workshop. Pick what you want to see.",
-    "disclaimer": "Simulated demo with made-up data. Nothing is downloaded or installed.",
-    "replay": "Replay",
-    "windowTitle": "Claude · Digital Brain",
-    "you": "You",
-    "assistant": "Claude",
-    "scenarios": [
+  "home": {
+    "hero": {
+      "title": "Digital Brain",
+      "tagline": "Your knowledge, private at all times.",
+      "text": "Everything your company knows, on your computer. Ask Claude and it answers from your documents. And it does your tasks.",
+      "ctaPrimary": "See pricing",
+      "ctaSecondary": "See features",
+      "chatUser": "Claude, check the books and make sure everything adds up.",
+      "chatReply": "September checked: 46 invoices match the bank. One is duplicated, F-118. Shall I flag it?",
+      "chatSource": "Based on: Month-end close",
+      "example": "Example",
+      "scroll": "Scroll"
+    },
+    "scenes": [
       {
-        "id": "ask",
-        "label": "Ask",
-        "messages": [
-          { "role": "user", "text": "Which varnish do we use for exterior doors?" },
-          {
-            "role": "assistant",
-            "text": "For exterior we use a water-based varnish with UV filter: two coats, with a light sanding between them. We buy it from Levante Varnishes, who deliver in 48 hours.",
-            "source": "Source: Finishes and varnishes · reviewed on 12 Sep"
-          }
+        "id": "local",
+        "kicker": "All local",
+        "title": "It lives on your computer.",
+        "text": "Your documents and your brain stay on your computers. Claude looks up only what it needs to answer you.",
+        "specs": [
+          "Nothing on our servers",
+          "Passwords in a vault, on your computer",
+          "Mac and Windows"
         ]
       },
       {
-        "id": "task",
-        "label": "Ask for a task",
-        "messages": [
-          { "role": "user", "text": "Prepare the quote for the kitchen of the customer on Main Street." },
-          {
-            "role": "assistant",
-            "text": "I am following the procedure “How to prepare a quote”. With the measurements you took on Tuesday it comes to 3.20 linear metres with an island, oak worktop and soft-close hinges. Shall I make it a PDF with your logo?"
-          },
-          { "role": "user", "text": "Yes, go ahead." },
-          {
-            "role": "assistant",
-            "text": "Done: quote-main-street.pdf, in the task folder.",
-            "source": "Procedure: How to prepare a quote"
-          }
+        "id": "history",
+        "kicker": "History",
+        "title": "Every change, kept forever.",
+        "text": "You know who changed what, when and why. Nothing from before is ever lost.",
+        "specs": [
+          "Who, what and when",
+          "Nothing is lost",
+          "Weekly backup"
         ]
       },
       {
-        "id": "change",
-        "label": "Change what it knows",
-        "messages": [
-          { "role": "user", "text": "We now buy the exterior varnish from Turia Timber." },
-          {
-            "role": "assistant",
-            "text": "I will change one document, “Finishes and varnishes”: the exterior varnish supplier becomes Turia Timber. The previous version stays in the history. Shall I confirm?"
-          },
-          { "role": "user", "text": "Yes." },
-          {
-            "role": "assistant",
-            "text": "Done. From now on the brain only says what is true today.",
-            "source": "Change saved in the history"
-          }
+        "id": "team",
+        "kicker": "Teams",
+        "title": "Your whole team, one brain.",
+        "text": "Everyone on their own computer. Sensitive things, only for the people you choose.",
+        "specs": [
+          "Up to 10 people",
+          "Locked areas",
+          "Add or remove people in one sentence"
+        ]
+      },
+      {
+        "id": "documents",
+        "kicker": "Your documents",
+        "title": "It learns from what you already have.",
+        "text": "Point it at the company folder and it reads it. No tidying, renaming or uploading.",
+        "specs": [
+          "PDF, Word, Excel, emails and scans",
+          "Your originals are never touched",
+          "Health files, it does not even open"
+        ]
+      },
+      {
+        "id": "folders",
+        "kicker": "Folders",
+        "title": "And it tidies up.",
+        "text": "It proposes how to organize your folders and makes an organized copy. Your usual ones stay as they are.",
+        "specs": [
+          "Organized copy",
+          "Sensitive files set apart",
+          "Index in Excel"
+        ]
+      },
+      {
+        "id": "tasks",
+        "kicker": "Tasks",
+        "title": "What you do every week, it does.",
+        "text": "Quotes, work reports, entries in your spreadsheets. Explain it once and it repeats it the same way. Before touching anything, it asks for your “yes”.",
+        "specs": [
+          "Asks for permission",
+          "Learns new tasks",
+          "PDFs with your logo"
         ]
       }
-    ]
+    ],
+    "more": "See all features",
+    "visual": {
+      "yourComputers": "Your computers",
+      "onlyNeeded": "only what is needed",
+      "docTitle": "Finishes and varnishes",
+      "versions": [
+        {
+          "who": "Marta",
+          "when": "today",
+          "what": "New varnish supplier"
+        },
+        {
+          "who": "Jordi",
+          "when": "12 Sep",
+          "what": "Drying: 24 h"
+        },
+        {
+          "who": "Marta",
+          "when": "3 Jun",
+          "what": "First version"
+        }
+      ],
+      "lockedArea": "Payroll",
+      "reading": "Reading 12,000 of 30,000 files",
+      "folders": [
+        "01 Customers",
+        "02 Tax",
+        "03 Payroll",
+        "_Sensitive",
+        "_Review"
+      ],
+      "taskTitle": "Quote · Main Street kitchen",
+      "taskSteps": [
+        "Tuesday's measurements",
+        "Materials and prices",
+        "Fitting and lead time"
+      ],
+      "permission": "Shall I make the PDF with your logo?",
+      "yes": "Yes",
+      "no": "No",
+      "files": [
+        {
+          "name": "kitchen-quote.pdf",
+          "status": "read"
+        },
+        {
+          "name": "prices-2026.xlsx",
+          "status": "read"
+        },
+        {
+          "name": "workshop-plan.dxf",
+          "status": "read"
+        },
+        {
+          "name": "medical-checkup.pdf",
+          "status": "not opened"
+        }
+      ]
+    },
+    "closing": {
+      "title": "Pay once. It is yours.",
+      "text": "A license for good. Launch price for the first 10 customers.",
+      "from": "from",
+      "noVat": "excl. VAT",
+      "cta": "See pricing",
+      "doubtsTitle": "Any questions?",
+      "doubtsText": "We will tell you which option fits.",
+      "doubtsCta": "Talk to sales"
+    }
   },
   "features": {
     "eyebrow": "Features",
-    "title": "Everything it can do",
-    "subtitle": "What it knows depends on what your company teaches it. This is what it does with that.",
-    "more": "See how it works",
-    "items": [
-      { "id": "answers", "title": "Answers from your documents", "text": "Ask in your own words and it answers, citing the document it comes from. If it does not know, it says so and notes the question." },
-      { "id": "tasks", "title": "Does tasks step by step", "text": "Quotes, work reports, entries in your spreadsheets. It follows the procedure the same way every time, with the permissions you approve." },
-      { "id": "learn", "title": "Learns new tasks", "text": "Explain something that repeats and it proposes it in writing. Once you approve it, it stays in the brain." },
-      { "id": "ingest", "title": "Uses what you already have", "text": "It reads your usual folders (PDF, Word, Excel, emails, scans) without you tidying anything. Your originals are never touched." },
-      { "id": "pdf", "title": "PDFs with your logo", "text": "Quotes, work reports and order sheets with your company's look, filled in with your data." },
-      { "id": "connect", "title": "Connects your software", "text": "If part of the work lives in another program, it uses it through verified connectors. It first tries without connecting anything." },
-      { "id": "vault", "title": "Password vault", "text": "Passwords live encrypted on your computer. The assistant never sees them." },
-      { "id": "backup", "title": "Automatic backups", "text": "Every week, verified, to the drive or folder you choose. The last four are kept." },
-      { "id": "mobile", "title": "From your phone too", "text": "Use it from your phone or another computer, with Claude, while the computer it lives on is on and Claude is open." },
-      { "id": "health", "title": "Health report", "text": "Every month it tells you what has not been reviewed and, above all, which questions it could not answer: what is left to document." }
-    ]
-  },
-  "different": {
-    "eyebrow": "Why this one",
-    "title": "Built for companies that are not in IT",
-    "items": [
-      { "id": "noTerminal", "title": "No terminal needed", "text": "An extension for Claude Desktop on Mac and Windows. A double click, three questions and a few windows to accept." },
-      { "id": "local", "title": "Your data, on your machines", "text": "The brain and your documents live on your computers. We never receive your brain or your passwords. Under GDPR, that matters." },
-      { "id": "spain", "title": "Speaks your language", "text": "Set up in English or Spanish, and each person can ask in their own language: the assistant answers in the language of the conversation." },
-      { "id": "team", "title": "For the whole team", "text": "Up to 10 people on the same brain, with locked areas: Production sees how Health & Safety works, not its data." },
-      { "id": "permissions", "title": "Nothing behind your back", "text": "Before changing anything it shows you what it will do and waits for your “yes”. Health information it does not even open." },
-      { "id": "yours", "title": "Yours for good", "text": "Perpetual license: if you drop the monthly plan, you lose support, not the use." }
-    ]
+    "title": "Everything it does, at a glance.",
+    "groups": [
+      {
+        "title": "You ask",
+        "items": [
+          {
+            "icon": "answers",
+            "title": "Answers from your documents",
+            "text": "And tells you which one each answer comes from."
+          },
+          {
+            "icon": "unknown",
+            "title": "If it does not know, it says so",
+            "text": "It does not make things up. It notes the question so you can document it."
+          },
+          {
+            "icon": "history",
+            "title": "Full history",
+            "text": "What changed, who and when. Nothing is lost."
+          },
+          {
+            "icon": "find",
+            "title": "Finds the original",
+            "text": "It tells you which folder each file is in."
+          }
+        ]
+      },
+      {
+        "title": "It works for you",
+        "items": [
+          {
+            "icon": "tasks",
+            "title": "Step-by-step tasks",
+            "text": "Done the same way every time."
+          },
+          {
+            "icon": "learn",
+            "title": "Learns new tasks",
+            "text": "Explain it once and it is saved."
+          },
+          {
+            "icon": "excel",
+            "title": "Fills in your spreadsheets",
+            "text": "And keeps the previous version before every change."
+          },
+          {
+            "icon": "pdf",
+            "title": "PDFs with your logo",
+            "text": "Quotes and work reports with your look."
+          },
+          {
+            "icon": "connect",
+            "title": "Uses your software",
+            "text": "If needed, it connects to the programs you already use."
+          }
+        ]
+      },
+      {
+        "title": "Your documents",
+        "items": [
+          {
+            "icon": "read",
+            "title": "Reads what you already have",
+            "text": "PDF, Word, Excel, PowerPoint, emails, drawings and scans."
+          },
+          {
+            "icon": "originals",
+            "title": "Leaves your originals alone",
+            "text": "It only reads them."
+          },
+          {
+            "icon": "order",
+            "title": "Organizes your folders",
+            "text": "In a separate copy, with an index in Excel."
+          },
+          {
+            "icon": "new",
+            "title": "Spots what is new",
+            "text": "It tells you what has arrived or changed in the folder."
+          }
+        ]
+      },
+      {
+        "title": "As a team",
+        "items": [
+          {
+            "icon": "people",
+            "title": "Up to 10 people",
+            "text": "Each on their own computer."
+          },
+          {
+            "icon": "locked",
+            "title": "Locked areas",
+            "text": "Sensitive things, only for the people you choose."
+          },
+          {
+            "icon": "invite",
+            "title": "Add people in one sentence",
+            "text": "“Add Laura, from the office.”"
+          },
+          {
+            "icon": "mobile",
+            "title": "From your phone",
+            "text": "While the brain’s computer is on."
+          }
+        ]
+      },
+      {
+        "title": "Privacy and security",
+        "items": [
+          {
+            "icon": "local",
+            "title": "Lives on your computers",
+            "text": "We never receive your brain."
+          },
+          {
+            "icon": "vault",
+            "title": "Password vault",
+            "text": "The assistant never sees them."
+          },
+          {
+            "icon": "permission",
+            "title": "Asks for permission",
+            "text": "Nothing changes without your “yes”."
+          },
+          {
+            "icon": "health",
+            "title": "Health files, not even opened",
+            "text": "Payslips or IDs, only if you allow it."
+          },
+          {
+            "icon": "backup",
+            "title": "Weekly backups",
+            "text": "Verified. The last four are kept."
+          },
+          {
+            "icon": "updates",
+            "title": "Signed updates",
+            "text": "It only installs versions from Pymatic Labs."
+          }
+        ]
+      }
+    ],
+    "specsTitle": "Specifications",
+    "specs": [
+      [
+        "Computers",
+        "Mac and Windows"
+      ],
+      [
+        "You need",
+        "Claude Desktop and a paid Claude account. With personal data, Claude Team or Enterprise."
+      ],
+      [
+        "Setup",
+        "A Claude extension: a double click and three questions. No terminal."
+      ],
+      [
+        "People",
+        "1, or up to 10 with a team"
+      ],
+      [
+        "Reads",
+        "PDF, Word, Excel, PowerPoint, emails, DXF drawings, scans and photos"
+      ],
+      [
+        "Languages",
+        "English and Spanish. Everyone asks in their own."
+      ],
+      [
+        "Backups",
+        "Every week, to a drive or folder of yours. The last 4 are kept."
+      ],
+      [
+        "Internet",
+        "To talk to Claude. Your documents stay on your computers."
+      ],
+      [
+        "License",
+        "For good. Checked offline."
+      ],
+      [
+        "Guides",
+        "Two, as PDFs: one for everyday use and a technical one."
+      ]
+    ],
+    "cta": "See pricing"
   },
   "promise": {
     "eyebrow": "Privacy promise",
@@ -146,16 +372,6 @@
     "footnote": "Our promise, word for word.",
     "link": "See security and privacy"
   },
-  "howToBuy": {
-    "eyebrow": "How to buy",
-    "title": "From purchase to a working brain",
-    "steps": [
-      { "title": "Pick an option and pay once", "text": "Do it yourself: by card on the website. Guided: invoice first, then bank transfer or card." },
-      { "title": "Get everything right away", "text": "Your license, the download link, the terms and the link to book your sessions arrive by email." },
-      { "title": "Two setup sessions", "text": "Two 1-hour video calls, 18:00 to 22:00 Spanish peninsular time, to set it up with you." },
-      { "title": "Setup guarantee", "text": "If it is not set up after the two sessions, we refund you if you ask in writing within 14 days of purchase." }
-    ]
-  },
   "offer": {
     "launch": "Launch",
     "list": "List price",
@@ -163,10 +379,26 @@
     "oneOff": "one-off payment",
     "launchNote": "Launch price for the first 10 customers. After that, the list price applies.",
     "modalities": {
-      "hazlo-tu": { "name": "Do it yourself", "tagline": "For those who set up and grow their brain on their own.", "people": "1 person" },
-      "hazlo-tu-equipo": { "name": "Do it yourself, team", "tagline": "The same, for several people.", "people": "Up to 10 people" },
-      "acompanado": { "name": "Guided", "tagline": "To start with your processes already set up.", "people": "1 person" },
-      "acompanado-equipo": { "name": "Guided, team", "tagline": "To start with your processes already set up, with a team.", "people": "Up to 10 people" }
+      "hazlo-tu": {
+        "name": "Do it yourself",
+        "tagline": "You set it up.",
+        "people": "1 person"
+      },
+      "hazlo-tu-equipo": {
+        "name": "Do it yourself, team",
+        "tagline": "You set it up, for your team.",
+        "people": "Up to 10 people"
+      },
+      "acompanado": {
+        "name": "Guided",
+        "tagline": "Start with your tasks already set up.",
+        "people": "1 person"
+      },
+      "acompanado-equipo": {
+        "name": "Guided, team",
+        "tagline": "Start with your tasks already set up, as a team.",
+        "people": "Up to 10 people"
+      }
     },
     "plans": {
       "esencial": "Essential",
@@ -174,124 +406,41 @@
       "premium": "Premium"
     }
   },
-  "pricingTeaser": {
-    "eyebrow": "Pricing",
-    "title": "Pay once. It is yours.",
-    "subtitle": "Perpetual license per company. Prices in euros, excluding VAT.",
-    "cta": "See all the details"
-  },
-  "faq": {
-    "title": "Frequently asked questions",
-    "items": [
-      { "q": "Do I need to know about computers?", "a": "No. It is set up with a Claude Desktop extension, no terminal, and you talk to it in your own words. You do not need to know what the documents are called." },
-      { "q": "What do I need to use it?", "a": "A Windows or Mac computer, Claude Desktop and a paid Claude account. If you will work with personal data, Claude Team or Enterprise." },
-      { "q": "Do I need the internet?", "a": "Yes, to talk to Claude. The brain and your documents are on your computers." },
-      { "q": "What happens if I stop paying the monthly plan?", "a": "The brain keeps working: the license is perpetual. You lose maintenance and support, not the use." },
-      { "q": "Do security fixes cost extra?", "a": "No. Every customer gets them free during their version's support period, with or without a monthly plan." },
-      { "q": "Can it damage my folders?", "a": "No. It only reads the company folder. When it organizes, it makes a separate copy." },
-      { "q": "Does it see my workers' health information?", "a": "No. It neither opens nor names it." },
-      { "q": "How many people can use it?", "a": "Without a team, one. With a team, up to 10. For more, we quote it as a custom project." },
-      { "q": "What if it tells me something wrong?", "a": "Tell it: “that has changed, now it is like this”. It offers to correct the document." },
-      { "q": "Do you sell to consumers?", "a": "No. Only to businesses and professionals." }
-    ]
-  },
-  "finalCta": {
-    "title": "Start with your brain",
-    "subtitle": "Launch price for the first 10 customers. Any questions, write to us.",
-    "primary": "See pricing",
-    "secondary": "Talk to us"
-  },
-  "howItWorks": {
-    "eyebrow": "How it works",
-    "title": "Everything it does, without jargon",
-    "subtitle": "The Digital Brain is your company's memory, organized and always at hand. You talk to it through Claude and it also does tasks for you.",
-    "talk": {
-      "title": "How to talk to it",
-      "askTitle": "Ask",
-      "askText": "Ask in your own words, the way you would say it in the workshop or at the office. It answers and tells you which document it comes from.",
-      "askExamples": [
-        "Which papers does the accountant need to register a freelancer?",
-        "How often is the workshop lift inspected?",
-        "What do we do if a customer disputes an invoice?",
-        "How do we close the till at the end of the day?"
-      ],
-      "doTitle": "Ask it to do things",
-      "doText": "If the task is already in the brain, it follows it step by step. If not, it offers to learn it.",
-      "doExamples": [
-        "Prepare the quote for a kitchen for this customer.",
-        "Add today's order to the orders spreadsheet.",
-        "The compressor service is now every six months.",
-        "Organize the office folders according to the standards."
-      ]
-    },
-    "permissions": {
-      "title": "It asks before it acts",
-      "subtitle": "The brain changes nothing behind your back. It asks in three ways:",
-      "items": [
-        { "title": "It shows you what it will do", "text": "Before changing or adding anything, it tells you in plain words what will change. You confirm once and it does it in one go." },
-        { "title": "It opens a window for you to choose", "text": "When it needs one of your folders or files, a window opens for you to pick it. It never asks you to type where something is." },
-        { "title": "It asks you to approve permissions", "text": "The first time a task needs to touch something on your computer, a window says in normal words what it will be able to do. Risky items are flagged and reject is the default button." }
-      ]
-    },
-    "capabilities": {
-      "title": "Everything it can do",
-      "items": [
-        { "title": "Find answers", "text": "It searches everything it knows and tells you where it got it from. It also answers about a document's history: what changed, who and why." },
-        { "title": "Do tasks and learn new ones", "text": "It follows written procedures the same way every time. If something repeats, explain it, it proposes it in writing and, once you approve it, it learns it." },
-        { "title": "Change what it knows", "text": "A new supplier, a different price: tell it. It shows you the change before making it and the previous version stays in the history." },
-        { "title": "Take in your company's documents", "text": "You choose the folder, it proposes the areas it sees and writes their documents. It reads PDF, Word, Excel, PowerPoint, emails, scans and photos. It does not make one document per file: 400 quotes become a summary and an inventory." },
-        { "title": "Organize your folders", "text": "It proposes an order based on your industry's standards and makes an organized copy. Sensitive files go to a separate folder it does not open." },
-        { "title": "Find the original", "text": "It does not store your files, but it knows where each one is: it tells you the folder and the name." },
-        { "title": "PDFs with your logo", "text": "Set it up once with your template or logo, and the documents you make over and over come out with your look." },
-        { "title": "Connect software you already use", "text": "It first tries with your files. If needed, it uses verified connectors and you decide what it can do alone and what it asks you first." },
-        { "title": "Password vault", "text": "Encrypted and opened with your master password. Tasks take what they need from it; the assistant never sees them." },
-        { "title": "Several people and locked areas", "text": "With a team, up to 10 people. Add and remove people with a sentence, and locked areas are only seen by whoever you say." },
-        { "title": "Backups", "text": "They run by themselves every week, are verified and the last four are kept. If one fails, it tells you." },
-        { "title": "From your phone and in other languages", "text": "Use it from your phone with Claude. It is set up in English or Spanish, and each person can ask in their own language." }
-      ]
-    },
-    "never": {
-      "title": "What it never does",
-      "subtitle": "The underlying rule: the brain keeps the know-how, not the sensitive data.",
-      "items": [
-        { "title": "Health", "text": "It never opens medical check-ups, medical reports or sick leave, and never writes a person next to an illness in any document." },
-        { "title": "Passwords", "text": "It does not open files that look like passwords. If it finds one written down, it does not copy it: it warns you. It never asks for one in the conversation." },
-        { "title": "Personal data", "text": "Payslips, contracts or IDs are only opened if you allow it for that folder, and even then without writing people's names." },
-        { "title": "Your originals", "text": "They are never modified. Nothing is installed or connected without your permission, and nothing moves from one brain to another without your “yes”." }
-      ]
-    },
-    "setup": {
-      "title": "How it is set up",
-      "steps": [
-        "You install the Digital Brain extension in Claude Desktop with a double click.",
-        "The assistant asks you three questions: the company name, your name and where your brain will live.",
-        "You click through a few windows and create the vault's master password.",
-        "You start adding your company's documents."
-      ],
-      "guides": "Every brain comes with two guides, as PDFs in your language: one for everyday use, with no IT at all, and a technical one."
-    },
-    "cta": "See pricing"
-  },
   "pricing": {
-    "eyebrow": "Pricing",
-    "title": "One-off payment, perpetual license",
-    "subtitle": "One license per company, in its name. Prices in euros, excluding VAT.",
-    "includedTitle": "Included in all four",
+    "title": "Pay once. It is yours.",
+    "subtitle": "A license for good, in your company’s name. Prices excluding VAT.",
+    "includedTitle": "In all four",
     "included": [
-      "Perpetual license in your company's name",
-      "Two 1-hour setup sessions by video call",
+      "License for good",
+      "2 one-hour setup sessions",
       "14-day setup guarantee",
-      "Free security fixes during the support period"
+      "Free security fixes"
     ],
     "extras": {
-      "hazlo-tu": ["For 1 person", "You set up and grow your brain on your own"],
-      "hazlo-tu-equipo": ["Up to 10 people on the same brain", "Add and remove people, invitations", "Locked areas", "3 months of the Pro plan included"],
-      "acompanado": ["For 1 person", "Kick-off with your processes: 3 to 5 of your processes set up", "Your documents loaded", "1 month of the Essential plan included"],
-      "acompanado-equipo": ["Up to 10 people on the same brain", "3 to 5 of your processes set up and your documents loaded", "People added and locked areas prepared", "3 months of the Pro plan included"]
+      "hazlo-tu": [
+        "1 person"
+      ],
+      "hazlo-tu-equipo": [
+        "Up to 10 people",
+        "Locked areas",
+        "3 months of Pro included"
+      ],
+      "acompanado": [
+        "1 person",
+        "3 to 5 of your tasks set up",
+        "Your documents loaded",
+        "1 month of Essential included"
+      ],
+      "acompanado-equipo": [
+        "Up to 10 people",
+        "3 to 5 of your tasks set up",
+        "Team and locked areas ready",
+        "3 months of Pro included"
+      ]
     },
     "payWith": {
-      "card": "Pay by card on the website",
-      "invoice": "Invoice first; pay by bank transfer or card"
+      "card": "Pay by card",
+      "invoice": "Invoice first"
     },
     "buy": "Buy",
     "requestInvoice": "Request an invoice",
@@ -299,46 +448,115 @@
     "comingSoonNote": "Online purchase opens soon. Meanwhile, write to us and we will let you know.",
     "notifyMe": "Let me know",
     "sessions": {
-      "title": "Setup sessions and guarantee",
+      "title": "Setup and guarantee",
       "items": [
-        "All four options include two 1-hour setup sessions by video call, between 18:00 and 22:00 Spanish peninsular time.",
-        "If you do not show up to a session, that session is lost.",
-        "If the brain is not set up after the two sessions, we refund the payment if you ask in writing within 14 days of purchase, and the license ends.",
-        "It is a setup guarantee, not a satisfaction guarantee."
+        "Two 1-hour video calls, 18:00 to 22:00 Spanish peninsular time.",
+        "If it is not set up, we refund you. Ask in writing within 14 days of purchase.",
+        "It is a setup guarantee, not a satisfaction guarantee. A missed session is lost."
       ]
     },
     "monthly": {
       "title": "Monthly plan, if you want it",
-      "subtitle": "Service only: keeping your brain up to date, improvements, packs, connector catalogue and support. Cancel whenever you want; without it you lose support, not the use.",
+      "subtitle": "Improvements, packs and support. Cancel whenever you want and the brain keeps working.",
       "perMonth": "/month",
       "feature": "What it includes",
       "rows": [
-        { "label": "New versions of the brain, with their improvements", "values": [true, true, true] },
-        { "label": "Reviewed connector catalogue", "values": [true, true, true] },
-        { "label": "Health report", "values": [true, true, true] },
-        { "label": "Email support within 48 h", "values": [true, false, false] },
-        { "label": "Priority support within 24 h", "values": [false, true, true] },
-        { "label": "Packs kept up to date with regulations and connectors", "values": [false, true, true] },
-        { "label": "We review your health report every month and apply the fixes", "values": [false, true, true] },
-        { "label": "Monthly 1-hour session", "values": [false, false, true] },
-        { "label": "One simple automation per month, at most", "values": [false, false, true] },
-        { "label": "One community connector verified every quarter", "values": [false, false, true] }
+        {
+          "label": "New versions with improvements",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Reviewed catalogue of connectable software",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Monthly health report",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Email support within 48 h",
+          "values": [
+            true,
+            false,
+            false
+          ]
+        },
+        {
+          "label": "Priority support within 24 h",
+          "values": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Packs kept up to date with regulations",
+          "values": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "We review your report and fix it",
+          "values": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Monthly 1-hour session",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "One simple automation per month",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "One new program verified every quarter",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        }
       ],
       "premiumNote": "The monthly session is for reviewing what has changed in the company and spotting automation opportunities. If a candidate is identified in the session that fits within the scope of the existing corpus and is classed as simple, it is implemented within the plan. Those of medium or higher complexity, or that require new systems or integrations, are quoted separately. At most one implemented per month, not cumulative.",
-      "securityNote": "Security fixes are not part of the monthly plan: every customer gets them free during their version's support period.",
-      "included": "With a team, the first 3 months of Pro are included. Guided without a team comes with the first month of Essential."
+      "securityNote": "Security fixes are free for everyone, with or without a monthly plan.",
+      "included": "With a team, 3 months of Pro included. Guided without a team, 1 month of Essential."
     },
     "apart": {
       "title": "Separately",
       "packEspana": {
         "name": "Spain Pack",
-        "text": "Spanish tax, employment and health & safety procedures, and Spanish connectors, each with its procedure.",
+        "text": "Spanish tax, employment and health & safety tasks, and links to Spanish software.",
         "badge": "In preparation"
       },
       "custom": {
         "name": "Custom",
         "from": "from",
-        "text": "We build the brain for you, with the Spain Pack. Only if you ask. It includes the Essential plan, which is mandatory in this case.",
+        "text": "We set up the brain for you, with the Spain Pack and the Essential plan.",
         "cta": "Talk to us"
       },
       "moreThan10": "More than 10 people? We quote it as a custom project."
@@ -347,18 +565,36 @@
     "b2b": "Sold only to businesses and professionals.",
     "faqTitle": "Questions about buying",
     "faq": [
-      { "q": "What is the license?", "a": "A file signed by Pymatic Labs, in your company's name, without which the brain cannot be set up. It is perpetual. It states until when you have maintenance and support; after that date nothing is blocked." },
-      { "q": "Does the license need the internet?", "a": "No. It is checked on your computer, without connecting anywhere. There is no remote kill switch." },
-      { "q": "Is Guided a number of consulting hours?", "a": "No: it is an outcome. At the end you have 3 to 5 of your processes set up and your documents loaded. With a team, also the people added and the locked areas prepared." },
-      { "q": "Can I start without a team and upgrade later?", "a": "Yes. Write to us and we will tell you how; you get a new license and give it to the brain." },
-      { "q": "What does “team” mean?", "a": "Up to 10 people use the same brain, each on their own computer, with adding and removing people, invitations and locked areas. Without a team, the brain belongs to one person." },
-      { "q": "Do prices include VAT?", "a": "No. Prices exclude VAT; the invoice includes whatever VAT applies." }
+      {
+        "q": "What is the license?",
+        "a": "A file in your company’s name that the brain needs to be set up. It is for good."
+      },
+      {
+        "q": "Does it need the internet?",
+        "a": "The license does not: it is checked on your computer. There is no remote switch."
+      },
+      {
+        "q": "Is Guided a number of hours?",
+        "a": "No, it is an outcome: you end up with 3 to 5 of your tasks set up and your documents loaded."
+      },
+      {
+        "q": "Can I start alone and upgrade to a team?",
+        "a": "Yes. Write to us and we will send you a new license."
+      },
+      {
+        "q": "What if I drop the monthly plan?",
+        "a": "The brain keeps working. You lose support, not the use."
+      },
+      {
+        "q": "Do prices include VAT?",
+        "a": "No. The invoice includes whatever VAT applies."
+      }
     ]
   },
   "security": {
     "eyebrow": "Security and privacy",
     "title": "Your data, on your computers",
-    "subtitle": "What happens to your information when you use the Digital Brain, and how to report a security flaw to us.",
+    "subtitle": "What happens to your information and how to report a flaw to us.",
     "promiseTitle": "Our promise",
     "behindTitle": "What is behind it",
     "behind": [
@@ -432,7 +668,7 @@
     "legal": "Legal",
     "contact": "Contact",
     "links": {
-      "comoFunciona": "How it works",
+      "comoFunciona": "Features",
       "precios": "Pricing",
       "seguridad": "Security",
       "contacto": "Contact"

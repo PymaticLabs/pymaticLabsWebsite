@@ -13,6 +13,7 @@ const retired = [
   ['/blog', '/'],
   ['/blog/:slug', '/'],
   ['/sobre-nosotros', '/'],
+  ['/como-funciona', '/funciones'],
 ]
 
 /** @type {import('next').NextConfig} */

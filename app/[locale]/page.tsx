@@ -1,14 +1,7 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
-import Hero from '@/components/home/hero'
-import WhatIs from '@/components/home/what-is'
-import Features from '@/components/home/features'
-import Different from '@/components/home/different'
-import PrivacyPromise from '@/components/home/promise'
-import HowToBuy from '@/components/home/how-to-buy'
-import PricingTeaser from '@/components/home/pricing-teaser'
-import FaqList from '@/components/faq-list'
-import FinalCta from '@/components/final-cta'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import Scrolly from '@/components/home/scrolly'
+import Closing from '@/components/home/closing'
 import { generatePageMetadata } from '@/lib/metadata'
 import { getOrganizationSchema, getProductSchema, getWebSiteSchema } from '@/lib/schemas'
 
@@ -32,7 +25,7 @@ export default async function HomePage({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'faq' })
+  setRequestLocale(locale)
   const tMeta = await getTranslations({ locale, namespace: 'meta' })
   const schemas = [
     getOrganizationSchema(),
@@ -49,15 +42,10 @@ export default async function HomePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <Hero />
-      <WhatIs />
-      <Features />
-      <Different />
-      <PrivacyPromise />
-      <HowToBuy />
-      <PricingTeaser />
-      <FaqList title={t('title')} items={t.raw('items')} id="faq" />
-      <FinalCta />
+      <div className="pt-16">
+        <Scrolly />
+      </div>
+      <Closing />
     </>
   )
 }

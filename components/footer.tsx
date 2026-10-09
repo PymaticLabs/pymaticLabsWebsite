@@ -8,7 +8,7 @@ export default function Footer() {
   const locale = useLocale()
 
   const productLinks = [
-    { href: localePath(locale, '/como-funciona'), label: t('links.comoFunciona') },
+    { href: localePath(locale, '/funciones'), label: t('links.comoFunciona') },
     { href: localePath(locale, '/precios'), label: t('links.precios') },
     { href: localePath(locale, '/seguridad'), label: t('links.seguridad') },
     { href: localePath(locale, '/contacto'), label: t('links.contacto') },

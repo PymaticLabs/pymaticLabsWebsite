@@ -29,7 +29,7 @@ export default function Navbar() {
   const altHref = localePath(altLocale, barePath === '/' ? '' : barePath)
 
   const navLinks = [
-    { href: localePath(locale, '/como-funciona'), label: t('comoFunciona') },
+    { href: localePath(locale, '/funciones'), label: t('comoFunciona') },
     { href: localePath(locale, '/precios'), label: t('precios') },
     { href: localePath(locale, '/seguridad'), label: t('seguridad') },
     { href: localePath(locale, '/contacto'), label: t('contacto') },

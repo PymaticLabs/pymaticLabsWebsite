@@ -9,7 +9,7 @@ import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 import '@/app/globals.css'
 
-const CLIENT_NAMESPACES = ['nav', 'demo', 'contact'] as const
+const CLIENT_NAMESPACES = ['nav', 'home', 'contact'] as const
 
 const inter = Inter({
   subsets: ['latin'],

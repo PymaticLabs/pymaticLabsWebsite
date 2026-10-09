@@ -52,7 +52,7 @@ export default async function PreciosPage({
     <>
       <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft to-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader as="h1" eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} />
+          <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
           <div className="mb-8 rounded-2xl border border-brand/20 bg-white p-5 sm:flex sm:items-center sm:justify-between gap-6">
             <p className="font-semibold text-ink">{tOffer('launchNote')}</p>
