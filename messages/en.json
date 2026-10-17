@@ -22,7 +22,9 @@
     "langSwitch": "ES",
     "langLabel": "Leer en castellano",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "themeDark": "Switch to dark mode",
+    "themeLight": "Switch to light mode"
   },
   "home": {
     "hero": {
@@ -31,9 +33,6 @@
       "text": "Everything your company knows, on your computer. Ask Claude and it answers from your documents. And it does your tasks.",
       "ctaPrimary": "See pricing",
       "ctaSecondary": "See features",
-      "chatUser": "Claude, check the books and make sure everything adds up.",
-      "chatReply": "September checked: 46 invoices match the bank. One is duplicated, F-118. Shall I flag it?",
-      "chatSource": "Based on: Month-end close",
       "scroll": "Scroll"
     },
     "scenes": [
@@ -46,7 +45,23 @@
           "Nothing on our servers",
           "Passwords in a vault, on your computer",
           "Mac and Windows"
-        ]
+        ],
+        "path": {
+          "folder": "C:\\Company",
+          "file": "Setup.pdf",
+          "place": "p. 1",
+          "folders": [
+            "Desktop",
+            "Downloads",
+            "Mail"
+          ],
+          "files": [
+            "Budget 2026.xlsx",
+            "Invoice 0412 (scanned).pdf",
+            "Ruiz contract.docx"
+          ]
+        },
+        "cite": "Source: Setup · p. 1"
       },
       {
         "id": "history",
@@ -57,7 +72,23 @@
           "Who, what and when",
           "Nothing is lost",
           "Weekly backup"
-        ]
+        ],
+        "path": {
+          "folder": "Quotes",
+          "file": "Alpha quote.xlsx",
+          "place": "version 47",
+          "folders": [
+            "Contracts",
+            "Offers",
+            "Orders"
+          ],
+          "files": [
+            "Beta quote.xlsx",
+            "Rates 2026.pdf",
+            "Offer template.docx"
+          ]
+        },
+        "cite": "Source: Alpha quote · version 47, from yesterday at 18:04"
       },
       {
         "id": "team",
@@ -68,7 +99,23 @@
           "Up to 10 people",
           "Locked areas",
           "Add or remove people in one sentence"
-        ]
+        ],
+        "path": {
+          "folder": "Ana's computer",
+          "file": "Shifts week 42.xlsx",
+          "place": "row 8",
+          "folders": [
+            "Luis's laptop",
+            "Workshop",
+            "Front desk"
+          ],
+          "files": [
+            "Payroll October.xlsx · locked",
+            "North clients.xlsx",
+            "Holidays 2026.pdf"
+          ]
+        },
+        "cite": "Source: Shifts week 42 · row 8"
       },
       {
         "id": "documents",
@@ -79,7 +126,23 @@
           "PDF, Word, Excel, emails and scans",
           "Your originals are never touched",
           "Health files, it does not even open"
-        ]
+        ],
+        "path": {
+          "folder": "Accounts",
+          "file": "Month-end close.xlsx",
+          "place": "sheet 2",
+          "folders": [
+            "Mail",
+            "Scans",
+            "Contracts"
+          ],
+          "files": [
+            "Delivery note 2291 (scanned).pdf",
+            "Email from Luis.eml",
+            "Board minutes.docx"
+          ]
+        },
+        "cite": "Source: Month-end close · sheet 2, row 18"
       },
       {
         "id": "folders",
@@ -90,7 +153,23 @@
           "Organized copy",
           "Sensitive files set apart",
           "Index in Excel"
-        ]
+        ],
+        "path": {
+          "folder": "Desktop",
+          "file": "final_v2_GOOD.docx",
+          "place": "2026 / Clients",
+          "folders": [
+            "New folder (7)",
+            "Downloads",
+            "Misc"
+          ],
+          "files": [
+            "Untitled.xlsx",
+            "IMG_0412.jpg",
+            "copy of copy.pdf"
+          ]
+        },
+        "cite": "Tidy copy in: 2026 / Clients / Ruiz"
       },
       {
         "id": "tasks",
@@ -101,7 +180,23 @@
           "Asks for permission",
           "Learns new tasks",
           "PDFs with your logo"
-        ]
+        ],
+        "path": {
+          "folder": "Every Monday",
+          "file": "Weekly quote.xlsx",
+          "place": "step 3 of 5",
+          "folders": [
+            "Every month",
+            "At closing",
+            "On request"
+          ],
+          "files": [
+            "Work report 0388.pdf",
+            "Supplier orders.xlsx",
+            "Sales report.pdf"
+          ]
+        },
+        "cite": "Source: Weekly quote · step 3 of 5"
       }
     ],
     "more": "See all features",
@@ -114,7 +209,30 @@
       "doubtsTitle": "Any questions?",
       "doubtsText": "We will tell you which option fits.",
       "doubtsCta": "Talk to sales"
-    }
+    },
+    "index": "Home",
+    "tour": "Tour",
+    "demo": "Sample brain",
+    "journey": {
+      "brain": "Brain",
+      "zoom": "Zoom",
+      "levels": [
+        "The whole brain",
+        "One area",
+        "Its folders",
+        "Its documents",
+        "The exact line"
+      ]
+    },
+    "hud": [
+      "2,431 documents · 0 in the cloud",
+      "All on your computer · 0 bytes on our servers",
+      "1,208 changes saved · 0 lost",
+      "10 people · 2 locked areas",
+      "PDF · Word · Excel · email · scans",
+      "Tidy copy · originals untouched",
+      "4 tasks done · 4 approvals asked"
+    ]
   },
   "features": {
     "eyebrow": "Features",

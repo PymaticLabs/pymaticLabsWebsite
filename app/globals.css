@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+/* Pantallas muy bajas (el movil en horizontal): la home compacta su texto. */
+@custom-variant short (@media (max-height: 500px));
+
 /* Marca Pymatic Labs (knowledge/01_Empresa/identidad-y-marca.md): azul #0463FE, negro y fondo blanco. */
 @theme {
   --color-brand: #0463FE;
@@ -12,8 +16,29 @@
   --color-line: #E5E7EB;
   --color-paper: #FFFFFF;
   --color-paper-2: #F6F7F9;
+  --color-surface: #FFFFFF; /* tarjetas y paneles sobre el fondo */
+  --color-inverse: #000000; /* bloques oscuros con texto blanco (pie, cierre) */
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Modo oscuro: los mismos tokens con otros valores. El azul de marca se queda igual. */
+.dark {
+  --color-brand-soft: #0C1A36;
+  --color-ink: #F3F5F9;
+  --color-body: #C3C9D4;
+  --color-muted: #8A93A3;
+  --color-line: #1E2636;
+  --color-paper: #070A12;
+  --color-paper-2: #0E1320;
+  --color-surface: #0C111C;
+  --color-inverse: #111A2C;
+}
+
+/* Sobre fondo oscuro el texto azul necesita algo mas de luz para leerse bien. */
+.dark .text-brand {
+  color: var(--color-brand-light);
 }
 
 * {
@@ -31,6 +56,10 @@ body {
   background-color: var(--color-paper);
   color: var(--color-body);
   font-family: var(--font-sans);
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -117,4 +146,28 @@ body {
 .prose-content th {
   background: var(--color-paper-2);
   color: var(--color-ink);
+}
+
+/* Titulares que el hilo escribe con sus celdas: el texto sigue ahi (se lee, se copia, lo ve
+   Google), pero transparente mientras la escena 3D esta en marcha (data-dots, se quita si pierde el
+   contexto) y ya tiene ese titular dibujado (data-drawn). Si no, se ve normal. */
+.dotted {
+  transition: color 0.8s ease;
+}
+html[data-dots] .dotted[data-drawn] {
+  color: transparent;
+}
+
+/* Textos de los instrumentos y etiquetas sobre el hilo: un halo del color del fondo los separa de las lineas. */
+.halo {
+  text-shadow: 0 0 6px var(--color-paper), 0 0 2px var(--color-paper);
+}
+
+/* Nombres de carpetas y documentos que la escena coloca sobre el hilo: con fondo para leerse encima. */
+.chip {
+  font-size: 11px;
+  line-height: 1;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--color-paper) 78%, transparent);
 }

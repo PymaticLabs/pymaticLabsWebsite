@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Geist_Mono, Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -7,6 +7,8 @@ import { Analytics } from '@vercel/analytics/next'
 import { locales } from '@/lib/i18n'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
+import { ThemeProvider } from '@/components/theme-provider'
+import { noFlashScript } from '@/lib/theme'
 import '@/app/globals.css'
 
 const CLIENT_NAMESPACES = ['nav', 'home', 'contact'] as const
@@ -14,6 +16,12 @@ const CLIENT_NAMESPACES = ['nav', 'home', 'contact'] as const
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+})
+
+// Para las etiquetas de la home, con aire de instrumento.
+const mono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
 })
 
 export function generateStaticParams() {
@@ -73,13 +81,19 @@ export default async function LocaleLayout({
   const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]))
 
   return (
-    <html lang={locale} className={inter.variable}>
+    // El tema se lee en el navegador (cookie o sistema) para que las paginas sigan siendo estaticas.
+    <html lang={locale} className={`${inter.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+      </head>
       <body className="min-h-screen flex flex-col">
-        <NextIntlClientProvider messages={clientMessages}>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </NextIntlClientProvider>
+        <ThemeProvider>
+          <NextIntlClientProvider messages={clientMessages}>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </NextIntlClientProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

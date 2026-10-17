@@ -13,7 +13,7 @@ export default function Closing() {
   return (
     <section className="pb-20 pt-8 sm:pb-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 gap-6 md:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-3xl bg-ink px-8 py-12 text-white sm:px-12">
+        <div className="rounded-3xl bg-inverse px-8 py-12 text-white sm:px-12">
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">{t('title')}</h2>
           <p className="mt-4 text-lg text-white/75">{t('text')}</p>
           <p className="mt-8 flex items-baseline gap-2">

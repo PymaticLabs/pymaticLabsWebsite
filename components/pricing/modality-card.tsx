@@ -18,7 +18,7 @@ export default function ModalityCard({ modality, extras, highlighted, children }
   return (
     <div
       className={cn(
-        'flex flex-col rounded-2xl border bg-white p-6',
+        'flex flex-col rounded-2xl border bg-surface p-6',
         highlighted ? 'border-brand ring-1 ring-brand shadow-lg shadow-brand/10' : 'border-line'
       )}
     >

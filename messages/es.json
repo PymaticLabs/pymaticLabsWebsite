@@ -22,7 +22,9 @@
     "langSwitch": "EN",
     "langLabel": "Read in English",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "themeDark": "Activar modo oscuro",
+    "themeLight": "Activar modo claro"
   },
   "home": {
     "hero": {
@@ -31,9 +33,6 @@
       "text": "Todo lo que sabe tu empresa, en tu ordenador. Le preguntas a Claude y te contesta con tus documentos. Y hace tus tareas.",
       "ctaPrimary": "Ver precios",
       "ctaSecondary": "Ver funciones",
-      "chatUser": "Claude, revísame la contabilidad, que cuadre todo.",
-      "chatReply": "Septiembre revisado: 46 facturas cuadran con el banco. Hay una repetida, la F-118. ¿Te la marco?",
-      "chatSource": "Según: Cierre de mes",
       "scroll": "Desliza"
     },
     "scenes": [
@@ -46,7 +45,23 @@
           "Nada en nuestros servidores",
           "Contraseñas en una caja fuerte, en tu equipo",
           "Mac y Windows"
-        ]
+        ],
+        "path": {
+          "folder": "C:\\Empresa",
+          "file": "Instalación.pdf",
+          "place": "pág. 1",
+          "folders": [
+            "Escritorio",
+            "Descargas",
+            "Correo"
+          ],
+          "files": [
+            "Presupuesto 2026.xlsx",
+            "Factura 0412 (escaneada).pdf",
+            "Contrato Ruiz.docx"
+          ]
+        },
+        "cite": "Según: Instalación · pág. 1"
       },
       {
         "id": "history",
@@ -57,7 +72,23 @@
           "Quién, qué y cuándo",
           "Nada se pierde",
           "Copia de seguridad cada semana"
-        ]
+        ],
+        "path": {
+          "folder": "Presupuestos",
+          "file": "Presupuesto Alfa.xlsx",
+          "place": "versión 47",
+          "folders": [
+            "Contratos",
+            "Ofertas",
+            "Pedidos"
+          ],
+          "files": [
+            "Presupuesto Beta.xlsx",
+            "Tarifas 2026.pdf",
+            "Plantilla oferta.docx"
+          ]
+        },
+        "cite": "Según: Presupuesto Alfa · versión 47, de ayer a las 18:04"
       },
       {
         "id": "team",
@@ -68,7 +99,23 @@
           "Hasta 10 personas",
           "Áreas con llave",
           "Altas y bajas con una frase"
-        ]
+        ],
+        "path": {
+          "folder": "Ordenador de Ana",
+          "file": "Turnos semana 42.xlsx",
+          "place": "fila 8",
+          "folders": [
+            "Portátil de Luis",
+            "Taller",
+            "Recepción"
+          ],
+          "files": [
+            "Nóminas octubre.xlsx · con llave",
+            "Clientes zona norte.xlsx",
+            "Vacaciones 2026.pdf"
+          ]
+        },
+        "cite": "Según: Turnos semana 42 · fila 8"
       },
       {
         "id": "documents",
@@ -79,7 +126,23 @@
           "PDF, Word, Excel, correos y escaneados",
           "Tus originales no se tocan",
           "Lo de salud, ni lo abre"
-        ]
+        ],
+        "path": {
+          "folder": "Contabilidad",
+          "file": "Cierre de mes.xlsx",
+          "place": "hoja 2",
+          "folders": [
+            "Correo",
+            "Escaneos",
+            "Contratos"
+          ],
+          "files": [
+            "Albarán 2291 (escaneado).pdf",
+            "Correo de Luis.eml",
+            "Acta junta.docx"
+          ]
+        },
+        "cite": "Según: Cierre de mes · hoja 2, fila 18"
       },
       {
         "id": "folders",
@@ -90,7 +153,23 @@
           "Copia ordenada",
           "Lo sensible, aparte",
           "Índice en Excel"
-        ]
+        ],
+        "path": {
+          "folder": "Escritorio",
+          "file": "final_v2_BUENO.docx",
+          "place": "2026 / Clientes",
+          "folders": [
+            "Nueva carpeta (7)",
+            "Descargas",
+            "Varios"
+          ],
+          "files": [
+            "Sin título.xlsx",
+            "IMG_0412.jpg",
+            "copia de copia.pdf"
+          ]
+        },
+        "cite": "Copia ordenada en: 2026 / Clientes / Ruiz"
       },
       {
         "id": "tasks",
@@ -101,7 +180,23 @@
           "Te pide permiso",
           "Aprende tareas nuevas",
           "PDF con tu logo"
-        ]
+        ],
+        "path": {
+          "folder": "Cada lunes",
+          "file": "Presupuesto semanal.xlsx",
+          "place": "paso 3 de 5",
+          "folders": [
+            "Cada mes",
+            "Al cerrar",
+            "Bajo pedido"
+          ],
+          "files": [
+            "Parte de trabajo 0388.pdf",
+            "Pedidos proveedor.xlsx",
+            "Informe de ventas.pdf"
+          ]
+        },
+        "cite": "Según: Presupuesto semanal · paso 3 de 5"
       }
     ],
     "more": "Ver todas las funciones",
@@ -114,7 +209,30 @@
       "doubtsTitle": "¿Tienes dudas?",
       "doubtsText": "Te contamos qué modalidad te encaja.",
       "doubtsCta": "Habla con ventas"
-    }
+    },
+    "index": "Inicio",
+    "tour": "Recorrido",
+    "demo": "Cerebro de ejemplo",
+    "journey": {
+      "brain": "Cerebro",
+      "zoom": "Aumento",
+      "levels": [
+        "Todo el cerebro",
+        "Una zona",
+        "Sus carpetas",
+        "Sus documentos",
+        "La línea exacta"
+      ]
+    },
+    "hud": [
+      "2.431 documentos · 0 en la nube",
+      "Todo en tu equipo · 0 bytes en nuestros servidores",
+      "1.208 cambios guardados · 0 perdidos",
+      "10 personas · 2 áreas con llave",
+      "PDF · Word · Excel · correos · escaneados",
+      "Copia ordenada · originales intactos",
+      "4 tareas hechas · 4 «sí» pedidos"
+    ]
   },
   "features": {
     "eyebrow": "Funciones",

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from '@/components/theme-toggle'
 import { Menu, X } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -41,7 +42,7 @@ export default function Navbar() {
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
-        isScrolled || isMobileOpen ? 'bg-white/90 backdrop-blur-md border-b border-line' : 'bg-transparent'
+        isScrolled || isMobileOpen ? 'bg-surface/90 backdrop-blur-md border-b border-line' : 'bg-transparent'
       )}
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -66,6 +67,7 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href={altHref}
             hrefLang={altLocale}
@@ -90,7 +92,7 @@ export default function Navbar() {
       </nav>
 
       {isMobileOpen && (
-        <div className="md:hidden bg-white border-t border-line px-4 py-4 space-y-1">
+        <div className="md:hidden bg-surface border-t border-line px-4 py-4 space-y-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -102,6 +104,7 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-3 flex items-center gap-3">
+            <ThemeToggle />
             <Link
               href={altHref}
               hrefLang={altLocale}

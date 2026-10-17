@@ -50,11 +50,11 @@ export default async function PreciosPage({
 
   return (
     <>
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft to-white">
+      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft to-paper">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
-          <div className="mb-8 rounded-2xl border border-brand/20 bg-white p-5 sm:flex sm:items-center sm:justify-between gap-6">
+          <div className="mb-8 rounded-2xl border border-brand/20 bg-surface p-5 sm:flex sm:items-center sm:justify-between gap-6">
             <p className="font-semibold text-ink">{tOffer('launchNote')}</p>
             <ul className="mt-3 sm:mt-0 flex flex-wrap gap-x-5 gap-y-1">
               <li className="text-sm text-muted">{t('includedTitle')}:</li>
@@ -107,7 +107,7 @@ export default async function PreciosPage({
       <section className="py-16 sm:py-20 bg-paper-2" id="mensual">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader title={t('monthly.title')} subtitle={t('monthly.subtitle')} />
-          <div className="overflow-x-auto rounded-2xl border border-line bg-white">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-line">
