@@ -4,8 +4,9 @@ Cookies are small files that a website stores in the browser of whoever visits i
 
 ## 2. Which cookies this site uses
 
-**None.** pymaticlabs.com does not set its own or third-party cookies: no analytics, advertising or social media cookies. That is why we do not show you a cookie banner.
+**Only one, and only if you ask for it.** pymaticlabs.com does not set analytics, advertising or social media cookies, its own or third-party. That is why we do not show you a cookie banner.
 
+- **Light or dark theme.** If you change the theme with the sun and moon button, we save your choice in a first-party cookie, `pymatic_theme`, for one year, so the site looks the same next time. It only stores your choice (`light` or `dark`), it is only set when you press the button, and you can delete it from your browser.
 - **Language.** The language is in the page address (`/en` for English), not in a cookie.
 - **Visit measurement.** We use Vercel Web Analytics, which counts visits in aggregate without cookies or identifiers stored in your browser. The details are in the website privacy policy.
 

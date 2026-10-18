@@ -4,7 +4,7 @@ import * as THREE from 'three'
 // empresa y que, visto desde arriba, dibuja un cerebro de icono: dos hemisferios, la cisura en medio y
 // un unico puente entre ellos. Cada zona es un tramo del hilo. Al bajar a una zona, cada vuelta del
 // hilo contiene el mismo dibujo en pequeno: sus carpetas y sus documentos. Al fondo, uno de esos
-// documentos se abre como una pagina y el propio hilo escribe el titular en uno de sus renglones.
+// documentos se abre como una pagina y el propio hilo dibuja el titular en sus renglones.
 // Aqui solo esta la geometria; la escena (core-scene.tsx) la pinta y mueve la camara.
 
 /** Orden de la curva en cada nivel: el cerebro, sus carpetas, sus documentos y la linea. */
@@ -132,6 +132,20 @@ export function warp3(x: number, y: number, out = new THREE.Vector3()) {
 export const CENTER = new THREE.Vector3(0, -0.02, WARP.height * 0.35)
 
 /**
+ * La unica vista del simbolo, la de la portada: desde delante y casi desde arriba, con la cisura en
+ * vertical. La camara nunca gira: solo se aleja y baja. Los niveles finos de cada zona
+ * son planos de frente a ella, asi al bajar se ven siempre derechos.
+ */
+const ELEVATION = THREE.MathUtils.degToRad(74)
+export const VIEW = {
+  /** Del simbolo hacia la camara. */
+  dir: new THREE.Vector3(0, -Math.cos(ELEVATION), Math.sin(ELEVATION)),
+  /** Derecha y arriba de la pantalla. */
+  right: new THREE.Vector3(1, 0, 0),
+  up: new THREE.Vector3(0, Math.sin(ELEVATION), Math.cos(ELEVATION)),
+}
+
+/**
  * Puntos del contorno del simbolo (el borde y un anillo a media altura de la boveda): proyectados,
  * dan la silueta en pantalla para dejar las etiquetas de las zonas por fuera.
  */
@@ -191,15 +205,14 @@ function zoneCells() {
 }
 
 /**
- * Todo lo que hace falta para bajar a una zona: el punto de la superficie por el que se entra, su
- * normal, los ejes de la rejilla alli (los niveles finos son planos tangentes, uno bajo otro), el
- * tamano de celda y la profundidad de cada nivel y la celda objetivo de cada uno. El hilo mas fino
- * (el ultimo nivel) va en el mismo plano que los documentos: rodea la pagina del documento objetivo.
+ * Todo lo que hace falta para bajar a una zona: el punto de la superficie por el que se entra, la
+ * normal y los ejes de los niveles finos (planos de frente a la camara, uno bajo otro, con la
+ * rejilla derecha en pantalla), el tamano de celda y la profundidad de cada nivel y la celda
+ * objetivo de cada uno. El hilo mas fino (el ultimo nivel) va en el mismo plano que los documentos:
+ * rodea la pagina del documento objetivo.
  */
 export interface ZoneFrame {
   zone: number
-  /** Direccion (angulo en el plano) desde el centro hacia la zona: por ahi se la ve desde fuera. */
-  azimuth: number
   /** Donde va la etiqueta de la zona, fuera del borde. */
   label: THREE.Vector3
   /** Posicion en el hilo del cerebro de la celda por la que se baja. */
@@ -229,7 +242,8 @@ export function buildFrames(): ZoneFrame[] {
     const xP = (2 * (pi + 0.5)) / deep - 1
     const yP = (2 * (pj + 0.5)) / deep - 1
     const surface = warp3(xP, yP)
-    // Giro y escala de la silueta en ese punto: la rejilla fina sigue a la gruesa.
+    // Escala de la silueta en ese punto: las celdas finas miden lo que les toca dentro de la gruesa.
+    // (Su giro alli es de menos de un grado: la rejilla fina va derecha, de frente a la camara.)
     const e = 1e-5
     const a1 = warp2(xP + e, yP)
     const a0 = warp2(xP - e, yP)
@@ -239,15 +253,10 @@ export function buildFrames(): ZoneFrame[] {
     const j10 = (a1[1] - a0[1]) / (2 * e)
     const j01 = (b1[0] - b0[0]) / (2 * e)
     const j11 = (b1[1] - b0[1]) / (2 * e)
-    const theta = Math.atan2(j10 - j01, j00 + j11)
     const scale = Math.sqrt(Math.abs(j00 * j11 - j01 * j10))
-    const hx = (dome(surface.x + e, surface.y) - dome(surface.x - e, surface.y)) / (2 * e)
-    const hy = (dome(surface.x, surface.y + e) - dome(surface.x, surface.y - e)) / (2 * e)
-    const normal = new THREE.Vector3(-hx, -hy, 1).normalize()
-    const e1 = new THREE.Vector3(1, 0, hx).normalize()
-    const e2 = new THREE.Vector3().crossVectors(normal, e1).normalize()
-    const axisI = e1.clone().multiplyScalar(Math.cos(theta)).addScaledVector(e2, Math.sin(theta))
-    const axisJ = e1.clone().multiplyScalar(-Math.sin(theta)).addScaledVector(e2, Math.cos(theta))
+    const normal = VIEW.dir.clone()
+    const axisI = VIEW.right.clone()
+    const axisJ = VIEW.up.clone()
     const unit = ORDERS.map((o) => (scale * 2) / 2 ** o)
     const depth = [0, FIRST_DEPTH]
     for (let k = 2; k < LEVELS - 1; k++) depth[k] = depth[k - 1] + GAP * unit[k - 1]
@@ -271,10 +280,8 @@ export function buildFrames(): ZoneFrame[] {
     const [bx, by] = warp2(center[0] / m, center[1] / m)
     const r = Math.hypot(bx, by)
     const label = new THREE.Vector3(bx * (1 + 0.1 / r), by * (1 + 0.1 / r), 0.02)
-    const [zx, zy] = warp2(center[0], center[1])
     return {
       zone,
-      azimuth: Math.atan2(zy, zx),
       label,
       index0: cell,
       cells,
@@ -493,11 +500,10 @@ export function* buildPatch(frame: ZoneFrame, level: number, hw: number, hh: num
 }
 
 /**
- * El titular de una zona escrito con celdas del nivel mas fino: se rasteriza el titular del DOM y
- * se mira que celdas de una rejilla anclada en su centro quedan dentro de la letra. Cada celda
- * encendida guarda cuando se enciende: se escribe en orden de lectura, palabra a palabra y de
- * izquierda a derecha, como una pluma. Las vecinas a lo largo del hilo que tambien estan encendidas
- * se unen con el propio hilo.
+ * El titular de una zona dibujado con celdas del nivel mas fino: se rasteriza el titular del DOM y
+ * se mira que celdas de una rejilla anclada en su centro quedan dentro de la letra. Se enciende
+ * entero de una vez (con un fundido suave, ver core-scene.tsx). Las vecinas a lo largo del hilo que
+ * tambien estan encendidas se unen con el propio hilo.
  */
 export interface Headline {
   cells: Float32Array
@@ -535,13 +541,14 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
   ctx.textBaseline = 'alphabetic'
   // Cada palabra va en su span: su caja empieza donde empieza la letra (por arriba, el ascendente).
   const ascent = ctx.measureText('Hg').fontBoundingBoxAscent
-  const words: { left: number; right: number; top: number; bottom: number }[] = []
+  /** Donde empieza cada renglon por arriba (el de cada palabra, sin repetir). */
+  const tops: number[] = []
   title.querySelectorAll(':scope > span > span').forEach((word) => {
     const r = word.getBoundingClientRect()
     const left = r.left - box.left + pad
     const top = r.top - box.top + pad
     ctx.fillText(word.textContent ?? '', left, top + ascent)
-    words.push({ left, right: left + r.width, top, bottom: top + r.height })
+    if (!tops.some((t) => Math.abs(t - top) < fontSize * 0.3)) tops.push(top)
   })
   const data = ctx.getImageData(0, 0, raster.width, raster.height).data
   // Centro del titular, en px del lienzo y en px del raster.
@@ -551,17 +558,8 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
   const oy = box.height / 2 + pad
   const ca = Math.floor(ox / step)
   const cb = Math.floor(oy / step)
-  const lit: { a: number; b: number; rank: number }[] = []
+  const lit: { a: number; b: number }[] = []
   const probe = 4
-  // La pluma recorre las palabras una detras de otra (con un pequeno salto entre ellas).
-  const gap = fontSize * 0.35
-  const starts: number[] = []
-  let pen = 0
-  for (const word of words) {
-    starts.push(pen)
-    pen += word.right - word.left + gap
-  }
-  const total = Math.max(1, pen - gap)
   for (let b = -cb; b <= cb; b++) {
     for (let a = -ca; a <= ca; a++) {
       const x0 = (ox + (a - 0.5) * step) * ss
@@ -575,24 +573,7 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
         }
       }
       if (ink / (probe * probe * 255) <= 0.42) continue
-      // Palabra a la que pertenece la celda: la que la contiene o, si no, la mas cercana.
-      const cx = ox + a * step
-      const cy = oy - b * step
-      let best = 0
-      let bestD = Infinity
-      for (let k = 0; k < words.length; k++) {
-        const wd = words[k]
-        const dx = Math.max(wd.left - cx, 0, cx - wd.right)
-        const dy = Math.max(wd.top - cy, 0, cy - wd.bottom)
-        const dist = dx * dx + dy * dy * 4
-        if (dist < bestD) {
-          bestD = dist
-          best = k
-        }
-      }
-      const word = words[best]
-      const along = word ? starts[best] + Math.min(Math.max(cx - word.left, 0), word.right - word.left) : 0
-      lit.push({ a, b, rank: (along / total) * 0.96 })
+      lit.push({ a, b })
     }
   }
   if (!lit.length) return null
@@ -603,7 +584,7 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
   const byIndex = new Set(grid.map(([di, dj]) => xy2d(n, ti + di, tj + dj)))
   const at: [number, number] = [0, 0]
   const cells = new Float32Array(lit.length * 4)
-  lit.forEach((c, k) => {
+  lit.forEach((_, k) => {
     const [di, dj] = grid[k]
     const d = xy2d(n, ti + di, tj + dj)
     const link = (e: number) => {
@@ -614,11 +595,8 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
     cells[k * 4] = di
     cells[k * 4 + 1] = dj
     cells[k * 4 + 2] = link(d - 1) + 5 * link(d + 1)
-    cells[k * 4 + 3] = c.rank
   })
   // Renglones: la linea de base de cada uno, desde el centro del titular.
-  const tops: number[] = []
-  for (const word of words) if (!tops.some((t) => Math.abs(t - word.top) < fontSize * 0.3)) tops.push(word.top)
   tops.sort((p, q) => p - q)
   const baselines = tops.map((t) => t + ascent - oy)
   const pitch = parseFloat(style.lineHeight) || fontSize * 0.95

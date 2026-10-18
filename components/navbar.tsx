@@ -46,7 +46,7 @@ export default function Navbar() {
       )}
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link href={localePath(locale)} className="flex items-center gap-2" aria-label={t('home')}>
+        <Link href={localePath(locale)} className="flex min-h-11 items-center gap-2" aria-label={t('home')}>
           <span className="text-lg font-bold text-ink">Pymatic Labs</span>
         </Link>
 
@@ -72,17 +72,17 @@ export default function Navbar() {
             href={altHref}
             hrefLang={altLocale}
             aria-label={t('langLabel')}
-            className="text-sm font-medium text-muted hover:text-ink border border-line rounded-full px-3 py-1"
+            className="inline-flex h-11 items-center text-sm font-medium text-muted hover:text-ink border border-line rounded-full px-4"
           >
             {t('langSwitch')}
           </Link>
-          <Button size="sm" asChild>
+          <Button className="h-11 px-5" asChild>
             <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
           </Button>
         </div>
 
         <button
-          className="md:hidden p-2 text-ink"
+          className="md:hidden p-2.5 text-ink"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           aria-label={isMobileOpen ? t('closeMenu') : t('openMenu')}
           aria-expanded={isMobileOpen}
@@ -97,7 +97,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="block text-base text-ink hover:text-brand py-2"
+              className="block text-base text-ink hover:text-brand py-3"
               onClick={() => setIsMobileOpen(false)}
             >
               {link.label}
@@ -109,11 +109,11 @@ export default function Navbar() {
               href={altHref}
               hrefLang={altLocale}
               aria-label={t('langLabel')}
-              className="text-sm font-medium text-muted border border-line rounded-full px-3 py-1"
+              className="inline-flex h-11 items-center text-sm font-medium text-muted border border-line rounded-full px-4"
             >
               {t('langSwitch')}
             </Link>
-            <Button size="sm" asChild>
+            <Button className="h-11 px-5" asChild>
               <Link href={localePath(locale, '/precios')} onClick={() => setIsMobileOpen(false)}>
                 {t('cta')}
               </Link>

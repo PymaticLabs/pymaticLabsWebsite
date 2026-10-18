@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { type Theme, THEME_COOKIE } from '@/lib/theme'
+import { DEFAULT_THEME, type Theme, THEME_COOKIE } from '@/lib/theme'
 
 type ThemeContextValue = {
   theme: Theme
@@ -27,16 +27,19 @@ function applyClass(resolved: 'light' | 'dark') {
 }
 
 // El tema se guarda en una cookie y se aplica antes de pintar con el script del layout, asi que
-// aqui solo se sincroniza el estado y se escucha el cambio del sistema.
+// aqui solo se sincroniza el estado y, con "system", se escucha el cambio del sistema. Hasta leer la
+// cookie no se toca la clase (null): si no, el primer render quitaria el oscuro que puso el script y
+// se veria un destello claro.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('system')
+  const [theme, setThemeState] = useState<Theme | null>(null)
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
-    setThemeState((readCookie(THEME_COOKIE) as Theme | null) ?? 'system')
+    setThemeState((readCookie(THEME_COOKIE) as Theme | null) ?? DEFAULT_THEME)
   }, [])
 
   useEffect(() => {
+    if (!theme) return // el script del layout ya puso la clase
     const resolve = (): 'light' | 'dark' => (theme === 'system' ? (systemPrefersDark() ? 'dark' : 'light') : theme)
     const next = resolve()
     setResolvedTheme(next)
@@ -58,11 +61,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeState(t)
   }, [])
 
-  return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>
+  return <ThemeContext.Provider value={{ theme: theme ?? DEFAULT_THEME, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>
 }
 
 const defaultThemeContext: ThemeContextValue = {
-  theme: 'system',
+  theme: DEFAULT_THEME,
   resolvedTheme: 'light',
   setTheme: () => {},
 }

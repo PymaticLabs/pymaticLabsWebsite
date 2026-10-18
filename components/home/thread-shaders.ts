@@ -33,6 +33,8 @@ export const THREAD_VERTEX = /* glsl */ `
   attribute vec3 aNext;
   attribute vec4 aInfo;
   uniform float uZone;
+  uniform float uZoneFrom;
+  uniform float uZoneMix;
   uniform float uZoneAmt;
   uniform float uTarget;
   #else
@@ -67,11 +69,14 @@ export const THREAD_VERTEX = /* glsl */ `
     vec3 B = aNext;
     float marks = aInfo.z;
     float phase = aInfo.y;
-    // La zona a la que se baja se enciende y las demas se apagan un poco.
-    float inZone = 1.0 - step(0.5, abs(aInfo.x - uZone));
+    // La zona a la que se va se enciende y las demas se apagan un poco. Con el simbolo entero quieto,
+    // la luz pasa poco a poco de la zona que se deja a la siguiente.
+    float inTo = 1.0 - step(0.5, abs(aInfo.x - uZone));
+    float inFrom = 1.0 - step(0.5, abs(aInfo.x - uZoneFrom));
+    float inZone = mix(inFrom, inTo, uZoneMix);
     float rim = bit(marks, 32.0);
     float fade = mix(1.0, mix(mix(0.3, 1.5, inZone), 0.8, rim), uZoneAmt);
-    float target = (1.0 - step(0.5, abs(aInfo.w - uTarget))) * uZoneAmt;
+    float target = (1.0 - step(0.5, abs(aInfo.w - uTarget))) * uZoneAmt * uZoneMix;
     vec3 gridI = vec3(1.0, 0.0, 0.0);
     vec3 gridJ = vec3(0.0, 1.0, 0.0);
     #else
@@ -363,18 +368,16 @@ export const THREAD_FRAGMENT = /* glsl */ `
   }
 `
 
-/** El titular: las celdas encendidas, cuadrados unidos por el hilo, que se encienden como una pluma. */
+/** El titular: las celdas encendidas, cuadrados unidos por el hilo, que aparecen todas a la vez con un fundido. */
 export const HEADLINE_VERTEX = /* glsl */ `
   attribute vec4 aCell;
   uniform vec2 uRes;
-  uniform float uWrite;
+  uniform float uFade;
   varying vec2 vA;
   varying vec2 vP;
   varying vec2 vN;
   varying vec2 vRight;
   varying float vCell;
-  varying float vLit;
-  varying float vHead;
   varying float vHasP;
   varying float vHasN;
 
@@ -384,10 +387,7 @@ export const HEADLINE_VERTEX = /* glsl */ `
   }
 
   void main() {
-    float rank = aCell.w;
-    vLit = smoothstep(rank - 0.015, rank + 0.015, uWrite);
-    vHead = exp(-abs(uWrite - rank) * 70.0) * step(uWrite, 0.985);
-    if (vLit < 0.003) { gl_Position = vec4(3.0, 3.0, 3.0, 1.0); return; }
+    if (uFade < 0.003) { gl_Position = vec4(3.0, 3.0, 3.0, 1.0); return; }
     float code = aCell.z;
     float kp = mod(code, 5.0);
     float kn = mod(floor(code / 5.0), 5.0);
@@ -418,16 +418,14 @@ export const HEADLINE_VERTEX = /* glsl */ `
 
 export const HEADLINE_FRAGMENT = /* glsl */ `
   uniform vec3 uInk;
-  uniform vec3 uFlash;
   uniform float uLight;
   uniform float uDpr;
+  uniform float uFade;
   varying vec2 vA;
   varying vec2 vP;
   varying vec2 vN;
   varying vec2 vRight;
   varying float vCell;
-  varying float vLit;
-  varying float vHead;
   varying float vHasP;
   varying float vHasN;
 
@@ -453,14 +451,14 @@ export const HEADLINE_FRAGMENT = /* glsl */ `
     float dt = min(mix(1e4, seg(p, vA, vP), vHasP), mix(1e4, seg(p, vA, vN), vHasN));
     float trace = (1.0 - smoothstep(w - 0.5, w + 0.5, dt)) * 0.8;
     float glow = exp(-max(b, 0.0) / max(1.0, c * 0.5)) * 0.18;
-    float a = max(sq, trace) * vLit;
-    vec3 rgb = uInk * (max(sq, trace) + glow * (1.0 - uLight)) + uFlash * vHead * (sq + glow * 2.0);
+    float a = max(sq, trace);
+    vec3 rgb = uInk * (a + glow * (1.0 - uLight));
     if (uLight > 0.5) {
-      float alpha = clamp(a + vHead * sq, 0.0, 1.0);
+      float alpha = clamp(a, 0.0, 1.0) * uFade;
       if (alpha < 0.004) discard;
-      gl_FragColor = vec4(mix(uInk, uFlash, vHead), alpha);
+      gl_FragColor = vec4(uInk, alpha);
     } else {
-      vec3 col = rgb * vLit;
+      vec3 col = rgb * uFade;
       if (max(col.r, max(col.g, col.b)) < 0.002) discard;
       gl_FragColor = vec4(col, 1.0);
     }

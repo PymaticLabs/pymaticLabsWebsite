@@ -13,7 +13,9 @@
   --color-ink: #000000;
   --color-body: #333842;
   --color-muted: #6B7280;
-  --color-line: #E5E7EB;
+  --color-line: #E5E7EB; /* separadores */
+  --color-field: #7F8794; /* borde de campos y botones de contorno: 3,6:1 sobre blanco */
+  --color-danger: #B91C1C; /* errores: 6,5:1 sobre blanco */
   --color-paper: #FFFFFF;
   --color-paper-2: #F6F7F9;
   --color-surface: #FFFFFF; /* tarjetas y paneles sobre el fondo */
@@ -30,6 +32,8 @@
   --color-body: #C3C9D4;
   --color-muted: #8A93A3;
   --color-line: #1E2636;
+  --color-field: #646E7F; /* 3,7:1 sobre las superficies oscuras */
+  --color-danger: #F87171; /* 7:1 sobre el fondo oscuro */
   --color-paper: #070A12;
   --color-paper-2: #0E1320;
   --color-surface: #0C111C;
@@ -41,14 +45,33 @@
   color: var(--color-brand-light);
 }
 
-* {
-  border-color: var(--color-line);
+@layer base {
+  /* Dentro de la capa base, para que las utilidades de color de borde ganen. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-line);
+    /* El hueco entre un elemento y su anillo de foco, del color del fondo (no blanco en el modo oscuro). */
+    --tw-ring-offset-color: var(--color-paper);
+  }
+
+  /* Foco del teclado bien visible en enlaces y botones (los componentes con su propio anillo lo quitan). */
+  :focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 3px;
+  }
+
+  /* Sobre fondos oscuros (el modo oscuro, el pie y los bloques en negro), el azul claro: 7:1 o mas. */
+  .dark :focus-visible,
+  .bg-inverse :focus-visible {
+    outline-color: var(--color-brand-light);
+  }
 }
 
+/* Sin scroll suave global: Next anima con el cada cambio de pagina. Quien lo quiera lo pide al desplazar. */
 html {
   background-color: var(--color-paper);
   color-scheme: light;
-  scroll-behavior: smooth;
   scroll-padding-top: 5rem;
 }
 
@@ -60,12 +83,6 @@ body {
 
 html.dark {
   color-scheme: dark;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
 }
 
 @keyframes fadeUp {
@@ -115,6 +132,9 @@ html.dark {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.dark .prose-content a {
+  color: var(--color-brand-light);
+}
 .prose-content strong {
   color: var(--color-ink);
 }
@@ -142,13 +162,30 @@ html.dark {
   padding: 0.5rem 0.75rem;
   text-align: left;
   vertical-align: top;
+  /* Las palabras largas se cortan con guion y los correos se parten: la tabla cabe en el movil sin
+     ensanchar la pagina. Solo palabras de 6 letras o mas, con 3 a cada lado (donde el navegador no
+     sabe poner guiones, la palabra se parte sin el). */
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
 }
 .prose-content th {
   background: var(--color-paper-2);
   color: var(--color-ink);
 }
+@media (max-width: 639px) {
+  /* En el movil, columnas del mismo ancho: el ancho no lo decide la palabra mas larga. */
+  .prose-content table {
+    font-size: 0.875rem;
+    table-layout: fixed;
+  }
+  .prose-content th,
+  .prose-content td {
+    padding: 0.5rem;
+  }
+}
 
-/* Titulares que el hilo escribe con sus celdas: el texto sigue ahi (se lee, se copia, lo ve
+/* Titulares que el hilo dibuja con sus celdas: el texto sigue ahi (se lee, se copia, lo ve
    Google), pero transparente mientras la escena 3D esta en marcha (data-dots, se quita si pierde el
    contexto) y ya tiene ese titular dibujado (data-drawn). Si no, se ve normal. */
 .dotted {
@@ -165,7 +202,7 @@ html[data-dots] .dotted[data-drawn] {
 
 /* Nombres de carpetas y documentos que la escena coloca sobre el hilo: con fondo para leerse encima. */
 .chip {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1;
   padding: 0.3rem 0.45rem;
   border-radius: 0.25rem;

@@ -27,7 +27,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
           <div className="space-y-3">
-            <Link href={localePath(locale)} className="flex items-center gap-2">
+            <Link href={localePath(locale)} className="inline-flex min-h-11 items-center gap-2">
               <span className="text-lg font-bold">Pymatic Labs</span>
             </Link>
             <p className="text-sm text-white/60">{t('tagline')}</p>
@@ -37,18 +37,18 @@ export default function Footer() {
           <FooterColumn title={t('legal')} links={legalLinks} />
 
           <div>
-            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">
               {t('contact')}
             </h3>
-            <div className="space-y-3 text-sm text-white/60">
+            <div className="text-sm text-white/60">
               <a
                 href="mailto:info@pymaticlabs.com"
-                className="flex items-center gap-2 hover:text-white transition-colors"
+                className="flex min-h-11 items-center gap-2 hover:text-white transition-colors"
               >
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 info@pymaticlabs.com
               </a>
-              <p className="flex items-center gap-2">
+              <p className="flex min-h-11 items-center gap-2">
                 <MapPin className="h-4 w-4" aria-hidden="true" />
                 Castellón de la Plana
               </p>
@@ -70,11 +70,11 @@ export default function Footer() {
 function FooterColumn({ title, links }: { title: string; links: { href: string; label: string }[] }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-4">{title}</h3>
-      <ul className="space-y-2">
+      <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">{title}</h3>
+      <ul>
         {links.map((link) => (
           <li key={link.href}>
-            <Link href={link.href} className="text-sm text-white/60 hover:text-white transition-colors">
+            <Link href={link.href} className="inline-flex min-h-11 items-center text-sm text-white/60 hover:text-white transition-colors">
               {link.label}
             </Link>
           </li>

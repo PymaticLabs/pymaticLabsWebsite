@@ -214,15 +214,7 @@
     "tour": "Recorrido",
     "demo": "Cerebro de ejemplo",
     "journey": {
-      "brain": "Cerebro",
-      "zoom": "Aumento",
-      "levels": [
-        "Todo el cerebro",
-        "Una zona",
-        "Sus carpetas",
-        "Sus documentos",
-        "La línea exacta"
-      ]
+      "brain": "Cerebro"
     },
     "hud": [
       "2.431 documentos · 0 en la nube",
@@ -753,7 +745,7 @@
     "descriptions": {
       "aviso-legal": "Datos de PYMATICLABS, S.L., titular de pymaticlabs.com, y condiciones de uso del sitio web.",
       "politica-privacidad": "Qué datos personales tratamos cuando visitas pymaticlabs.com o nos escribes desde ella.",
-      "politica-cookies": "pymaticlabs.com no usa cookies. Aquí te lo explicamos.",
+      "politica-cookies": "pymaticlabs.com solo usa una cookie, la del tema, y solo si la pides. Aquí te lo explicamos.",
       "condiciones": "Condiciones de uso y venta del Cerebro Digital, para empresas y profesionales.",
       "privacidad-producto": "Qué datos personales trata Pymatic Labs al vender el Cerebro Digital y dar soporte, y cuáles no."
     },

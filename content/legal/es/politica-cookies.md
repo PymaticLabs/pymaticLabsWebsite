@@ -4,8 +4,9 @@ Las cookies son pequeños ficheros que un sitio web guarda en el navegador de qu
 
 ## 2. Qué cookies usa este sitio
 
-**Ninguna.** pymaticlabs.com no instala cookies propias ni de terceros: ni de análisis, ni de publicidad, ni de redes sociales. Por eso no te mostramos un aviso de cookies.
+**Solo una, y solo si la pides.** pymaticlabs.com no instala cookies de análisis, de publicidad ni de redes sociales, propias ni de terceros. Por eso no te mostramos un aviso de cookies.
 
+- **Tema claro u oscuro.** Si cambias el tema con el botón del sol y la luna, guardamos tu elección en una cookie propia, `pymatic_theme`, durante un año, para que la web se vea igual la próxima vez. Solo guarda tu elección (`light` si es el claro o `dark` si es el oscuro), solo se instala cuando pulsas el botón y puedes borrarla desde tu navegador.
 - **Idioma.** El idioma va en la dirección de la página (`/en` para el inglés), no en una cookie.
 - **Medición de visitas.** Usamos Vercel Web Analytics, que cuenta visitas de forma agregada sin cookies ni identificadores guardados en tu navegador. Los detalles están en la política de privacidad de la web.
 

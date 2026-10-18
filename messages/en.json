@@ -214,15 +214,7 @@
     "tour": "Tour",
     "demo": "Sample brain",
     "journey": {
-      "brain": "Brain",
-      "zoom": "Zoom",
-      "levels": [
-        "The whole brain",
-        "One area",
-        "Its folders",
-        "Its documents",
-        "The exact line"
-      ]
+      "brain": "Brain"
     },
     "hud": [
       "2,431 documents · 0 in the cloud",
@@ -753,7 +745,7 @@
     "descriptions": {
       "aviso-legal": "Details of PYMATICLABS, S.L., owner of pymaticlabs.com, and terms of use of the website.",
       "politica-privacidad": "Which personal data we process when you visit pymaticlabs.com or write to us from it.",
-      "politica-cookies": "pymaticlabs.com does not use cookies. Here is why.",
+      "politica-cookies": "pymaticlabs.com only uses one cookie, for the theme, and only if you ask for it. Here is why.",
       "condiciones": "Terms of use and sale of the Digital Brain, for businesses and professionals.",
       "privacidad-producto": "Which personal data Pymatic Labs processes when selling the Digital Brain and providing support, and which it does not."
     },
