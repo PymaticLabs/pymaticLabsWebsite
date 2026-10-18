@@ -49,16 +49,11 @@
         "path": {
           "folder": "C:\\Empresa",
           "file": "Instalación.pdf",
-          "place": "pág. 1",
           "folders": [
-            "Escritorio",
-            "Descargas",
-            "Correo"
+            "Escritorio"
           ],
           "files": [
-            "Presupuesto 2026.xlsx",
-            "Factura 0412 (escaneada).pdf",
-            "Contrato Ruiz.docx"
+            "Presupuesto 2026.xlsx"
           ]
         },
         "cite": "Según: Instalación · pág. 1"
@@ -76,16 +71,11 @@
         "path": {
           "folder": "Presupuestos",
           "file": "Presupuesto Alfa.xlsx",
-          "place": "versión 47",
           "folders": [
-            "Contratos",
-            "Ofertas",
-            "Pedidos"
+            "Contratos"
           ],
           "files": [
-            "Presupuesto Beta.xlsx",
-            "Tarifas 2026.pdf",
-            "Plantilla oferta.docx"
+            "Presupuesto Beta.xlsx"
           ]
         },
         "cite": "Según: Presupuesto Alfa · versión 47, de ayer a las 18:04"
@@ -103,16 +93,11 @@
         "path": {
           "folder": "Ordenador de Ana",
           "file": "Turnos semana 42.xlsx",
-          "place": "fila 8",
           "folders": [
-            "Portátil de Luis",
-            "Taller",
-            "Recepción"
+            "Portátil de Luis"
           ],
           "files": [
-            "Nóminas octubre.xlsx · con llave",
-            "Clientes zona norte.xlsx",
-            "Vacaciones 2026.pdf"
+            "Nóminas octubre.xlsx · con llave"
           ]
         },
         "cite": "Según: Turnos semana 42 · fila 8"
@@ -130,16 +115,11 @@
         "path": {
           "folder": "Contabilidad",
           "file": "Cierre de mes.xlsx",
-          "place": "hoja 2",
           "folders": [
-            "Correo",
-            "Escaneos",
-            "Contratos"
+            "Correo"
           ],
           "files": [
-            "Albarán 2291 (escaneado).pdf",
-            "Correo de Luis.eml",
-            "Acta junta.docx"
+            "Albarán 2291 (escaneado).pdf"
           ]
         },
         "cite": "Según: Cierre de mes · hoja 2, fila 18"
@@ -157,16 +137,11 @@
         "path": {
           "folder": "Escritorio",
           "file": "final_v2_BUENO.docx",
-          "place": "2026 / Clientes",
           "folders": [
-            "Nueva carpeta (7)",
-            "Descargas",
-            "Varios"
+            "Nueva carpeta (7)"
           ],
           "files": [
-            "Sin título.xlsx",
-            "IMG_0412.jpg",
-            "copia de copia.pdf"
+            "Sin título.xlsx"
           ]
         },
         "cite": "Copia ordenada en: 2026 / Clientes / Ruiz"
@@ -184,16 +159,11 @@
         "path": {
           "folder": "Cada lunes",
           "file": "Presupuesto semanal.xlsx",
-          "place": "paso 3 de 5",
           "folders": [
-            "Cada mes",
-            "Al cerrar",
-            "Bajo pedido"
+            "Cada mes"
           ],
           "files": [
-            "Parte de trabajo 0388.pdf",
-            "Pedidos proveedor.xlsx",
-            "Informe de ventas.pdf"
+            "Parte de trabajo 0388.pdf"
           ]
         },
         "cite": "Según: Presupuesto semanal · paso 3 de 5"

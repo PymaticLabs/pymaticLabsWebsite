@@ -2,24 +2,18 @@ import * as THREE from 'three'
 
 // El simbolo de la home: un solo hilo de luz (una curva de Hilbert) que recorre todo lo que sabe la
 // empresa y que, visto desde arriba, dibuja un cerebro de icono: dos hemisferios, la cisura en medio y
-// un unico puente entre ellos. Cada zona es un tramo del hilo. Al bajar a una zona, cada vuelta del
-// hilo contiene el mismo dibujo en pequeno: sus carpetas y sus documentos. Al fondo, uno de esos
-// documentos se abre como una pagina y el propio hilo dibuja el titular en sus renglones.
+// un unico puente entre ellos. Cada zona es un tramo del hilo. Al acercarse a una zona, algunas celdas
+// de su tramo llevan sus carpetas y documentos con nombre, y el propio hilo dibuja el titular encima.
 // Aqui solo esta la geometria; la escena (core-scene.tsx) la pinta y mueve la camara.
 
-/** Orden de la curva en cada nivel: el cerebro, sus carpetas, sus documentos y la linea. */
-export const ORDERS = [5, 8, 11, 17]
-export const LEVELS = ORDERS.length
+/** Orden de la curva del cerebro (32 x 32 celdas) y de la rejilla con la que el hilo dibuja los titulares. */
+const ORDER = 5
+const HEAD_ORDER = 10
 export const ZONE_COUNT = 6
-const DEEPEST = ORDERS[LEVELS - 1]
-/** Separacion entre los planos de dos niveles seguidos, en celdas del de arriba. */
-const GAP = 2
-/** Profundidad del primer nivel bajo la superficie del cerebro. */
-const FIRST_DEPTH = 0.12
-/** Media tarjeta de documento, en celdas (ancho y alto): al fondo, la tarjeta objetivo es la pagina. */
-export const CARD = { half: 0.29, tall: 0.35 }
+/** Tamano de las carpetas y las tarjetas respecto a la celda: casi la llenan, para leerse de cerca (lo usan la escena y los shaders). */
+export const GLYPH = 1.3
 
-export const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 /** Rampa suave de 0 a 1 entre a y b. */
 export const ramp = (a: number, b: number, x: number) => {
   const t = clamp01((x - a) / (b - a))
@@ -133,8 +127,7 @@ export const CENTER = new THREE.Vector3(0, -0.02, WARP.height * 0.35)
 
 /**
  * La unica vista del simbolo, la de la portada: desde delante y casi desde arriba, con la cisura en
- * vertical. La camara nunca gira: solo se aleja y baja. Los niveles finos de cada zona
- * son planos de frente a ella, asi al bajar se ven siempre derechos.
+ * vertical. La camara nunca gira: solo se aleja y se acerca.
  */
 const ELEVATION = THREE.MathUtils.degToRad(74)
 export const VIEW = {
@@ -166,147 +159,57 @@ export function outlinePoints() {
 
 // ---------------------------------------------------------------- las zonas
 
-const N0 = 2 ** ORDERS[0]
+const N0 = 2 ** ORDER
+/** Celdas del hilo del cerebro y lado de una (en el centro del simbolo, en unidades del espacio). */
+export const CELLS = N0 * N0
+export const CELL_SIZE = (2 * WARP.sx) / N0
 
-/**
- * Cada zona es un sexto del hilo. Para cada una: su centro (en el cuadrado) y la celda por la que
- * se baja, una del interior de su tramo, lejos del borde y de la cisura.
- */
-function zoneCells() {
-  const total = N0 * N0
+/** Cada zona es un sexto del hilo: su tramo (de first a last, sin incluirla), su etiqueta y su centro. */
+export interface ZoneFrame {
+  zone: number
+  first: number
+  last: number
+  /** Donde va la etiqueta de la zona, fuera del borde. */
+  label: THREE.Vector3
+  /** Punto de la boveda en el centro de la zona: a el se acerca la camara. */
+  focus: THREE.Vector3
+}
+
+export function buildFrames(): ZoneFrame[] {
   const at: [number, number] = [0, 0]
-  return Array.from({ length: ZONE_COUNT }, (_, z) => {
-    const a = Math.floor((z * total) / ZONE_COUNT)
-    const b = Math.floor(((z + 1) * total) / ZONE_COUNT)
+  return Array.from({ length: ZONE_COUNT }, (_, zone) => {
+    // Las mismas celdas que llevan su zona en la malla (ver buildBrain).
+    const first = Math.ceil((zone * CELLS) / ZONE_COUNT)
+    const last = Math.ceil(((zone + 1) * CELLS) / ZONE_COUNT)
     let cx = 0
     let cy = 0
-    for (let d = a; d < b; d++) {
+    for (let d = first; d < last; d++) {
       d2xy(N0, d, at)
       cx += at[0]
       cy += at[1]
     }
-    cx /= b - a
-    cy /= b - a
-    let best = a
-    let bestScore = -Infinity
-    for (let d = a; d < b; d++) {
-      const [i, j] = d2xy(N0, d, at)
-      const x = (2 * (i + 0.5)) / N0 - 1
-      const y = (2 * (j + 0.5)) / N0 - 1
-      const interior = Math.min(Math.abs(x) - 0.28, 0.78 - Math.max(Math.abs(x), Math.abs(y)))
-      const score = -Math.hypot(i - cx, j - cy) * 0.06 + Math.min(0, interior) * 40
-      if (score > bestScore) {
-        bestScore = score
-        best = d
-      }
-    }
-    return { center: [(2 * (cx + 0.5)) / N0 - 1, (2 * (cy + 0.5)) / N0 - 1] as [number, number], cell: best }
-  })
-}
-
-/**
- * Todo lo que hace falta para bajar a una zona: el punto de la superficie por el que se entra, la
- * normal y los ejes de los niveles finos (planos de frente a la camara, uno bajo otro, con la
- * rejilla derecha en pantalla), el tamano de celda y la profundidad de cada nivel y la celda
- * objetivo de cada uno. El hilo mas fino (el ultimo nivel) va en el mismo plano que los documentos:
- * rodea la pagina del documento objetivo.
- */
-export interface ZoneFrame {
-  zone: number
-  /** Donde va la etiqueta de la zona, fuera del borde. */
-  label: THREE.Vector3
-  /** Posicion en el hilo del cerebro de la celda por la que se baja. */
-  index0: number
-  /** Celda objetivo en cada nivel. */
-  cells: [number, number][]
-  surface: THREE.Vector3
-  normal: THREE.Vector3
-  axisI: THREE.Vector3
-  axisJ: THREE.Vector3
-  unit: number[]
-  depth: number[]
-  /** Centro de la celda objetivo de cada nivel en el espacio (los niveles finos, sobre su plano). */
-  centers: THREE.Vector3[]
-}
-
-export function buildFrames(): ZoneFrame[] {
-  const deep = 2 ** DEEPEST
-  const side = 2 ** (DEEPEST - ORDERS[0])
-  return zoneCells().map(({ center, cell }, zone) => {
-    // La celda a la que se baja esta, en cada nivel, en el centro de la del nivel anterior: asi cada
-    // nivel aparece dentro del anterior.
-    const [i0, j0] = d2xy(N0, cell)
-    const inner = side / 2 + side / 16 + side / 128
-    const pi = i0 * side + inner
-    const pj = j0 * side + inner
-    const xP = (2 * (pi + 0.5)) / deep - 1
-    const yP = (2 * (pj + 0.5)) / deep - 1
-    const surface = warp3(xP, yP)
-    // Escala de la silueta en ese punto: las celdas finas miden lo que les toca dentro de la gruesa.
-    // (Su giro alli es de menos de un grado: la rejilla fina va derecha, de frente a la camara.)
-    const e = 1e-5
-    const a1 = warp2(xP + e, yP)
-    const a0 = warp2(xP - e, yP)
-    const b1 = warp2(xP, yP + e)
-    const b0 = warp2(xP, yP - e)
-    const j00 = (a1[0] - a0[0]) / (2 * e)
-    const j10 = (a1[1] - a0[1]) / (2 * e)
-    const j01 = (b1[0] - b0[0]) / (2 * e)
-    const j11 = (b1[1] - b0[1]) / (2 * e)
-    const scale = Math.sqrt(Math.abs(j00 * j11 - j01 * j10))
-    const normal = VIEW.dir.clone()
-    const axisI = VIEW.right.clone()
-    const axisJ = VIEW.up.clone()
-    const unit = ORDERS.map((o) => (scale * 2) / 2 ** o)
-    const depth = [0, FIRST_DEPTH]
-    for (let k = 2; k < LEVELS - 1; k++) depth[k] = depth[k - 1] + GAP * unit[k - 1]
-    depth[LEVELS - 1] = depth[LEVELS - 2]
-    const cells = ORDERS.map((o) => [Math.floor(pi / 2 ** (DEEPEST - o)), Math.floor(pj / 2 ** (DEEPEST - o))] as [number, number])
-    const centers = cells.map(([ci, cj], k) => {
-      const n = 2 ** ORDERS[k]
-      const x = (2 * (ci + 0.5)) / n - 1
-      const y = (2 * (cj + 0.5)) / n - 1
-      if (k === 0) return warp3(x, y)
-      const dx = (x - xP) * scale
-      const dy = (y - yP) * scale
-      return surface
-        .clone()
-        .addScaledVector(axisI, dx)
-        .addScaledVector(axisJ, dy)
-        .addScaledVector(normal, -depth[k])
-    })
+    const x = (2 * (cx / (last - first) + 0.5)) / N0 - 1
+    const y = (2 * (cy / (last - first) + 0.5)) / N0 - 1
     // Etiqueta: en el borde del cuadrado en la direccion del centro de la zona, un poco por fuera.
-    const m = Math.max(Math.abs(center[0]), Math.abs(center[1])) || 1
-    const [bx, by] = warp2(center[0] / m, center[1] / m)
+    const m = Math.max(Math.abs(x), Math.abs(y)) || 1
+    const [bx, by] = warp2(x / m, y / m)
     const r = Math.hypot(bx, by)
     const label = new THREE.Vector3(bx * (1 + 0.1 / r), by * (1 + 0.1 / r), 0.02)
-    return {
-      zone,
-      label,
-      index0: cell,
-      cells,
-      surface,
-      normal,
-      axisI,
-      axisJ,
-      unit,
-      depth,
-      centers,
-    }
+    return { zone, first, last, label, focus: warp3(x, y) }
   })
 }
 
 // ---------------------------------------------------------------- las mallas
 
 /**
- * Marcas de cada celda (se suman): vuelta del hilo, punto, candado, carpeta, objetivo, borde y
- * tarjeta de documento; con tarjeta, su tipo va en los dos bits de "kind" (0 texto, 1 pdf, 2 hoja de
- * calculo, 3 foto).
+ * Marcas de cada celda (se suman): vuelta del hilo, punto, candado, carpeta, borde y tarjeta de
+ * documento; con tarjeta, su tipo va en los dos bits de "kind" (0 texto, 1 pdf, 2 hoja de calculo, 3 foto).
+ * Carpetas y tarjetas solo las llevan las celdas con nombre (ver namedMarks).
  */
-const MARK = { turn: 1, dot: 2, lock: 4, folder: 8, target: 16, rim: 32, card: 64, kind: 128 }
+const MARK = { turn: 1, dot: 2, lock: 4, folder: 8, rim: 32, card: 64, kind: 128 }
 
 /** Zona con las areas cerradas del equipo: alli hay mas candados. */
-const TEAM_ZONE = 2
+export const TEAM_ZONE = 2
 
 /** Tipo de tarjeta segun la extension del nombre de un documento. */
 export function fileKind(name: string) {
@@ -317,14 +220,54 @@ export function fileKind(name: string) {
   return 0
 }
 
+/** Si una celda es una vuelta del hilo y si lleva candado, segun sus marcas. */
+export const isTurn = (marks: number) => (marks & MARK.turn) !== 0
+export const isLock = (marks: number) => (marks & MARK.lock) !== 0
+
+/** Marcas de una celda sin carpeta, tarjeta ni candado (las de las vecinas de una con nombre, para que no se confundan). */
+export const plainMarks = (marks: number) => marks & (MARK.turn | MARK.dot | MARK.rim)
+
+/** Marcas de una celda con nombre: su carpeta o la tarjeta de su documento (de su tipo y, si va con llave, con candado). */
+export function namedMarks(marks: number, folder: boolean, kind: number, lock: boolean) {
+  const keep = marks & (MARK.turn | MARK.dot)
+  return keep + (folder ? MARK.folder : MARK.card + MARK.kind * kind) + (lock ? MARK.lock : 0)
+}
+
+/** Las cuatro vecinas de una celda (y las de las esquinas) en el hilo del cerebro, por su posicion en el hilo. */
+export function neighbors(d: number) {
+  const [i, j] = d2xy(N0, d)
+  const out: number[] = []
+  for (let dj = -1; dj <= 1; dj++) {
+    for (let di = -1; di <= 1; di++) {
+      const x = i + di
+      const y = j + dj
+      if ((di || dj) && x >= 0 && y >= 0 && x < N0 && y < N0) out.push(xy2d(N0, x, y))
+    }
+  }
+  return out
+}
+
 /**
- * El cerebro entero (nivel 0), sobre la boveda: por celda, su nodo y los de la anterior y la
- * siguiente, y en "info" su zona, su posicion en el hilo (de 0 a 1, para el pulso), sus marcas y su
- * indice. Al final, el borde de cada hemisferio como un hilo cerrado.
+ * Puntos de la boveda en los cuatro lados de la celda d (izquierda, derecha, abajo y arriba):
+ * proyectados, dicen cuanto mide en pantalla en cada direccion y si alli la boveda se ve de lado.
+ */
+export function cellSides(d: number): THREE.Vector3[] {
+  const [i, j] = d2xy(N0, d)
+  const x = (2 * i + 1) / N0 - 1
+  const y = (2 * j + 1) / N0 - 1
+  const h = 1 / N0
+  return [warp3(x - h, y), warp3(x + h, y), warp3(x, y - h), warp3(x, y + h)]
+}
+
+/**
+ * El cerebro entero, sobre la boveda: por celda, su nodo y los de la anterior y la siguiente, y en
+ * "info" su zona, su posicion en el hilo (de 0 a 1, para el pulso), sus marcas y su indice. Las
+ * carpetas y las tarjetas se ponen despues, en las celdas con nombre (solo se ven de cerca, en la zona
+ * a la que se va). Al final, el borde de cada hemisferio como un hilo cerrado.
  */
 export function buildBrain() {
   const n = N0
-  const total = n * n
+  const total = CELLS
   const rimSteps = 44
   const count = total + 2 * rimSteps * 6
   const a = new Float32Array(count * 3)
@@ -387,139 +330,24 @@ export function buildBrain() {
   return { a, prev, next, info, count: q }
 }
 
-/**
- * Celdas con nombre alrededor del objetivo, en celdas de pantalla: en el nivel 1 las carpetas y en
- * el 2 los documentos (la primera es la del objetivo). Cada una en su fila, para que el nombre de un
- * documento quede debajo de su tarjeta sin pisar otro. En el movil van mas juntas.
- */
-export function namedCells(wide: boolean, level: number): [number, number][] {
-  if (wide) {
-    return [
-      [0, 0],
-      [-3, 2],
-      [3, 1],
-      [-2, -2],
-    ]
-  }
-  return level === 1
-    ? [
-        [0, 0],
-        [-1, 1],
-        [1, -1],
-        [1, 2],
-      ]
-    : [
-        [0, 0],
-        [-1, 2],
-        [1, -1],
-        [-1, -2],
-      ]
-}
-
-/** Ejes de la pantalla al llegar al fondo de una zona, en celdas de la rejilla (derecha y arriba). */
-export interface ScreenAxes {
-  right: [number, number]
-  up: [number, number]
-}
-
-export const toGrid = (axes: ScreenAxes, a: number, b: number): [number, number] => [
-  a * axes.right[0] + b * axes.up[0],
-  a * axes.right[1] + b * axes.up[1],
-]
-
-/** Clave numerica de una celda relativa al objetivo (sin crear cadenas). */
-const cellKey = (di: number, dj: number) => (di + 4096) * 8192 + (dj + 4096)
+export type Brain = ReturnType<typeof buildBrain>
 
 /**
- * Un nivel fino de una zona: un trozo de la curva alrededor de su celda objetivo, de 2 hw x 2 hh
- * celdas. Por celda: su posicion respecto a la objetivo, los enlaces con la anterior y la siguiente
- * mas sus marcas (anterior + 5 * siguiente + 25 * marcas) y su fase para el pulso. En los documentos,
- * algo menos de la mitad de las celdas son tarjetas (entre ellas se ven las vueltas del hilo); las que
- * tienen nombre llevan el tipo de su archivo y la de debajo se deja libre para el nombre. Se
- * construye a trozos (es un generador) para no parar el scroll.
- */
-export function* buildPatch(frame: ZoneFrame, level: number, hw: number, hh: number, axes: ScreenAxes, wide: boolean, kinds: number[]) {
-  const n = 2 ** ORDERS[level]
-  const [ti, tj] = frame.cells[level]
-  const dT = xy2d(n, ti, tj)
-  const cells = new Float32Array(4 * hw * hh * 4)
-  // Debajo de cada documento con nombre (y a sus lados) no va tarjeta: alli se lee su nombre. Debajo
-  // del objetivo solo se deja libre la de en medio: sus vecinas son todas documentos, para que al
-  // acercarse a el se vea entre otros.
-  const named = new Map<number, number>()
-  const below = new Set<number>()
-  namedCells(wide, level).forEach(([a, b], k) => {
-    const [gi, gj] = toGrid(axes, a, b)
-    named.set(cellKey(gi, gj), k)
-    for (let side = k === 0 ? 0 : -1; side <= (k === 0 ? 0 : 1); side++) {
-      const [bi, bj] = toGrid(axes, a + side, b - 1)
-      below.add(cellKey(bi, bj))
-    }
-  })
-  const docs = level === 2
-  const lockRate = level === LEVELS - 1 ? 0 : frame.zone === TEAM_ZONE ? (docs ? 0.1 : 0.06) : 0.008
-  const before: [number, number] = [0, 0]
-  const after: [number, number] = [0, 0]
-  let count = 0
-  let rows = 0
-  for (let j = tj - hh; j < tj + hh; j++) {
-    for (let i = ti - hw; i < ti + hw; i++) {
-      if (i < 0 || j < 0 || i >= n || j >= n) continue
-      const d = xy2d(n, i, j)
-      const [pi, pj] = d > 0 ? d2xy(n, d - 1, before) : [i, j]
-      const [si, sj] = d < n * n - 1 ? d2xy(n, d + 1, after) : [i, j]
-      const di = i - ti
-      const dj = j - tj
-      const key = cellKey(di, dj)
-      const name = named.get(key) ?? -1
-      const target = di === 0 && dj === 0
-      const turn = i - pi !== si - i || j - pj !== sj - j
-      let marks = turn ? MARK.turn : 0
-      if (turn && hash(i, j, 3 + level) < 0.12) marks += MARK.dot
-      if (target) marks += MARK.target
-      else if (hash(i, j, 7 + level) < lockRate || (docs && frame.zone === TEAM_ZONE && name === 1)) marks += MARK.lock
-      if (level === 1 && (name >= 0 || (turn && hash(i, j, 11) < 0.1))) marks += MARK.folder
-      const ring = Math.max(Math.abs(di), Math.abs(dj)) === 1
-      if (docs && (target || name >= 0 || (!below.has(key) && (ring || hash(i, j, 13) < 0.42)))) {
-        const r = hash(i, j, 17)
-        const kind = name >= 0 ? (kinds[name] ?? 0) : r < 0.38 ? 0 : r < 0.68 ? 1 : r < 0.92 ? 2 : 3
-        marks += MARK.card + MARK.kind * kind
-      }
-      const code = direction(pi - i, pj - j) + 5 * direction(si - i, sj - j) + 25 * marks
-      const phase = (d - dT) / 8192
-      const o = count * 4
-      cells[o] = di
-      cells[o + 1] = dj
-      cells[o + 2] = code
-      cells[o + 3] = phase - Math.floor(phase)
-      count++
-    }
-    if (++rows % 12 === 0) yield
-  }
-  return { cells, count }
-}
-
-/**
- * El titular de una zona dibujado con celdas del nivel mas fino: se rasteriza el titular del DOM y
- * se mira que celdas de una rejilla anclada en su centro quedan dentro de la letra. Se enciende
- * entero de una vez (con un fundido suave, ver core-scene.tsx). Las vecinas a lo largo del hilo que
- * tambien estan encendidas se unen con el propio hilo.
+ * El titular de una zona dibujado por el hilo: se rasteriza el titular del DOM y se mira que celdas
+ * de una rejilla anclada en su centro (con la derecha y el arriba de la pantalla) quedan dentro de la
+ * letra. Se enciende entero de una vez (con un fundido suave, ver core-scene.tsx). Las vecinas a lo
+ * largo de una curva de Hilbert que tambien estan encendidas se unen con el propio hilo.
  */
 export interface Headline {
   cells: Float32Array
   count: number
-  /** Centro del titular en px del lienzo: alli queda el centro de la pagina al llegar. */
+  /** Centro del titular en px del lienzo. */
   at: [number, number]
+  /** Lado de cada celda, en px. */
   step: number
-  /** Ancho y alto del titular, en px. */
-  size: [number, number]
-  /** Linea de base de cada renglon, en px desde el centro del titular (hacia abajo). */
-  baselines: number[]
-  /** Distancia entre renglones, en px. */
-  pitch: number
 }
 
-export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMRect, axes: ScreenAxes, wide: boolean): Headline | null {
+export function buildHeadline(title: HTMLElement, canvas: DOMRect, wide: boolean): Headline | null {
   const box = title.getBoundingClientRect()
   if (!box.width || !box.height || !canvas.width) return null
   const style = getComputedStyle(title)
@@ -541,14 +369,9 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
   ctx.textBaseline = 'alphabetic'
   // Cada palabra va en su span: su caja empieza donde empieza la letra (por arriba, el ascendente).
   const ascent = ctx.measureText('Hg').fontBoundingBoxAscent
-  /** Donde empieza cada renglon por arriba (el de cada palabra, sin repetir). */
-  const tops: number[] = []
   title.querySelectorAll(':scope > span > span').forEach((word) => {
     const r = word.getBoundingClientRect()
-    const left = r.left - box.left + pad
-    const top = r.top - box.top + pad
-    ctx.fillText(word.textContent ?? '', left, top + ascent)
-    if (!tops.some((t) => Math.abs(t - top) < fontSize * 0.3)) tops.push(top)
+    ctx.fillText(word.textContent ?? '', r.left - box.left + pad, r.top - box.top + pad + ascent)
   })
   const data = ctx.getImageData(0, 0, raster.width, raster.height).data
   // Centro del titular, en px del lienzo y en px del raster.
@@ -558,7 +381,7 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
   const oy = box.height / 2 + pad
   const ca = Math.floor(ox / step)
   const cb = Math.floor(oy / step)
-  const lit: { a: number; b: number }[] = []
+  const lit: [number, number][] = []
   const probe = 4
   for (let b = -cb; b <= cb; b++) {
     for (let a = -ca; a <= ca; a++) {
@@ -572,33 +395,26 @@ export function buildHeadline(frame: ZoneFrame, title: HTMLElement, canvas: DOMR
           if (x >= 0 && y >= 0 && x < raster.width && y < raster.height) ink += data[(y * raster.width + x) * 4 + 3]
         }
       }
-      if (ink / (probe * probe * 255) <= 0.42) continue
-      lit.push({ a, b })
+      if (ink / (probe * probe * 255) > 0.42) lit.push([a, b])
     }
   }
   if (!lit.length) return null
-  // Enlaces a lo largo del hilo entre celdas encendidas seguidas.
-  const n = 2 ** DEEPEST
-  const [ti, tj] = frame.cells[LEVELS - 1]
-  const grid = lit.map(({ a, b }) => toGrid(axes, a, b))
-  const byIndex = new Set(grid.map(([di, dj]) => xy2d(n, ti + di, tj + dj)))
+  // Enlaces a lo largo de la curva entre celdas encendidas seguidas (la rejilla centrada en la curva).
+  const n = 2 ** HEAD_ORDER
+  const o = n / 2
+  const byIndex = new Set(lit.map(([a, b]) => xy2d(n, o + a, o + b)))
   const at: [number, number] = [0, 0]
   const cells = new Float32Array(lit.length * 4)
-  lit.forEach((_, k) => {
-    const [di, dj] = grid[k]
-    const d = xy2d(n, ti + di, tj + dj)
+  lit.forEach(([a, b], k) => {
+    const d = xy2d(n, o + a, o + b)
     const link = (e: number) => {
       if (!byIndex.has(e)) return 4
       const [x, y] = d2xy(n, e, at)
-      return direction(x - ti - di, y - tj - dj)
+      return direction(x - o - a, y - o - b)
     }
-    cells[k * 4] = di
-    cells[k * 4 + 1] = dj
+    cells[k * 4] = a
+    cells[k * 4 + 1] = b
     cells[k * 4 + 2] = link(d - 1) + 5 * link(d + 1)
   })
-  // Renglones: la linea de base de cada uno, desde el centro del titular.
-  tops.sort((p, q) => p - q)
-  const baselines = tops.map((t) => t + ascent - oy)
-  const pitch = parseFloat(style.lineHeight) || fontSize * 0.95
-  return { cells, count: lit.length, at: [hx, hy], step, size: [box.width, box.height], baselines, pitch }
+  return { cells, count: lit.length, at: [hx, hy], step }
 }

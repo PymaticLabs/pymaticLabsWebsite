@@ -49,16 +49,11 @@
         "path": {
           "folder": "C:\\Company",
           "file": "Setup.pdf",
-          "place": "p. 1",
           "folders": [
-            "Desktop",
-            "Downloads",
-            "Mail"
+            "Desktop"
           ],
           "files": [
-            "Budget 2026.xlsx",
-            "Invoice 0412 (scanned).pdf",
-            "Ruiz contract.docx"
+            "Budget 2026.xlsx"
           ]
         },
         "cite": "Source: Setup · p. 1"
@@ -76,16 +71,11 @@
         "path": {
           "folder": "Quotes",
           "file": "Alpha quote.xlsx",
-          "place": "version 47",
           "folders": [
-            "Contracts",
-            "Offers",
-            "Orders"
+            "Contracts"
           ],
           "files": [
-            "Beta quote.xlsx",
-            "Rates 2026.pdf",
-            "Offer template.docx"
+            "Beta quote.xlsx"
           ]
         },
         "cite": "Source: Alpha quote · version 47, from yesterday at 18:04"
@@ -103,16 +93,11 @@
         "path": {
           "folder": "Ana's computer",
           "file": "Shifts week 42.xlsx",
-          "place": "row 8",
           "folders": [
-            "Luis's laptop",
-            "Workshop",
-            "Front desk"
+            "Luis's laptop"
           ],
           "files": [
-            "Payroll October.xlsx · locked",
-            "North clients.xlsx",
-            "Holidays 2026.pdf"
+            "Payroll October.xlsx · locked"
           ]
         },
         "cite": "Source: Shifts week 42 · row 8"
@@ -130,16 +115,11 @@
         "path": {
           "folder": "Accounts",
           "file": "Month-end close.xlsx",
-          "place": "sheet 2",
           "folders": [
-            "Mail",
-            "Scans",
-            "Contracts"
+            "Mail"
           ],
           "files": [
-            "Delivery note 2291 (scanned).pdf",
-            "Email from Luis.eml",
-            "Board minutes.docx"
+            "Delivery note 2291 (scanned).pdf"
           ]
         },
         "cite": "Source: Month-end close · sheet 2, row 18"
@@ -157,16 +137,11 @@
         "path": {
           "folder": "Desktop",
           "file": "final_v2_GOOD.docx",
-          "place": "2026 / Clients",
           "folders": [
-            "New folder (7)",
-            "Downloads",
-            "Misc"
+            "New folder (7)"
           ],
           "files": [
-            "Untitled.xlsx",
-            "IMG_0412.jpg",
-            "copy of copy.pdf"
+            "Untitled.xlsx"
           ]
         },
         "cite": "Tidy copy in: 2026 / Clients / Ruiz"
@@ -184,16 +159,11 @@
         "path": {
           "folder": "Every Monday",
           "file": "Weekly quote.xlsx",
-          "place": "step 3 of 5",
           "folders": [
-            "Every month",
-            "At closing",
-            "On request"
+            "Every month"
           ],
           "files": [
-            "Work report 0388.pdf",
-            "Supplier orders.xlsx",
-            "Sales report.pdf"
+            "Work report 0388.pdf"
           ]
         },
         "cite": "Source: Weekly quote · step 3 of 5"

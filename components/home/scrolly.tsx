@@ -21,18 +21,18 @@ interface Scene {
   title: string
   text: string
   specs: string[]
-  /** Donde esta la informacion de la escena: su carpeta, su documento, el sitio exacto y lo que hay al lado. */
-  path: { folder: string; file: string; place: string; folders: string[]; files: string[] }
+  /** Donde esta la informacion de la escena: su carpeta y su documento (los principales) y otros que hay al lado. */
+  path: { folder: string; file: string; folders: string[]; files: string[] }
   cite: string
 }
 
 // La home es un viaje por el cerebro, siempre en el centro: un solo hilo de luz que dibuja el simbolo.
-// Al bajar, como sobre un mapa y sin que nada gire, la camara se aleja hasta ver el simbolo entero, la
-// luz pasa a la zona de cada escena (orden de Eric: portada, local, historial, equipo, documentos,
-// carpetas y tareas) y baja a ella: sus carpetas, sus documentos y la pagina donde esta lo que se
-// busca, con el titular dibujado por el propio hilo. En cada parada todo se queda quieto mientras se
-// lee. Todo va centrado y apilado en el mismo sitio; la escena decide que se ve y donde va cada
-// etiqueta (ver stage.ts).
+// Al bajar, como sobre un mapa y sin que nada gire, la camara se aleja despacio hasta ver el simbolo
+// entero, la luz pasa a la zona de cada escena (orden de Eric: portada, local, historial, equipo,
+// documentos, carpetas y tareas) y se acerca a ella: su tramo del hilo, algunas de sus carpetas y
+// documentos con su nombre y el titular dibujado por el propio hilo. En cada parada todo se queda
+// quieto mientras se lee. Todo va centrado y apilado en el mismo sitio; la escena decide que se ve y
+// donde va cada etiqueta (ver stage.ts).
 export default function Scrolly() {
   const t = useTranslations('home')
   const locale = useLocale()
@@ -89,11 +89,12 @@ export default function Scrolly() {
   const number = (i: number) => String(i + 2).padStart(2, '0')
 
   // Cada escena empieza SCENE_VH mas abajo (ver sceneTop). Se salta de golpe: la escena no recorre el
-  // camino, aparece ya en la parada con un fundido (ver JUMP en core-scene.tsx).
+  // camino, se apaga y aparece ya en la parada con un fundido (ver JUMP en core-scene.tsx).
   const goTo = (k: number) => {
     const section = sectionRef.current
     const sticky = stickyRef.current
     if (!section || !sticky) return
+    stage.leap = performance.now()
     const top = section.getBoundingClientRect().top + window.scrollY
     window.scrollTo({ top: top + sceneTop(k, scenes.length) * (section.offsetHeight - sticky.offsetHeight), behavior: 'instant' })
   }
@@ -135,7 +136,7 @@ export default function Scrolly() {
           )}
         </div>
 
-        {/* Etiquetas que la escena coloca sobre el hilo: las zonas alrededor del simbolo y, al bajar, carpetas y documentos */}
+        {/* Etiquetas que la escena coloca sobre el hilo: las zonas alrededor del simbolo y, cerca de una zona, sus carpetas y documentos */}
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
           {/* En el movil solo se ve la de la zona a la que se va (la escena decide) */}
           {scenes.map((scene, i) => (
@@ -173,15 +174,16 @@ export default function Scrolly() {
           </Readable>
         </div>
 
-        {/* Escenas: el titular (lo dibuja el hilo al llegar al fondo de la zona), de donde sale y el resto en
+        {/* Escenas: el titular (lo dibuja el hilo al llegar a la zona), de donde sale y el resto en
             texto, grande y con buen contraste. Ocultas siguen en el arbol de accesibilidad; solo sus enlaces
-            salen del tabulador */}
+            salen del tabulador. En el movil (en vertical) el texto va abajo, como en la portada, y la zona
+            encima */}
         {scenes.map((scene, i) => (
           <div
             key={scene.id}
             ref={(el) => void (stage.blocks[i + 1] = el)}
             style={{ opacity: 0, pointerEvents: 'none' }}
-            className="absolute inset-0 flex flex-col items-center justify-center px-4 pt-10 text-center short:pt-12"
+            className="absolute inset-0 flex flex-col items-center justify-center px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 short:pt-12"
           >
             <p className="font-mono text-sm uppercase tracking-[0.2em] text-muted">
               <span className="text-brand">{number(i)}</span> — {scene.kicker}
@@ -204,10 +206,10 @@ export default function Scrolly() {
           </div>
         ))}
 
-        {/* Por donde va la busqueda: la ruta entera hasta la informacion, fija, mientras se esta dentro de una zona */}
+        {/* Donde se esta: el cerebro, la zona y su carpeta principal, fija, mientras se esta en una zona */}
         <div className="halo pointer-events-none absolute left-6 right-6 top-20 hidden font-mono text-xs uppercase tracking-[0.12em] sm:block xl:left-8 short:hidden" aria-hidden="true">
           {scenes.map((scene, i) => {
-            const steps = [t('journey.brain'), scene.kicker, scene.path.folder, scene.path.file, scene.path.place]
+            const steps = [t('journey.brain'), scene.kicker, scene.path.folder]
             return (
               <ol key={scene.id} ref={(el) => void (stage.crumbs[i] = el)} style={{ opacity: 0 }} className="absolute left-0 top-0 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-body">
                 {steps.map((step, m) => (
