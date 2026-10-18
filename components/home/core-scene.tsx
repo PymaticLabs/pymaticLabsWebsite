@@ -104,9 +104,6 @@ const CUT_IN = 0.35
 /** Pulso: una sola pasada lenta y suave por el hilo al abrir la pagina, y se para. Sin animaciones, ninguna. */
 const PULSE_SPEED = 1 / 36
 const PULSE_AMOUNT = 0.6
-/** Sin animaciones la camara no viaja: al cambiar de vista todo se apaga (DIP_OUT s) y se enciende ya en la nueva. */
-const DIP_OUT = 0.2
-const DIP_IN = 0.3
 
 type RGB = [number, number, number]
 // Componentes tal cual del hex: el shader los pinta sin convertir.
@@ -412,34 +409,6 @@ function journey(s: number, out: Pose) {
   out.mix = m > 0 && m < 1 ? m : 1
   out.light = m > 0 ? k : k - 1
   out.from = m < 1 ? k - 1 : k
-  return out
-}
-
-/**
- * Sin animaciones, la camara no viaja: cada tramo del scroll tiene una vista quieta y entre dos hay
- * un fundido. Por escena, dos: la parada (un cuarto de escena a cada lado) y el simbolo entero con la
- * zona siguiente encendida. La vista v cubre x = 2 s + 0.5 de v a v + 1: las pares son las paradas
- * (la v / 2) y las impares, el simbolo entero.
- */
-const stillView = (x: number) => Math.min(2 * (SCENE_COUNT - 1), Math.max(0, Math.floor(x)))
-
-function stillPose(view: number, out: Pose) {
-  const base = view >> 1
-  out.hero = 0
-  out.zoom = 0
-  out.mix = 1
-  if (view % 2 === 0) {
-    // La parada: la portada o la zona.
-    out.zone = out.light = Math.max(0, base - 1)
-    out.from = base - 1
-    if (base === 0) {
-      out.hero = 1
-      out.mix = 0
-    } else out.zoom = 1
-  } else {
-    // El simbolo entero con la zona siguiente encendida.
-    out.zone = out.light = out.from = base
-  }
   return out
 }
 
@@ -1026,11 +995,10 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
   /**
    * Fundidos en el tiempo (nunca se quedan a medias): el texto de cada escena (la parada que se lee,
    * con margen para no parpadear en el borde), la penumbra detras y, por zona, su ruta y los nombres de
-   * sus carpetas y documentos. Sin animaciones, ademas, la vista quieta que se ve, la que toca y cuanto
-   * se ve (dip).
+   * sus carpetas y documentos.
    */
   const fades = useMemo(
-    () => ({ reading: -1, lead: 0, text: new Float64Array(SCENE_COUNT), dim: 0, zones: new Float64Array(ZONE_COUNT), shown: -1, wanted: -1, dip: 1 }),
+    () => ({ reading: -1, lead: 0, text: new Float64Array(SCENE_COUNT), dim: 0, zones: new Float64Array(ZONE_COUNT) }),
     []
   )
   /** Portada: cajas del titulo y de su texto (en penumbra) y, en el movil, donde empieza el titulo. */
@@ -1226,7 +1194,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     const c = cut.current
     // Tras un salto (o al empezar), los fundidos no se recorren: todo aparece ya como toca.
     let jumped = first
-    if (first || reduceMotion) {
+    if (first) {
       smooth.current = goal
       c.leaving = false
       c.level = 1
@@ -1253,25 +1221,12 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     const s = smooth.current
     let fade = c.level
 
-    // Que se ve y que texto se lee. Sin animaciones, la vista quieta del tramo, con un fundido al cambiar.
-    if (reduceMotion) {
-      const x = 2 * s + 0.5
-      if (fades.wanted < 0 || x < fades.wanted - 0.08 || x >= fades.wanted + 1.08) fades.wanted = stillView(x)
-      if (fades.shown < 0 || first) {
-        fades.shown = fades.wanted
-        fades.dip = 1
-      } else if (fades.shown !== fades.wanted) {
-        fades.dip = Math.max(0, fades.dip - dt / DIP_OUT)
-        if (fades.dip === 0) fades.shown = fades.wanted
-      } else fades.dip = Math.min(1, fades.dip + dt / DIP_IN)
-      stillPose(fades.shown, pose)
-      fade *= fades.dip
-      fades.reading = fades.shown % 2 === 0 && fades.shown === fades.wanted && fades.dip > 0.95 ? fades.shown / 2 : -1
-    } else {
-      journey(s, pose)
-      const near = Math.round(s)
-      fades.reading = Math.abs(s - near) < (fades.reading === near ? TEXT_HIDE : TEXT_SHOW) ? near : -1
-    }
+    // Que se ve y que texto se lee. Tambien sin animaciones (en Windows, "efectos de animacion" apagados):
+    // la camara solo se mueve con el scroll de quien lee y despacio, asi que el viaje se ve igual; lo que
+    // se mueve solo (el pulso) es lo que se quita.
+    journey(s, pose)
+    const stop = Math.round(s)
+    fades.reading = Math.abs(s - stop) < (fades.reading === stop ? TEXT_HIDE : TEXT_SHOW) ? stop : -1
     let fading = false
     let lead = -1
     for (let k = 0; k < SCENE_COUNT; k++) {
@@ -1291,7 +1246,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     // Fotogramas lentos (menos de unos 26 por segundo; con ahorro de bateria algunos navegadores se quedan
     // en 30 y eso no cuenta) dos ratos seguidos: un paso menos de resolucion. Solo cuentan los que siguen
     // a otro (el primero tras un rato quieto no dice nada de la tarjeta grafica).
-    if (!reduceMotion && !slowed && continued.current && dt < 0.25 && now > 3) {
+    if (!slowed && continued.current && dt < 0.25 && now > 3) {
       const p = perf.current
       p.time += dt
       p.frames++
@@ -1327,7 +1282,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     aim(cam, frame.focus, view.pivot[0] + zoom * (view.from[0] - view.pivot[0]), view.pivot[1] + zoom * (view.from[1] - view.pivot[1]), height, W, H, zoom)
     /** Px de pantalla por unidad del espacio junto al punto al que se mira. */
     const pxUnit = (pxk * zoom) / height
-    // Tras un salto (o sin animaciones, al cambiar de vista), toda la escena se funde.
+    // Tras un salto desde el indice, toda la escena se funde.
     dom.opacity(gl.domElement, fade)
 
     // Leyendo un titular en un movil de mucha densidad, a mas resolucion (la escena esta quieta).
@@ -1511,8 +1466,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     // Solo se pide otro fotograma mientras algo se mueve: la camara que aun no ha llegado, el fundido de
     // un salto o de un cambio de vista, un fundido de texto o de nombres, el pulso (mientras dura y se ve)
     // o el cielo, que lo recoge en el siguiente.
-    const dipping = reduceMotion && (fades.shown !== fades.wanted || fades.dip < 1)
-    const moving = s !== goal || c.leaving || c.level < 1 || fading || dipping || pulseSeen || skyChanged
+    const moving = s !== goal || c.leaving || c.level < 1 || fading || pulseSeen || skyChanged
     continued.current = moving
     if (moving) invalidate()
 
