@@ -3,11 +3,12 @@
 // fragmento traza las lineas con su brillo, el punto del nodo y, de cerca y en la zona a la que se va,
 // la carpeta, la tarjeta del documento (con el dibujo de su tipo) o el candado.
 
-import { GLYPH } from '@/components/home/thread'
+import { DOME, GLYPH, VIEW } from '@/components/home/thread'
 
 const COMMON = /* glsl */ `
   uniform vec2 uRes;
   uniform float uDpr;
+  uniform float uLight;
   varying vec2 vA;
   varying vec2 vM1;
   varying vec2 vM2;
@@ -20,11 +21,21 @@ const COMMON = /* glsl */ `
   varying float vFolder;
   varying float vCard;
   varying float vKind;
+  // Solo en el modo claro: el volumen de la boveda (cuanta luz le da y cuanto mira a la camara), cuanto
+  // esta encendida o apagada la celda y cuanto brilla su halo.
+  varying vec2 vVol;
+  varying float vOn;
+  varying float vOff;
+  varying float vGlowK;
 
   float bit(float m, float b) { return mod(floor(m / b), 2.0); }
   // Tamano de las carpetas y las tarjetas respecto a la celda (ver GLYPH en thread.ts).
   const float GLYPH = ${GLYPH.toFixed(3)};
 `
+
+const num = (n: number) => n.toFixed(4)
+/** Luz del modo claro: llega de arriba a la izquierda de la pantalla y algo de frente. */
+const LIGHT = [-0.45, 0.4, 0.8]
 
 export const THREAD_VERTEX = /* glsl */ `
   ${COMMON}
@@ -48,6 +59,8 @@ export const THREAD_VERTEX = /* glsl */ `
   uniform float uGlowAmt;
   uniform float uCardOn;
   uniform float uFolderOn;
+  uniform float uOff;
+  uniform float uLitGlow;
 
   vec2 toScreen(vec4 c) { return (c.xy / c.w * 0.5 + 0.5) * uRes; }
   void cull() { gl_Position = vec4(3.0, 3.0, 3.0, 1.0); }
@@ -55,13 +68,21 @@ export const THREAD_VERTEX = /* glsl */ `
   void main() {
     float marks = aInfo.z;
     float phase = aInfo.y;
-    // La zona a la que se va se enciende y las demas se apagan un poco. Con el simbolo entero, la luz
-    // pasa poco a poco de la zona que se deja a la siguiente.
+    // La zona a la que se va se enciende y las demas se apagan un poco (hasta uOff). Con el simbolo
+    // entero, la luz pasa poco a poco de la zona que se deja a la siguiente.
     float inTo = 1.0 - step(0.5, abs(aInfo.x - uZone));
     float inFrom = 1.0 - step(0.5, abs(aInfo.x - uZoneFrom));
     float inZone = mix(inFrom, inTo, uZoneMix);
     float rim = bit(marks, 32.0);
-    float fade = mix(1.0, mix(mix(0.3, 1.5, inZone), 0.8, rim), uZoneAmt);
+    float fade = mix(1.0, mix(mix(uOff, 1.5, inZone), 0.8, rim), uZoneAmt);
+    // En claro, la boveda con volumen: su normal (la de un medio elipsoide a la altura de cada celda; en
+    // la cisura, mas baja, queda algo en sombra), cuanta luz le da y cuanto mira a la camara.
+    vec3 nrm = normalize(vec3(aA.x / ${num(DOME.a * DOME.a)}, aA.y / ${num(DOME.b * DOME.b)}, aA.z / ${num(DOME.height * DOME.height)} + 1e-4));
+    vVol = vec2(max(dot(nrm, normalize(vec3(${LIGHT.map(num).join(', ')}))), 0.0), max(dot(nrm, vec3(${num(VIEW.dir.x)}, ${num(VIEW.dir.y)}, ${num(VIEW.dir.z)})), 0.0));
+    vOn = inZone * uZoneAmt;
+    vOff = (1.0 - inZone) * uZoneAmt * (1.0 - rim);
+    // El halo de la zona encendida brilla mas y el de las apagadas, menos (en oscuro, igual en todas).
+    vGlowK = uLight > 0.5 ? (1.0 - 0.7 * vOff) * (1.0 + uLitGlow * vOn) : 1.0;
     float target = (1.0 - step(0.5, abs(aInfo.w - uTarget))) * uZoneAmt * uZoneMix;
     vFade = fade;
     if (vFade < 0.003) { cull(); return; }
@@ -88,7 +109,7 @@ export const THREAD_VERTEX = /* glsl */ `
     // pasa por aqui), el punto y, si los hay, la tarjeta, la carpeta o el candado: el resto seria pintar
     // para nada.
     float hot = vPulse * (1.6 * exp(-vPh * uHead) + 0.5 * exp(-vPh * uTail)) * 0.8;
-    float reach = log(max(uGlowAmt + hot, 1e-4) / 0.004);
+    float reach = log(max((uLight > 0.5 ? uGlowAmt * vGlowK : uGlowAmt) + hot, 1e-4) / 0.004);
     float R = uLineW * 0.5 + uGlow * clamp(reach, 0.5, 5.0) + 1.0;
     R = max(R, uDotR * (target > 0.5 ? 14.0 : 1.5) + 1.0);
     float glyph = max(vFolder * 0.24 * GLYPH, max(vMarks.z * 0.18 * GLYPH, step(0.5, target) * 0.3));
@@ -108,6 +129,13 @@ export const THREAD_FRAGMENT = /* glsl */ `
   uniform vec3 uNodeColor;
   uniform vec3 uPulseColor;
   uniform vec3 uInk;
+  uniform vec3 uShadowColor;
+  uniform vec3 uLitColor;
+  uniform vec3 uOnColor;
+  uniform vec3 uMuteColor;
+  uniform float uShade;
+  uniform float uOnAmt;
+  uniform float uMute;
   uniform float uLineW;
   uniform float uGlow;
   uniform float uDotR;
@@ -116,7 +144,6 @@ export const THREAD_FRAGMENT = /* glsl */ `
   uniform float uCardOn;
   uniform float uFolderOn;
   uniform float uLockOn;
-  uniform float uLight;
   uniform vec4 uDim;
   uniform float uDimAmt;
   uniform vec4 uDim2;
@@ -266,16 +293,36 @@ export const THREAD_FRAGMENT = /* glsl */ `
     ph = ph < 0.0 ? ph + 1.0 : ph;
     float pulse = vPulse * (1.6 * exp(-ph * uHead) + 0.5 * exp(-ph * uTail)) * dim;
 
+    // En claro, la boveda tiene volumen: del azul hondo de la sombra y del borde al color del hilo hacia la
+    // luz, con un brillo arriba. La zona a la que se va, en su color y con mas halo; las demas, mas suaves.
+    vec3 coreColor = uCoreColor;
+    vec3 glowColor = uGlowColor;
+    float glowAmt = uGlowAmt;
+    if (uLight > 0.5) {
+      vec3 tone = mix(uShadowColor, uCoreColor, smoothstep(0.1, 0.7, vVol.x));
+      tone = mix(tone, uLitColor, smoothstep(0.6, 1.0, vVol.x));
+      tone = mix(tone, uShadowColor, 1.0 - smoothstep(0.1, 0.55, vVol.y));
+      coreColor = mix(uCoreColor, tone, uShade);
+      coreColor = mix(coreColor, uOnColor, vOn * uOnAmt);
+      coreColor = mix(coreColor, uMuteColor, vOff * uMute);
+      glowColor = mix(glowColor, uOnColor, vOn * uOnAmt);
+      glowAmt *= vGlowK;
+    }
+
     // El objetivo resalta: en oscuro, mas luz; en claro, en el azul de marca (mas luz lo aclararia).
     float lift = target * (1.0 - uLight);
     vec3 mark = mix(uNodeColor, uCoreColor, target * uLight);
-    vec3 rgb = uGlowColor * glow * uGlowAmt
-      + uCoreColor * core * uCore
-      + uPulseColor * pulse * (core * 1.6 + glow * 0.8)
+    // En claro el pulso pesa en la opacidad lo mismo que en el color y su halo es mas corto: asi tine el
+    // hilo de su azul, como una chispa, en vez de aclararlo hasta un velo palido.
+    float pulseCore = uLight > 0.5 ? 1.0 : 1.6;
+    float pulseGlow = uLight > 0.5 ? glow * glow : glow;
+    vec3 rgb = glowColor * glow * glowAmt
+      + coreColor * core * uCore
+      + uPulseColor * pulse * (core * pulseCore + pulseGlow * 0.8)
       + uNodeColor * (node + halo * 0.7)
       + mark * (card * (0.9 + lift * 1.4) + ink * (0.6 + lift * 0.5) + folder * (1.0 + lift))
       + uInk * padlock;
-    float a = core * uCore + glow * uGlowAmt + pulse * core + node + halo * 0.5 + card + ink * 0.7 + folder + padlock;
+    float a = core * uCore + glow * glowAmt + pulse * (core + pulseGlow * 0.8 * uLight) + node + halo * 0.5 + card + ink * 0.7 + folder + padlock;
     float f = vFade * dim;
     if (uLight > 0.5) {
       float alpha = clamp(a, 0.0, 1.0) * f;

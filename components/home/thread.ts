@@ -110,10 +110,13 @@ export function warp2(x: number, y: number): [number, number] {
   return [X, Y]
 }
 
+/** Semiejes de la boveda (un medio elipsoide): tambien la sombrean los shaders en el modo claro. */
+export const DOME = { a: WARP.sx + 0.08, b: WARP.sy + 0.06, height: WARP.height }
+
 /** Altura de la boveda en un punto de la silueta. */
 export function dome(X: number, Y: number) {
-  const r2 = (X / (WARP.sx + 0.08)) ** 2 + (Y / (WARP.sy + 0.06)) ** 2
-  const z = WARP.height * Math.pow(Math.max(0, 1 - r2), 0.5)
+  const r2 = (X / DOME.a) ** 2 + (Y / DOME.b) ** 2
+  const z = DOME.height * Math.pow(Math.max(0, 1 - r2), 0.5)
   return z * (1 - WARP.valley * 2.2 * Math.exp(-((Math.abs(X) / 0.16) ** 2)))
 }
 

@@ -127,8 +127,9 @@ export default function Scrolly() {
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: `${sectionVh(scenes.length)}svh` }}>
-      <div ref={stickyRef} className="sticky top-0 h-[100svh] w-full overflow-hidden">
-        <div className="absolute inset-0" aria-hidden="true">
+      <div ref={stickyRef} className="home-journey sticky top-0 h-[100svh] w-full overflow-hidden">
+        {/* En claro el lienzo es transparente y el fondo lo pone la pagina (home-sky); en oscuro lo pinta el lienzo */}
+        <div className="home-sky absolute inset-0" aria-hidden="true">
           {webgl && (
             <SceneGuard onFail={() => setCrashed(true)}>
               <CoreScene progress={scrollYProgress} reduceMotion={reduceMotion} dark={resolvedTheme === 'dark'} />
@@ -164,7 +165,7 @@ export default function Scrolly() {
             movil (en vertical) el texto va abajo y el simbolo encima */}
         <div
           ref={(el) => void (stage.blocks[0] = el)}
-          className="absolute inset-0 flex flex-col items-center justify-center px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 short:pt-14"
+          className="home-hero absolute inset-0 flex flex-col items-center justify-center px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 short:pt-14"
         >
           <h1 className="text-[3.6rem] sm:text-8xl lg:text-[7.5rem] xl:text-[9rem] short:text-6xl font-bold leading-[0.92] tracking-tight text-ink">{t('hero.title')}</h1>
           <Readable className="mt-6 short:mt-3">
@@ -360,7 +361,8 @@ function Tag({ ref, className, children }: { ref: (el: HTMLDivElement | null) =>
         className={cn(
           'absolute top-0 -translate-y-1/2 whitespace-nowrap font-mono group-data-[side=left]:right-3 group-data-[side=right]:left-3',
           'group-data-[side=below]:left-0 group-data-[side=below]:-translate-x-1/2 group-data-[side=below]:translate-y-0',
-          'group-data-[on=1]:text-brand dark:group-data-[on=1]:text-brand-light',
+          // Encendida, en azul: en claro un punto mas hondo (sobre el cielo, el de marca no llega a 4,5:1)
+          'group-data-[on=1]:text-brand-dark dark:group-data-[on=1]:text-brand-light',
           className
         )}
       >

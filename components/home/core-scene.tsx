@@ -113,26 +113,59 @@ const rgb = (hex: string): RGB => {
 }
 
 const THEMES = {
+  // Claro: cielo de dia. El hilo en el azul de marca, con volumen (mas hondo en la sombra y el borde,
+  // cian hacia la luz) y un halo azul que lo hace luminoso sin emborronarlo.
   light: {
-    background: '#ffffff',
+    /** En claro el lienzo es transparente: el fondo lo pinta la pagina (.home-sky en globals.css). */
+    background: null as string | null,
     blending: THREE.NormalBlending as THREE.Blending,
     light: 1,
-    glow: rgb('#3d7bff'),
+    glow: rgb('#3D8BFF'),
     core: rgb('#0463FE'),
     node: rgb('#0A2A7A'),
-    pulse: rgb('#00A3D9'),
-    ink: rgb('#0A1633'),
-    glowScale: 0.35,
+    pulse: rgb('#0096FF'), // un azul electrico: tine el hilo sin aclararlo
+    ink: rgb('#0A2470'),
+    glowScale: 0.75,
+    /** Grosor del trazo y alcance del halo respecto a STYLE. */
+    lineScale: 1,
+    glowReach: 1.15,
+    /** De cerca (en cada parada) el halo se recoge, para que el tramo encendido se vea nitido. */
+    glowReachNear: 0.95,
+    /** Con las celdas pequenas (el simbolo entero en un movil) los halos se juntan: alli el halo baja hasta glowDense. */
+    glowDense: 0.45,
+    /** Volumen de la boveda: color en la sombra y en el borde, brillo hacia la luz y cuanto se nota. */
+    shadow: rgb('#0A2E8C'),
+    lit: rgb('#3FA9FF'),
+    shade: 0.85,
+    /** La zona a la que se va (en su color y con mas halo) y las demas (mas suaves y transparentes). */
+    on: rgb('#0463FE'),
+    onAmt: 0.5,
+    litGlow: 0.4,
+    litGlowNear: 0.25,
+    mute: rgb('#86A9E3'),
+    muteAmt: 0.5,
+    off: 0.65,
     sky: rgb('#9DB6E8'),
-    starOpacity: 0.5,
-    nebula: ['#6AA4FF', '#9AB8FF', '#7FD8FF'],
-    nebulaOpacity: 0.08,
-    /** Penumbra detras del titulo de la portada (en claro, menos: el hilo azul sobre blanco se borraria) y de su texto. */
-    heroDim: 0.45,
+    starOpacity: 0,
+    nebula: ['#FFFFFF', '#FFFFFF', '#FFFFFF'],
+    nebulaOpacity: 0,
+    /** Brillo propio bajo el simbolo (la ultima nebulosa): en claro, una luz blanca. */
+    auraOpacity: 0.9,
+    /** Sombra de contacto, azul, bajo la boveda y abajo a la derecha: sobre fondo claro da mas volumen que un brillo. */
+    contact: '#1F4FC4',
+    contactOpacity: 0.07,
+    /**
+     * Etiquetas de las zonas con el simbolo entero: las que no estan encendidas y todas en la portada. En
+     * claro, enteras (con menos, el gris no llega a 4,5:1 sobre el cielo); la encendida se distingue por el azul.
+     */
+    labelDim: 1,
+    heroLabel: 1,
+    /** Penumbra detras del titulo de la portada (en claro, menos: el hilo azul se borraria) y de su texto. */
+    heroDim: 0.5,
     heroTextDim: 0.85,
   },
   dark: {
-    background: '#070a12',
+    background: '#070a12' as string | null,
     blending: THREE.AdditiveBlending as THREE.Blending,
     light: 0,
     glow: rgb('#0463FE'),
@@ -141,10 +174,30 @@ const THEMES = {
     pulse: rgb('#5FE3FF'),
     ink: rgb('#F2F6FF'),
     glowScale: 1,
+    lineScale: 1,
+    glowReach: 1,
+    glowReachNear: 1,
+    glowDense: 1,
+    // En oscuro no hay volumen ni tonos por zona: solo cuenta off (lo que se apagan las demas zonas).
+    shadow: rgb('#000000'),
+    lit: rgb('#000000'),
+    shade: 0,
+    on: rgb('#000000'),
+    onAmt: 0,
+    litGlow: 0,
+    litGlowNear: 0,
+    mute: rgb('#000000'),
+    muteAmt: 0,
+    off: 0.3,
     sky: rgb('#C9D8FF'),
     starOpacity: 0.9,
     nebula: ['#0463FE', '#2B7FFF', '#1FB6FF'],
     nebulaOpacity: 0.16,
+    auraOpacity: 0.16,
+    contact: '#000000',
+    contactOpacity: 0,
+    labelDim: 0.5,
+    heroLabel: 0.85,
     heroDim: 0.86,
     heroTextDim: 0.9,
   },
@@ -195,7 +248,7 @@ export default function CoreScene(props: CoreSceneProps) {
       gl={{ antialias: false, powerPreference: 'high-performance' }}
       fallback={null}
     >
-      <color attach="background" args={[palette.background]} />
+      {palette.background && <color attach="background" args={[palette.background]} />}
       <Sky palette={palette} fade={sky} wide={wide} />
       <Thread {...props} palette={palette} wide={wide} sky={sky} quality={quality} slowed={top <= 1} onScreen={onScreen} />
     </Canvas>
@@ -276,13 +329,14 @@ function Sky({ palette, fade, wide }: { palette: Palette; fade: { current: { fad
   // Nebulosas: manchas de luz grandes y muy suaves por debajo del simbolo; la ultima, su propio brillo.
   // Una textura por color, compartida.
   const clouds = useMemo(() => {
-    const textures = palette.nebula.map((color) => glowTexture(color))
+    const textures = [...palette.nebula, palette.contact].map((color) => glowTexture(color))
     const list = CLOUDS.map((c) => ({
       ...c,
+      opacity: c.contact ? palette.contactOpacity : c.own ? palette.auraOpacity : palette.nebulaOpacity,
       material: new THREE.SpriteMaterial({
-        map: textures[c.color],
+        map: textures[c.contact ? palette.nebula.length : c.color],
         transparent: true,
-        opacity: palette.nebulaOpacity,
+        opacity: c.contact ? palette.contactOpacity : c.own ? palette.auraOpacity : palette.nebulaOpacity,
         depthTest: false,
         depthWrite: false,
         blending: palette.blending,
@@ -301,10 +355,12 @@ function Sky({ palette, fade, wide }: { palette: Palette; fade: { current: { fad
   useFrame(() => {
     starMaterial.uniforms.uRatio.value = gl.getPixelRatio()
     starMaterial.uniforms.uOpacity.value = palette.starOpacity * (0.25 + 0.75 * fade.current.fade)
+    // Sin estrellas (en claro) no se pintan.
+    starMaterial.visible = palette.starOpacity > 0
     for (const c of clouds.list) {
-      // Apagadas no se pintan.
-      c.material.opacity = palette.nebulaOpacity * fade.current.fade
-      c.material.visible = fade.current.fade > 0.01
+      // Apagadas (o sin ellas, en claro) no se pintan.
+      c.material.opacity = c.opacity * fade.current.fade
+      c.material.visible = fade.current.fade > 0.01 && c.opacity > 0
     }
   })
 
@@ -318,12 +374,17 @@ function Sky({ palette, fade, wide }: { palette: Palette; fade: { current: { fad
   )
 }
 
-const CLOUDS: { at: [number, number, number]; scale: number; color: number }[] = [
+/**
+ * Nebulosas del fondo, la sombra de contacto (contact, solo en claro; detras del brillo) y, la ultima
+ * (own), el brillo propio del simbolo.
+ */
+const CLOUDS: { at: [number, number, number]; scale: number; color: number; own?: boolean; contact?: boolean }[] = [
   { at: [7, 4, -9], scale: 15, color: 0 },
   { at: [-8, -3, -8], scale: 12, color: 1 },
   { at: [2, -9, -11], scale: 13, color: 2 },
   { at: [-4, 8, -12], scale: 11, color: 0 },
-  { at: [0, 0, -0.8], scale: 4.6, color: 1 },
+  { at: [0.2, -0.28, -0.95], scale: 3.6, color: 0, contact: true },
+  { at: [0, 0, -0.8], scale: 4.6, color: 1, own: true },
 ]
 
 /** Mancha de luz redonda que se desvanece hacia fuera. */
@@ -618,6 +679,15 @@ function threadMaterial(palette: Palette) {
       uFolderOn: { value: 0 },
       uLockOn: { value: 0 },
       uLight: { value: palette.light },
+      uOff: { value: palette.off },
+      uShade: { value: palette.shade },
+      uOnAmt: { value: palette.onAmt },
+      uLitGlow: { value: palette.litGlow },
+      uMute: { value: palette.muteAmt },
+      uShadowColor: vec3(palette.shadow),
+      uLitColor: vec3(palette.lit),
+      uOnColor: vec3(palette.on),
+      uMuteColor: vec3(palette.mute),
       uDim: { value: new THREE.Vector4() },
       uDimAmt: { value: 0 },
       uDim2: { value: new THREE.Vector4() },
@@ -1317,10 +1387,13 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     u.uCardOn.value = ramp(0.5, 0.95, pose.zoom)
     u.uRes.value.set(W * dpr, H * dpr)
     u.uDpr.value = dpr
-    u.uLineW.value = STYLE.lineW * dpr
-    u.uGlow.value = STYLE.glow * dpr
+    u.uLineW.value = STYLE.lineW * dpr * palette.lineScale
+    u.uGlow.value = STYLE.glow * dpr * lerp(palette.glowReach, palette.glowReachNear, near)
+    u.uLitGlow.value = lerp(palette.litGlow, palette.litGlowNear, near)
     u.uDotR.value = STYLE.dot * dpr
-    u.uGlowAmt.value = STYLE.glowAmt * palette.glowScale
+    // Con las celdas muy pequenas (el simbolo entero en un movil) el halo baja: si no, los halos se juntan
+    // y en claro el cerebro se veria como una mancha azul.
+    u.uGlowAmt.value = STYLE.glowAmt * palette.glowScale * lerp(palette.glowDense, 1, ramp(5, 16, CELL_SIZE * pxUnit))
     u.uTime.value = now - pulseStart.current
     u.uPulse.value = pulseSeen ? pulse : 0
     if (box) u.uDim.value.set(box[0] * dpr, (H - box[3]) * dpr, box[2] * dpr, (H - box[1]) * dpr)
@@ -1425,7 +1498,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
       // Cuanto es esta la zona encendida (con el simbolo entero, la luz pasa de la que se deja a la siguiente).
       const on = (z === pose.light ? pose.mix : 0) + (z === pose.from ? 1 - pose.mix : 0)
       const seen = (wide || on > 0.01) && away > 0.01 && project(frames[z].label, cam, W, H, at)
-      const shown = wide ? lerp(0.5 + 0.5 * on, 0.85, pose.hero) : on * (1 - pose.hero)
+      const shown = wide ? lerp(palette.labelDim + (1 - palette.labelDim) * on, palette.heroLabel, pose.hero) : on * (1 - pose.hero)
       dom.opacity(el, seen ? away * shown * fade : 0)
       if (!seen || !el) continue
       let dx = at[0] - ex

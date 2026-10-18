@@ -37,12 +37,15 @@ export default function Navbar() {
   ]
 
   const isActive = (href: string) => pathname === href
+  // En la home, en claro, el filo de la barra en un azul apenas marcado: se funde con el cielo del viaje.
+  const onHome = barePath === '' || barePath === '/'
 
   return (
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
-        isScrolled || isMobileOpen ? 'bg-surface/90 backdrop-blur-md border-b border-line' : 'bg-transparent'
+        isScrolled || isMobileOpen ? 'bg-surface/90 backdrop-blur-md border-b' : 'bg-transparent',
+        (isScrolled || isMobileOpen) && (onHome ? 'border-brand/10 dark:border-line' : 'border-line')
       )}
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -72,7 +75,7 @@ export default function Navbar() {
             href={altHref}
             hrefLang={altLocale}
             aria-label={t('langLabel')}
-            className="inline-flex h-11 items-center text-sm font-medium text-muted hover:text-ink border border-line rounded-full px-4"
+            className="inline-flex h-11 items-center text-sm font-medium text-muted hover:text-ink border border-line rounded-full px-4 bg-surface/70 dark:bg-transparent"
           >
             {t('langSwitch')}
           </Link>

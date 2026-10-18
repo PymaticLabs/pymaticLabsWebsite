@@ -12,7 +12,7 @@
   --color-brand-light: #6AA4FF;
   --color-ink: #000000;
   --color-body: #333842;
-  --color-muted: #6B7280;
+  --color-muted: #5B6474; /* 6:1 sobre blanco y 5:1 sobre lo mas azul del cielo de la home */
   --color-line: #E5E7EB; /* separadores */
   --color-field: #7F8794; /* borde de campos y botones de contorno: 3,6:1 sobre blanco */
   --color-danger: #B91C1C; /* errores: 6,5:1 sobre blanco */
@@ -195,6 +195,27 @@ html[data-dots] .dotted[data-drawn] {
   color: transparent;
 }
 
+/* Fondo del viaje de la home en el modo claro, detras del lienzo (alli transparente): un cielo de dia,
+   mas azul arriba y casi blanco abajo, con una luz blanca en el centro, detras del texto. En oscuro lo
+   pinta el propio lienzo. */
+.home-sky {
+  background:
+    radial-gradient(ellipse 48% 52% at 50% 50%, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0) 100%),
+    linear-gradient(180deg, #e1ebfd 0%, #ecf2fe 40%, #f6f9ff 75%, #fbfcff 100%);
+}
+.dark .home-sky {
+  background: none;
+}
+
+/* Sobre el cielo de la home, el azul de los textos pequenos, un punto mas hondo (5,7:1 o mas). El lema
+   de la portada, grande y sobre la luz blanca del centro, se queda en el azul de marca. */
+html:not(.dark) .home-journey .text-brand {
+  color: var(--color-brand-dark);
+}
+html:not(.dark) .home-journey .home-hero .text-brand {
+  color: var(--color-brand);
+}
+
 /* Textos de los instrumentos y etiquetas sobre el hilo: un halo del color del fondo los separa de las lineas. */
 .halo {
   text-shadow: 0 0 6px var(--color-paper), 0 0 2px var(--color-paper);
@@ -207,4 +228,9 @@ html[data-dots] .dotted[data-drawn] {
   padding: 0.3rem 0.45rem;
   border-radius: 0.25rem;
   background: color-mix(in srgb, var(--color-paper) 78%, transparent);
+}
+/* En claro, una etiqueta blanca con un filo azul apenas marcado. */
+html:not(.dark) .chip {
+  background: rgb(255 255 255 / 0.88);
+  box-shadow: 0 0 0 1px rgb(4 99 254 / 0.1), 0 1px 3px rgb(10 36 112 / 0.08);
 }
