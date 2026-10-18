@@ -89,7 +89,7 @@ export default function Scrolly() {
   const number = (i: number) => String(i + 2).padStart(2, '0')
 
   // Cada escena empieza SCENE_VH mas abajo (ver sceneTop). Se salta de golpe: la escena no recorre el
-  // camino, se apaga y aparece ya en la parada con un fundido (ver JUMP en core-scene.tsx).
+  // camino, se apaga y aparece ya en la parada con un fundido (ver CUT_OUT en core-scene.tsx).
   const goTo = (k: number) => {
     const section = sectionRef.current
     const sticky = stickyRef.current

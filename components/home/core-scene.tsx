@@ -95,17 +95,12 @@ const NAME_FADE = 0.3
 /** Cuanto se enciende la zona a la que se va mientras se ve el simbolo entero. */
 const LIT = 0.7
 /**
- * Un salto de mas de JUMP escenas (la barra de scroll, una rueda muy rapida) o cualquiera desde el
- * indice no se recorre: todo se apaga en CUT_OUT s, la escena pasa a su sitio y se enciende en CUT_IN s.
+ * La camara depende solo del scroll: rueda, teclado, barra o dedo la mueven al momento y nunca se queda
+ * atras (si no, un scroll rapido se saltaba zonas enteras). Solo un salto desde el indice no se recorre:
+ * todo se apaga en CUT_OUT s, la escena pasa a su sitio y se enciende en CUT_IN s.
  */
-const JUMP = 0.9
 const CUT_OUT = 0.2
 const CUT_IN = 0.35
-/**
- * Velocidad maxima de la camara, en escenas por segundo: ni una rueda rapida, ni la barra espaciadora,
- * ni un golpe de dedo la aceleran. De una zona a la siguiente tarda unos 3 s.
- */
-const MAX_SPEED = 0.23
 /** Pulso: una sola pasada lenta y suave por el hilo al abrir la pagina, y se para. Sin animaciones, ninguna. */
 const PULSE_SPEED = 1 / 36
 const PULSE_AMOUNT = 0.6
@@ -1011,7 +1006,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
   const probe = useMemo(() => new THREE.PerspectiveCamera(FOV, 1, 0.001, 200), [])
 
   const pose = useMemo<Pose>(() => ({ zone: 0, light: 0, from: -1, mix: 0, hero: 1, zoom: 0 }), [])
-  /** Scroll suavizado (en escenas): la camara no salta con cada golpe de rueda ni pasa de MAX_SPEED. */
+  /** Donde esta la camara (en escenas): el scroll, salvo mientras se funde un salto desde el indice. */
   const smooth = useRef(-1)
   /**
    * Relojes en segundos de performance.now (el de R3F vuelve a cero cada vez que el lienzo sale de la
@@ -1019,11 +1014,8 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
    */
   const last = useRef(0)
   const pulseStart = useRef(-1)
-  /**
-   * Salto grande (que no se recorre): si todo se esta apagando (leaving; forced si viene del indice, y
-   * entonces no se cancela) y cuanto se ve la escena (level, de 0 a 1).
-   */
-  const cut = useRef({ leaving: false, forced: false, level: 1 })
+  /** Salto desde el indice (que no se recorre): si todo se esta apagando y cuanto se ve la escena (de 0 a 1). */
+  const cut = useRef({ leaving: false, level: 1 })
   // Al volver a la vista, la escena aparece ya en su sitio, sin recorrer nada ni fundidos a medias.
   useEffect(() => void (onScreen && (smooth.current = -1)), [onScreen])
   /** Si el fotograma anterior pidio otro (si no, el tiempo hasta este fue un rato quieto, no un fotograma lento). */
@@ -1229,10 +1221,8 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     if (pulseStart.current < 0) pulseStart.current = now
     const goal = sceneAt(progress.get(), SCENE_COUNT - 1)
     const first = smooth.current < 0
-    // Scroll suavizado y nunca mas deprisa que MAX_SPEED (ni con la barra espaciadora, ni con un golpe de
-    // dedo). Un salto grande (la barra de scroll, una rueda muy rapida) o desde el indice no se recorre:
-    // con la camara quieta todo se apaga, la escena pasa a su sitio y se enciende. Si el scroll vuelve
-    // cerca antes de apagarse del todo, se recorre como siempre.
+    // La camara sigue al scroll al momento, sin retraso ni velocidad maxima. Un salto desde el indice no
+    // se recorre: con la camara quieta todo se apaga, la escena pasa a su sitio y se enciende.
     const c = cut.current
     // Tras un salto (o al empezar), los fundidos no se recorren: todo aparece ya como toca.
     let jumped = first
@@ -1241,15 +1231,13 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
       c.leaving = false
       c.level = 1
     } else {
-      const gap = Math.abs(goal - smooth.current)
       const leap = performance.now() - stage.leap < 600
       // En un aparato muy lento, el fundido dura al menos unos fotogramas (nunca se apaga de golpe).
       const step = Math.min(dt, 1 / 15)
-      if (!c.leaving && (gap > JUMP || (leap && gap > 0.02))) {
+      if (!c.leaving && leap && Math.abs(goal - smooth.current) > 0.02) {
         c.leaving = true
-        c.forced = leap
         stage.leap = 0
-      } else if (c.leaving && !c.forced && gap < JUMP * 0.8) c.leaving = false
+      }
       if (c.leaving) {
         c.level = Math.max(0, c.level - step / CUT_OUT)
         if (c.level === 0) {
@@ -1259,11 +1247,9 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
         }
       } else {
         c.level = Math.min(1, c.level + step / CUT_IN)
-        const move = THREE.MathUtils.damp(smooth.current, goal, 8, dt) - smooth.current
-        smooth.current += clampTo(move, -MAX_SPEED * dt, MAX_SPEED * dt)
+        smooth.current = goal
       }
     }
-    if (Math.abs(smooth.current - goal) < 2e-4) smooth.current = goal
     const s = smooth.current
     let fade = c.level
 
