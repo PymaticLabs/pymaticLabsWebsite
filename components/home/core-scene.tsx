@@ -559,8 +559,9 @@ function overviewOf(frames: ZoneFrame[], W: number, H: number, wide: boolean, ti
  * del simbolo se desplace mas de MAX_SHIFT del ancho mientras se acerca. points son las celdas del tramo
  * en pantalla con el simbolo entero (x e y seguidas): en la parada, cada una queda a ZONE_ZOOM veces su
  * distancia a from, alrededor de to. Devuelve el centro de lo que se ve de la zona (alli van los nombres).
+ * index es donde empieza el indice de escenas (ver indexEdge).
  */
-function aimZone(view: ZoneView, points: Float64Array, at: [number, number], dim: number[] | null, W: number, H: number, wide: boolean): [number, number] {
+function aimZone(view: ZoneView, points: Float64Array, at: [number, number], dim: number[] | null, W: number, H: number, index: number): [number, number] {
   const z = ZONE_ZOOM
   const [fx, fy] = view.from
   // Sin desplazar el centro del simbolo, la zona quedaria en (nx, ny).
@@ -570,7 +571,7 @@ function aimZone(view: ZoneView, points: Float64Array, at: [number, number], dim
   const top = topBand(W) + 8
   const bottom = H - BOTTOM_BAND - 8
   const box = dim ? [dim[0] - 40, dim[1] - 40, dim[2] + 40, dim[3] + 40] : [0, 0, 0, 0]
-  const nav = wide ? W - 230 : Infinity
+  const nav = index - 30
   const free = (x: number, y: number) =>
     x > 16 && x < W - 16 && y > top && y < bottom && !(x > box[0] && x < box[2] && y > box[1] && y < box[3]) && !(x > nav && Math.abs(y - H / 2) < 160)
   // Cada celda respecto al punto de la zona, ya en la parada.
@@ -774,6 +775,25 @@ function textBox(elements: Element[], canvas: DOMRect) {
 }
 
 /**
+ * Donde empieza (en px del lienzo, por la izquierda) lo que ensena el indice de escenas mientras se lee
+ * un titular: desde xl, el nombre de cada escena; en lg, y en xl si la pantalla es baja, solo los numeros
+ * (los nombres se apagan, ver scrolly.tsx y globals.css). Asi, en esas pantallas, las zonas y sus nombres
+ * pueden llegar mas cerca del borde. Infinity si no hay indice (en el movil).
+ */
+function indexEdge(canvas: DOMRect) {
+  const nav = stage.nav
+  if (!nav || !nav.offsetWidth) return Infinity
+  const named = window.matchMedia('(min-width: 1280px) and (min-height: 761px)').matches
+  let left = Infinity
+  // Cada boton lleva su nombre, su numero y su raya.
+  nav.querySelectorAll('button').forEach((button) => {
+    const shown = named ? button : button.children[1]
+    if (shown) left = Math.min(left, shown.getBoundingClientRect().left)
+  })
+  return left - canvas.left
+}
+
+/**
  * Titular de una zona, de una vez (unos 10-30 ms). Con el titular dibujado, el texto real se vuelve
  * transparente (data-drawn, ver .dotted en globals.css); sin el, se sigue viendo.
  */
@@ -835,15 +855,16 @@ const FLAT = 0.7
  * frente, repartidas alrededor de centre (el centro de lo que se ve de la zona) y sin pisarse, cada una
  * con su nombre al lado (las carpetas, en una vuelta del hilo) o debajo (los documentos, si cabe). Pocos:
  * la carpeta y el documento principales y, si hay sitio, uno o dos mas; un nombre que no cabe no se ve.
- * Devuelve tambien los candados sueltos que se quitan (pisarian un nombre o el texto).
+ * Devuelve tambien los candados sueltos que se quitan (pisarian un nombre o el texto). index es donde
+ * empieza el indice de escenas (ver indexEdge).
  */
-function placeNames(work: ZoneWork, brain: Brain, cam: THREE.Camera, centre: [number, number], W: number, H: number, wide: boolean, widths: Map<HTMLElement, number>) {
+function placeNames(work: ZoneWork, brain: Brain, cam: THREE.Camera, centre: [number, number], W: number, H: number, wide: boolean, index: number, widths: Map<HTMLElement, number>) {
   const { zone, first, last } = work.frame
   const safe: Rect = [16, topBand(W) + 26, W - 16, H - BOTTOM_BAND - 26]
   const busy: Rect[] = []
   if (work.dim) busy.push(work.dim as Rect)
   // El indice de escenas (y su penumbra).
-  if (wide) busy.push([W - 256, H / 2 - 184, W, H / 2 + 184])
+  if (index < W) busy.push([index - 56, H / 2 - 184, W, H / 2 + 184])
   const at = new Float64Array(2)
   const edge = new Float64Array(8)
   const cells: { d: number; x: number; y: number; c: number; turn: boolean; fit: number }[] = []
@@ -973,7 +994,7 @@ function domWriter() {
       const cy = changed(el, 'y', ry)
       if (cx || cy) el.style.transform = `translate3d(${rx}px, ${ry}px, 0)`
     },
-    data(el: Maybe, key: 'on' | 'side' | 'quiet', value: string) {
+    data(el: Maybe, key: 'on' | 'side' | 'quiet' | 'zone', value: string) {
       if (el && changed(el, key, value)) el.dataset[key] = value
     },
     /** Sin clics (un bloque de texto que no se ve). */
@@ -1075,6 +1096,8 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
   const hero = useRef<{ title: number[] | null; text: number[] | null; top: number }>({ title: null, text: null, top: 0 })
   /** Ancho de cada etiqueta en px, para que no se salga de la pantalla ni pise nada. */
   const widths = useMemo(() => new Map<HTMLElement, number>(), [])
+  /** Donde empieza el indice de escenas en px del lienzo (ver indexEdge). */
+  const index = useRef(Infinity)
   const dom = useMemo(() => domWriter(), [])
 
   // Los titulares de las zonas se preparan uno a uno en los ratos libres del navegador, empezando por
@@ -1099,6 +1122,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
       text: textBox(block ? Array.from(block.querySelectorAll('p')) : [], canvas),
       top: h1 ? h1.getBoundingClientRect().top - canvas.top : 0,
     }
+    index.current = indexEdge(canvas)
     widths.clear()
     for (const el of [...stage.zoneLabels, ...stage.folders.flat(), ...stage.files.flat()]) {
       if (el) widths.set(el, (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0)
@@ -1179,9 +1203,9 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     for (const work of zones) {
       const { zone, first, last } = work.frame
       const view = over.zones[zone]
-      const centre = aimZone(view, points.subarray(first * 2, last * 2), over.at, work.dim, W, H, wide)
+      const centre = aimZone(view, points.subarray(first * 2, last * 2), over.at, work.dim, W, H, index.current)
       aim(probe, work.frame.focus, view.to[0], view.to[1], view.above, W, H, ZONE_ZOOM)
-      const placed = placeNames(work, brain, probe, centre, W, H, wide, widths)
+      const placed = placeNames(work, brain, probe, centre, W, H, wide, index.current, widths)
       work.names = placed.names
       work.clear = placed.clear
       work.all = [...(stage.folders[zone] ?? []), ...(stage.files[zone] ?? [])].filter((el): el is HTMLElement => !!el)
@@ -1400,7 +1424,7 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
     u.uDimAmt.value = box ? dimAmt : 0
     if (box2) u.uDim2.value.set(box2[0] * dpr, (H - box2[3]) * dpr, box2[2] * dpr, (H - box2[1]) * dpr)
     u.uDimAmt2.value = box2 ? palette.heroTextDim * fades.dim : 0
-    u.uEdge.value.set((H - topBand(W)) * dpr, BOTTOM_BAND * dpr, wide ? (W - 210) * dpr : 1e6, 140 * dpr)
+    u.uEdge.value.set((H - topBand(W)) * dpr, BOTTOM_BAND * dpr, index.current < W ? (index.current - 10) * dpr : 1e6, 140 * dpr)
     u.uEdgeAmt.value = 0.88 * ramp(0.15, 0.85, pose.zoom)
 
     // El titular que se lee, dibujado por el hilo en el plano de su zona, encima del titular real:
@@ -1446,9 +1470,11 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
       dom.inert(stage.actions[k], shown < 0.5)
     }
     // Mientras se lee un titular, el indice de la derecha se queda en numeros si no hay sitio (para no
-    // pisarlo) y el aviso de scroll se va.
+    // pisarlo) y el aviso de scroll se va. Mientras se lee una zona (data-zone), tambien en las pantallas
+    // bajas de xl, y el hilo del fondo de la pagina se va (ver globals.css).
     dom.opacity(stage.hint, 1 - ramp(0.1, 0.2, s))
     dom.data(stage.nav, 'quiet', lead >= 0 ? '1' : '0')
+    dom.data(stage.nav, 'zone', lead > 0 ? '1' : '0')
 
     // Con la camara ya en la parada de una zona, su ruta y los nombres de sus carpetas (al lado de su
     // icono) y documentos (debajo o al lado de su tarjeta) aparecen con un fundido corto; al irse, se van.

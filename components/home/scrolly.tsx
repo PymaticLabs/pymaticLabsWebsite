@@ -167,8 +167,9 @@ export default function Scrolly() {
           ref={(el) => void (stage.blocks[0] = el)}
           className="home-hero absolute inset-0 flex flex-col items-center justify-center px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 short:pt-14"
         >
-          <h1 className="text-[3.6rem] sm:text-8xl lg:text-[7.5rem] xl:text-[9rem] short:text-6xl font-bold leading-[0.92] tracking-tight text-ink">{t('hero.title')}</h1>
-          <Readable className="mt-6 short:mt-3">
+          {/* Su tamano, a la medida del ancho y del alto (ver .hero-title en globals.css) */}
+          <h1 className="hero-title font-bold leading-[0.92] tracking-tight text-ink">{t('hero.title')}</h1>
+          <Readable className="mt-6 low:mt-4 short:mt-3">
             <p className="text-xl sm:text-2xl short:text-lg font-semibold tracking-tight text-brand">{t('hero.tagline')}</p>
             <p className="mt-3 max-w-xl text-lg short:mt-1 short:max-w-2xl short:text-base text-body leading-relaxed">{t('hero.text')}</p>
             <HeroActions ref={(el) => void (stage.actions[0] = el)} className="mt-7 short:mt-4" />
@@ -178,37 +179,44 @@ export default function Scrolly() {
         {/* Escenas: el titular (lo dibuja el hilo al llegar a la zona), de donde sale y el resto en
             texto, grande y con buen contraste. Ocultas siguen en el arbol de accesibilidad; solo sus enlaces
             salen del tabulador. En el movil (en vertical) el texto va abajo, como en la portada, y la zona
-            encima */}
+            encima. En el ordenador va centrado entre la ruta de arriba y la lectura en vivo de abajo; en las
+            pantallas bajas los huecos se aprietan y el titular baja de tamano, para que quepa entero (y si
+            aun asi no cabe, se pega arriba en vez de esconderse bajo la barra) */}
         {scenes.map((scene, i) => (
           <div
             key={scene.id}
             ref={(el) => void (stage.blocks[i + 1] = el)}
             style={{ opacity: 0, pointerEvents: 'none' }}
-            className="absolute inset-0 flex flex-col items-center justify-center px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 short:pt-12"
+            className="absolute inset-0 flex flex-col items-center justify-center-safe px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 lg:pb-12 lg:pt-[6.5rem] short:pt-12 deskshort:pb-10 deskshort:pt-24"
           >
             <p className="font-mono text-sm uppercase tracking-[0.2em] text-muted">
               <span className="text-brand">{number(i)}</span> — {scene.kicker}
             </p>
-            {/* Con el indice de la derecha a la vista, el titular deja sitio a los dos lados */}
+            {/* Con el indice de la derecha a la vista, el titular deja sitio a los dos lados; en las pantallas bajas, en una
+                columna mas estrecha (en em: salta de linea igual a cualquier tamano), para que a los lados quepan la zona
+                y sus nombres. Su tamano, ver .zone-title en globals.css */}
             <DottedTitle
               index={i + 1}
               text={scene.title}
-              className="mt-3 max-w-5xl text-5xl sm:text-7xl lg:max-w-[min(64rem,calc(100vw-17rem))] xl:max-w-[min(64rem,calc(100vw-27rem))] lg:text-[6.2rem] short:mt-2 short:text-4xl leading-[0.95]"
+              className="zone-title mt-3 max-w-5xl lg:max-w-[min(64rem,calc(100vw-17rem))] xl:max-w-[min(64rem,calc(100vw-27rem))] low:mt-2 low:lg:max-w-[9em] short:mt-2 leading-[0.95]"
             />
-            <p className="mt-4 inline-flex max-w-sm items-center justify-center gap-2 text-balance font-mono text-[13px] uppercase tracking-[0.12em] text-brand sm:max-w-none short:mt-2">
+            {/* En el movil en horizontal no cabe: se queda la cita fuera para que quepa el resto de la parada. */}
+            <p className="mt-4 inline-flex max-w-sm items-center justify-center gap-2 text-balance font-mono text-[13px] uppercase tracking-[0.12em] text-brand sm:max-w-none low:mt-2.5 short:mt-2 max-sm:short:hidden">
               <span className="hidden h-px w-5 shrink-0 bg-current sm:block" aria-hidden="true" />
               {scene.cite}
             </p>
-            <Readable className="mt-4 short:mt-2">
-              <p className="max-w-xl text-lg short:max-w-2xl short:text-base text-body leading-relaxed">{scene.text}</p>
-              <Specs items={scene.specs} className="mt-4 hidden flex-wrap justify-center gap-x-6 gap-y-1 sm:flex short:hidden" />
-              <MoreLink ref={(el) => void (stage.actions[i + 1] = el)} inert href={featuresHref} className="mt-3 short:mt-1" />
+            <Readable className="mt-4 low:mt-3 short:mt-2">
+              <p className="max-w-xl text-lg low:max-w-[40rem] short:text-base deskshort:max-w-[31rem] text-body leading-relaxed">{scene.text}</p>
+              {/* En el movil en horizontal no caben; en un ordenador bajo, si, algo mas pequenas */}
+              <Specs items={scene.specs} className="mt-4 hidden flex-wrap justify-center gap-x-6 gap-y-1 sm:flex low:mt-2.5 low:max-w-[40rem] short:hidden deskshort:mt-2 deskshort:flex deskshort:max-w-[31rem] deskshort:text-[15px]" />
+              <MoreLink ref={(el) => void (stage.actions[i + 1] = el)} inert href={featuresHref} className="mt-3 low:mt-1 short:mt-1" />
             </Readable>
           </div>
         ))}
 
-        {/* Donde se esta: el cerebro, la zona y su carpeta principal, fija, mientras se esta en una zona */}
-        <div className="halo pointer-events-none absolute left-6 right-6 top-20 hidden font-mono text-xs uppercase tracking-[0.12em] sm:block xl:left-8 short:hidden" aria-hidden="true">
+        {/* Donde se esta: el cerebro, la zona y su carpeta principal, fija, mientras se esta en una zona (en un
+            ordenador bajo, algo mas arriba; en el movil en horizontal no cabe) */}
+        <div className="halo pointer-events-none absolute left-6 right-6 top-20 hidden font-mono text-xs uppercase tracking-[0.12em] sm:block xl:left-8 short:hidden deskshort:top-[4.5rem] deskshort:block" aria-hidden="true">
           {scenes.map((scene, i) => {
             const steps = [t('journey.brain'), scene.kicker, scene.path.folder]
             return (
@@ -225,7 +233,8 @@ export default function Scrolly() {
         </div>
 
         {/* Indice de escenas, con el nombre de cada una a la vista (en pantallas algo mas estrechas, el de la
-            escena en la que se esta, y solo los numeros mientras se lee un titular: data-quiet) */}
+            escena en la que se esta, y solo los numeros mientras se lee un titular: data-quiet; en las bajas,
+            solo los numeros mientras se lee una zona: data-zone, ver globals.css) */}
         <nav ref={(el) => void (stage.nav = el)} aria-label={t('tour')} className="group/nav halo absolute right-4 top-1/2 hidden -translate-y-1/2 lg:block xl:right-6">
           <ol className="text-right">
             {labels.map((label, k) => (

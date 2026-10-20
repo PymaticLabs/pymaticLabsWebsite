@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Pantallas bajas de ordenador (con el escalado de Windows al 125-175 % quedan de 500 a 760 px de alto
+   tras las barras del navegador): la home aprieta los huecos para que cada parada quepa entera. Va antes
+   que short, para que short mande en las aun mas bajas. */
+@custom-variant low (@media (min-width: 640px) and (max-height: 760px));
 /* Pantallas muy bajas (el movil en horizontal): la home compacta su texto. */
 @custom-variant short (@media (max-height: 500px));
+/* Igual de bajas, pero de ordenador (de lg en adelante, o de md con raton: un portatil al 150-175 %): ahi
+   si caben la ruta y lo que incluye cada parada. Va despues de short, para mandar sobre el. En bloque: la
+   forma corta parte la consulta por las comas y se pierde la segunda mitad. */
+@custom-variant deskshort {
+  @media (max-height: 500px) and (min-width: 1024px), (max-height: 500px) and (min-width: 768px) and (hover: hover) and (pointer: fine) {
+    @slot;
+  }
+}
 
 /* Marca Pymatic Labs (knowledge/01_Empresa/identidad-y-marca.md): azul #0463FE, negro y fondo blanco. */
 @theme {
@@ -18,6 +30,8 @@
   --color-danger: #B91C1C; /* errores: 6,5:1 sobre blanco */
   --color-paper: #FFFFFF;
   --color-paper-2: #F6F7F9;
+  /* Franjas de seccion: sobre el blanco se ven como paper-2, pero dejan pasar el hilo del fondo. */
+  --color-band: rgb(242 244 246 / 0.7);
   --color-surface: #FFFFFF; /* tarjetas y paneles sobre el fondo */
   --color-inverse: #000000; /* bloques oscuros con texto blanco (pie, cierre) */
 
@@ -36,6 +50,7 @@
   --color-danger: #F87171; /* 7:1 sobre el fondo oscuro */
   --color-paper: #070A12;
   --color-paper-2: #0E1320;
+  --color-band: rgb(17 23 38 / 0.7);
   --color-surface: #0C111C;
   --color-inverse: #111A2C;
 }
@@ -83,6 +98,57 @@ body {
 
 html.dark {
   color-scheme: dark;
+}
+
+/* Fondo de todas las paginas: el mismo hilo que dibuja el cerebro de la home, muy suave, en dos remansos
+   de luz (arriba a la derecha y abajo a la izquierda) que dejan limpio el centro, donde va el texto. Va
+   fijo a la pantalla y el contenido pasa por encima. La tesela es una curva de Hilbert de orden 4 en
+   celdas de 28 px (como el hilo del cerebro, ver thread.ts) que va de abajo a la izquierda a abajo a la
+   derecha, con medio paso hasta cada borde: las teselas de una fila forman un solo hilo. Lleva un nodo en
+   algunas vueltas. Se genero una vez y va como mascara (negro con alfa): el color lo pone cada tema. Sin
+   JS ni imagenes. Los remansos miden segun el lado largo de la pantalla, pero no pasan de una parte del
+   alto: en las pantallas bajas y anchas (un portatil con el escalado de Windows) no llegan al centro.
+   En claro, el hilo se queda en un 7 % de azul en lo mas marcado (los nodos, en un 9 %) y la luz de las
+   esquinas en un 5 %: el texto normal sigue por encima de 4,5:1 y el azul de marca, salvo en la misma
+   esquina, tambien. */
+:root {
+  --thread-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='448' height='448'%3E%3Cpath d='M0 434H14h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h56v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-84h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-28h-56v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-28v-56h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h28v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v56h-28v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-56v28h-28v-28h-56v28h28v28h-28v28h56v-28h28v84h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h56v-28h-28v-56h28v28h28v-28h28v56h-28v28h28H448' fill='none' stroke='%23000' stroke-opacity='0.32'/%3E%3Cg fill-opacity='.4'%3E%3Ccircle cx='42' cy='434' r='1.7'/%3E%3Ccircle cx='42' cy='406' r='1.7'/%3E%3Ccircle cx='210' cy='322' r='1.7'/%3E%3Ccircle cx='126' cy='238' r='1.7'/%3E%3Ccircle cx='98' cy='322' r='1.7'/%3E%3Ccircle cx='70' cy='322' r='1.7'/%3E%3Ccircle cx='98' cy='126' r='1.7'/%3E%3Ccircle cx='14' cy='70' r='1.7'/%3E%3Ccircle cx='154' cy='70' r='1.7'/%3E%3Ccircle cx='126' cy='126' r='1.7'/%3E%3Ccircle cx='126' cy='154' r='1.7'/%3E%3Ccircle cx='126' cy='210' r='1.7'/%3E%3Ccircle cx='434' cy='70' r='1.7'/%3E%3Ccircle cx='406' cy='98' r='1.7'/%3E%3Ccircle cx='434' cy='98' r='1.7'/%3E%3Ccircle cx='406' cy='126' r='1.7'/%3E%3Ccircle cx='378' cy='294' r='1.7'/%3E%3Ccircle cx='378' cy='350' r='1.7'/%3E%3Ccircle cx='406' cy='406' r='1.7'/%3E%3C/g%3E%3C/svg%3E");
+  --thread-tile-size: 448px;
+  --thread-color: rgb(4 99 254 / 0.22);
+  --thread-pools:
+    radial-gradient(circle at 100% 0, #000, rgb(0 0 0 / 0.55) min(16vmax, 30vh), transparent min(46vmax, 85vh)),
+    radial-gradient(circle at 0 100%, #000, rgb(0 0 0 / 0.5) min(14vmax, 26vh), transparent min(40vmax, 74vh));
+  /* La luz de las esquinas, en partes del color del hilo (0,23 de 0,22 es un 5 % de azul). */
+  --thread-glow:
+    radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.23), transparent min(40vmax, 74vh)),
+    radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.18), transparent min(36vmax, 66vh));
+}
+/* En oscuro, el hilo en el azul claro y aun mas tenue: las paginas dejan de ser planas sin ruido. */
+html.dark {
+  --thread-color: rgb(106 164 255 / 0.16);
+  --thread-glow:
+    radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.45), transparent min(40vmax, 74vh)),
+    radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.32), transparent min(36vmax, 66vh));
+}
+
+/* body aisla su fondo: asi el fondo fijo (z-index -1) queda encima de su color y debajo de todo lo demas. */
+body {
+  isolation: isolate;
+}
+/* El hilo y su luz en una sola capa fija: el color del tema, recortado por la tesela cortada (intersect)
+   por la suma de los dos remansos, y encima la luz de las esquinas, para que el blanco no sea plano. Los
+   prefijos los pone la build. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--thread-color);
+  mask-image: var(--thread-glow), var(--thread-tile), var(--thread-pools);
+  mask-size: 100% 100%, 100% 100%, var(--thread-tile-size), 100% 100%, 100% 100%;
+  mask-repeat: no-repeat, no-repeat, repeat, no-repeat, no-repeat;
+  mask-composite: add, add, intersect, add, add;
 }
 
 @keyframes fadeUp {
@@ -195,6 +261,62 @@ html[data-dots] .dotted[data-drawn] {
   color: transparent;
 }
 
+/* Titulares de la home a la medida de la pantalla: por ancho, como siempre, y en las pantallas bajas
+   tambien por alto (svh), para que el titulo de la portada no pise el indice de escenas y cada parada
+   quepa entera entre la ruta de arriba y la lectura en vivo de abajo. El hilo dibuja cada titular
+   midiendo el h2 real, asi que el dibujo sigue la misma medida. */
+@layer components {
+  .hero-title {
+    font-size: 3.6rem;
+  }
+  .zone-title {
+    font-size: 3rem;
+  }
+  @media (min-width: 640px) {
+    .hero-title {
+      font-size: 6rem;
+    }
+    /* Por alto: con el titular en tres lineas, el resto de la parada y los huecos de arriba y abajo, cabe. */
+    .zone-title {
+      font-size: clamp(2.25rem, calc(36svh - 8rem), 4.5rem);
+    }
+  }
+  @media (min-width: 1024px) {
+    /* El titulo de la portada mide unas 6,9 veces su tamano de ancho y deja libre el indice de la
+       derecha (a este ancho, solo con el nombre de la escena en la que se esta). */
+    .hero-title {
+      font-size: min(7.5rem, calc((100vw - 18rem) / 6.9));
+    }
+    /* Aqui con un poco menos (la columna estrecha de las pantallas bajas, ver scrolly.tsx, deja el
+       titular en tres lineas mas a menudo). Desde unos 640 px de alto ya es el tamano entero. */
+    .zone-title {
+      font-size: clamp(2.25rem, calc(36svh - 8.25rem), 6.2rem);
+    }
+  }
+  @media (min-width: 1280px) {
+    /* Aqui el indice ensena el nombre de todas las escenas. */
+    .hero-title {
+      font-size: min(9rem, calc((100vw - 29rem) / 6.9));
+    }
+  }
+  @media (max-height: 500px) {
+    .hero-title {
+      font-size: 3.75rem;
+    }
+  }
+  /* El movil en horizontal: el titular en dos lineas, para que quepan el resto de la parada y su enlace. */
+  @media (max-width: 639px) and (max-height: 500px) {
+    .zone-title {
+      font-size: 2.25rem;
+    }
+  }
+  @media (min-width: 1024px) and (max-height: 500px) {
+    .hero-title {
+      font-size: 4.5rem;
+    }
+  }
+}
+
 /* Fondo del viaje de la home en el modo claro, detras del lienzo (alli transparente): un cielo de dia,
    mas azul arriba y casi blanco abajo, con una luz blanca en el centro, detras del texto. En oscuro lo
    pinta el propio lienzo. */
@@ -202,9 +324,42 @@ html[data-dots] .dotted[data-drawn] {
   background:
     radial-gradient(ellipse 48% 52% at 50% 50%, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0) 100%),
     linear-gradient(180deg, #e1ebfd 0%, #ecf2fe 40%, #f6f9ff 75%, #fbfcff 100%);
+  /* El hilo del fondo de las paginas, aqui en remansos mas pequenos y mas tenue: se queda en las
+     esquinas, lejos del simbolo, para no competir con el. */
+  --thread-pools:
+    radial-gradient(circle at 100% 0, #000, rgb(0 0 0 / 0.4) min(12vmax, 22vh), transparent min(32vmax, 60vh)),
+    radial-gradient(circle at 0 100%, #000, rgb(0 0 0 / 0.4) min(12vmax, 22vh), transparent min(32vmax, 60vh));
+}
+/* Sin la luz de las esquinas (el cielo ya la tiene). Se ve con el simbolo entero; mientras se lee una
+   zona (data-zone, lo pone la escena), el cerebro llena las esquinas y el hilo del fondo se va. */
+.home-sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: rgb(4 99 254 / 0.2);
+  mask-image: var(--thread-tile), var(--thread-pools);
+  mask-size: var(--thread-tile-size), 100% 100%, 100% 100%;
+  mask-repeat: repeat, no-repeat, no-repeat;
+  mask-composite: intersect, add;
+  transition: opacity 1s ease;
+}
+.home-journey:has(> nav[data-zone='1']) .home-sky::before {
+  opacity: 0;
 }
 .dark .home-sky {
   background: none;
+}
+.dark .home-sky::before {
+  content: none;
+}
+
+/* En las pantallas bajas de ordenador, mientras se lee una zona, el indice de escenas se queda en numeros
+   (como en lg): asi la zona y sus nombres tienen sitio a la derecha (ver indexEdge en core-scene.tsx). */
+@media (min-width: 1280px) and (max-height: 760px) {
+  .home-journey > nav[data-zone='1'] button:not(:hover, :focus-visible) > span:first-child {
+    opacity: 0;
+  }
 }
 
 /* Sobre el cielo de la home, el azul de los textos pequenos, un punto mas hondo (5,7:1 o mas). El lema

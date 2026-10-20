@@ -50,7 +50,8 @@ export default async function PreciosPage({
 
   return (
     <>
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft to-paper">
+      {/* El degradado deja ver el hilo del fondo (ver body::before en globals.css) */}
+      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
@@ -104,7 +105,7 @@ export default async function PreciosPage({
       </section>
 
       {/* Mensual */}
-      <section className="py-16 sm:py-20 bg-paper-2" id="mensual">
+      <section className="py-16 sm:py-20 bg-band" id="mensual">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader title={t('monthly.title')} subtitle={t('monthly.subtitle')} />
           <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
@@ -191,7 +192,7 @@ export default async function PreciosPage({
         </div>
       </section>
 
-      <FaqList title={t('faqTitle')} items={t.raw('faq')} className="py-16 sm:py-20 bg-paper-2" />
+      <FaqList title={t('faqTitle')} items={t.raw('faq')} className="py-16 sm:py-20 bg-band" />
     </>
   )
 }

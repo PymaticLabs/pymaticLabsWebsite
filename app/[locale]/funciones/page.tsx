@@ -118,7 +118,7 @@ export default async function FuncionesPage({
         </section>
       ))}
 
-      <section className="mt-10 bg-paper-2 py-16 sm:py-20" id="especificaciones">
+      <section className="mt-10 bg-band py-16 sm:py-20" id="especificaciones">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <h2 className="mb-8 text-3xl sm:text-4xl font-bold tracking-tight text-ink">{t('specsTitle')}</h2>
           <dl className="divide-y divide-line border-y border-line">
