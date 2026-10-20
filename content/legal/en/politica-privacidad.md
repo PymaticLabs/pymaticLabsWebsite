@@ -25,7 +25,7 @@ Providers that process it on behalf of Pymatic Labs, under a data processing agr
 - **Resend**, which delivers the form messages to our mailbox.
 - **Google** (Workspace), where our email is.
 
-If you book a call, you do so in a third party's calendar, with its own privacy policy. We do not sell data or share it with anyone else, unless the law requires it.
+If you book a call, you do so in Cal.com's calendar, with its own privacy policy. We do not sell data or share it with anyone else, unless the law requires it.
 
 ## 4. International transfers
 

@@ -40,7 +40,7 @@
         "id": "local",
         "kicker": "Todo en local",
         "title": "Vive en tu ordenador.",
-        "text": "Tus documentos y tu cerebro se quedan en tus equipos. Claude consulta solo lo que necesita para contestarte.",
+        "text": "Tus documentos y tu cerebro se quedan en tus equipos. Claude consulta solo lo que necesita para contestarte, y lo dejamos configurado para que no aprenda de ello.",
         "specs": [
           "Nada en nuestros servidores",
           "Contraseñas en una caja fuerte, en tu equipo",
@@ -675,7 +675,7 @@
     "successTitle": "¡Recibido!",
     "successMsg": "Te responderemos en menos de 24 horas.",
     "errorMsg": "No se ha podido enviar. Escríbenos a info@pymaticlabs.com.",
-    "privacyNote": "Usamos tus datos solo para contestarte.",
+    "privacyNote": "Responsable: Pymatic Labs. Usamos tus datos solo para contestarte, porque nos lo pides. Los tratan nuestros proveedores de web y correo (Vercel, Resend y Google). Puedes verlos, corregirlos o borrarlos escribiendo a info@pymaticlabs.com.",
     "privacyLink": "Política de privacidad",
     "orSchedule": "¿Prefieres una videollamada?",
     "scheduleCta": "Reservar una llamada",
@@ -719,7 +719,7 @@
       "condiciones": "Condiciones de uso y venta del Cerebro Digital, para empresas y profesionales.",
       "privacidad-producto": "Qué datos personales trata Pymatic Labs al vender el Cerebro Digital y dar soporte, y cuáles no."
     },
-    "lastUpdated": "Última actualización: octubre de 2026",
+    "lastUpdated": "Versión del {date}",
     "draftBadge": "Borrador",
     "draftNote": "Borrador pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
     "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."

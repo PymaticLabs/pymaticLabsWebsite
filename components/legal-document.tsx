@@ -9,10 +9,25 @@ export type LegalDocumentId =
   | 'condiciones'
   | 'privacidad-producto'
 
+/**
+ * Fecha de la version publicada de cada texto (las politicas prometen publicar cada version con su
+ * fecha). Se cambia aqui cada vez que se cambia el texto.
+ */
+const VERSIONS: Record<LegalDocumentId, string> = {
+  'aviso-legal': '2026-10-09',
+  'politica-privacidad': '2026-10-20',
+  'politica-cookies': '2026-10-18',
+  condiciones: '2026-10-09',
+  'privacidad-producto': '2026-10-20',
+}
+
 // Todos los textos legales son borradores hasta que los revise un abogado (traspaso, seccion 6).
 export default async function LegalDocument({ id, locale }: { id: LegalDocumentId; locale: string }) {
   const t = await getTranslations({ locale, namespace: 'legal' })
   const { html, fallback } = renderContent('legal', locale, id)
+  const date = new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(VERSIONS[id])
+  )
 
   return (
     <div className="pt-32 pb-20">
@@ -21,7 +36,7 @@ export default async function LegalDocument({ id, locale }: { id: LegalDocumentI
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">{t(`titles.${id}`)}</h1>
           <Badge variant="accent">{t('draftBadge')}</Badge>
         </div>
-        <p className="text-sm text-muted">{t('lastUpdated')}</p>
+        <p className="text-sm text-muted">{t('lastUpdated', { date })}</p>
         <p className="mt-4 rounded-xl bg-paper-2 px-4 py-3 text-sm text-body">{t('draftNote')}</p>
         {fallback && (
           <p className="mt-3 rounded-xl border border-brand/20 bg-brand-soft px-4 py-3 text-sm text-ink" lang="en">

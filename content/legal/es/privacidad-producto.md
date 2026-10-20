@@ -32,7 +32,7 @@ No hay decisiones automatizadas con efectos jurídicos ni perfiles (artículo 22
 ## 5. Quién recibe los datos
 
 - Stripe, que cobra y trata los datos del pago con su propia política de privacidad.
-- Proveedores que los tratan por cuenta de PymaticLabs, con contrato de encargado: Google (Workspace: correo, documentos y videollamada), Holded (facturación y contabilidad), Vercel (alojamiento de la web), Resend (correo transaccional), Notion (agenda) y la herramienta de reservas de las sesiones.
+- Proveedores que los tratan por cuenta de PymaticLabs, con contrato de encargado: Google (Workspace: correo, documentos y videollamada), Holded (facturación y contabilidad), Vercel (alojamiento de la web), Resend (correo transaccional), Upstash (registro de las compras ya entregadas, sin nombres ni correos), Notion (agenda) y la herramienta de reservas de las sesiones (Cal.com).
 - La Agencia Tributaria, otras administraciones y los juzgados, cuando la ley obliga.
 
 PymaticLabs no vende datos ni los cede a nadie más.

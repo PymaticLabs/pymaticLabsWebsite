@@ -40,7 +40,7 @@
         "id": "local",
         "kicker": "All local",
         "title": "It lives on your computer.",
-        "text": "Your documents and your brain stay on your computers. Claude looks up only what it needs to answer you.",
+        "text": "Your documents and your brain stay on your computers. Claude looks up only what it needs to answer you, and we set it up so it does not learn from it.",
         "specs": [
           "Nothing on our servers",
           "Passwords in a vault, on your computer",
@@ -675,7 +675,7 @@
     "successTitle": "Received!",
     "successMsg": "We will reply within 24 hours.",
     "errorMsg": "It could not be sent. Write to us at info@pymaticlabs.com.",
-    "privacyNote": "We only use your data to reply to you.",
+    "privacyNote": "Controller: Pymatic Labs. We only use your data to reply to you, because you asked us to. Our website and email providers (Vercel, Resend and Google) process it. You can see, correct or delete it by writing to info@pymaticlabs.com.",
     "privacyLink": "Privacy policy",
     "orSchedule": "Prefer a video call?",
     "scheduleCta": "Book a call",
@@ -719,7 +719,7 @@
       "condiciones": "Terms of use and sale of the Digital Brain, for businesses and professionals.",
       "privacidad-producto": "Which personal data Pymatic Labs processes when selling the Digital Brain and providing support, and which it does not."
     },
-    "lastUpdated": "Last updated: October 2026",
+    "lastUpdated": "Version of {date}",
     "draftBadge": "Draft",
     "draftNote": "Draft pending legal review. It may change before its final version.",
     "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."

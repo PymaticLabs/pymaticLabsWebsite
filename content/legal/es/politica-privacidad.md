@@ -25,7 +25,7 @@ Proveedores que los tratan por cuenta de Pymatic Labs, con contrato de encargado
 - **Resend**, que entrega a nuestro buzón los mensajes del formulario.
 - **Google** (Workspace), donde está nuestro correo.
 
-Si reservas una llamada, lo haces en el calendario de un tercero, con su propia política de privacidad. No vendemos datos ni los cedemos a nadie más, salvo obligación legal.
+Si reservas una llamada, lo haces en el calendario de Cal.com, con su propia política de privacidad. No vendemos datos ni los cedemos a nadie más, salvo obligación legal.
 
 ## 4. Transferencias internacionales
 
