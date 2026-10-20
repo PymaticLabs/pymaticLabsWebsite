@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist_Mono, Inter } from 'next/font/google'
+import { Atkinson_Hyperlegible_Mono, Atkinson_Hyperlegible_Next } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -13,15 +13,17 @@ import '@/app/globals.css'
 
 const CLIENT_NAMESPACES = ['nav', 'home', 'contact'] as const
 
-const inter = Inter({
+// Letra pensada para leerse bien (tambien con poca vista): letras abiertas y que no se confunden
+// (I, l y 1; O y 0). Quien lleva una empresa la lee sin esfuerzo, y sigue siendo limpia y tecnica.
+const sans = Atkinson_Hyperlegible_Next({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-atkinson',
 })
 
-// Para las etiquetas de la home, con aire de instrumento.
-const mono = Geist_Mono({
+// Su version de ancho fijo, para las etiquetas de la home, con aire de instrumento.
+const mono = Atkinson_Hyperlegible_Mono({
   subsets: ['latin'],
-  variable: '--font-geist-mono',
+  variable: '--font-atkinson-mono',
 })
 
 export function generateStaticParams() {
@@ -82,7 +84,7 @@ export default async function LocaleLayout({
 
   return (
     // El tema se lee en el navegador (cookie o sistema) para que las paginas sigan siendo estaticas.
-    <html lang={locale} className={`${inter.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>

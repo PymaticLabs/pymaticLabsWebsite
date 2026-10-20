@@ -110,11 +110,11 @@ export default function Scrolly() {
         <div className="mx-auto mt-12 grid max-w-6xl gap-4 text-left md:grid-cols-2 lg:grid-cols-3">
           {scenes.map((scene, i) => (
             <article key={scene.id} className="flex flex-col rounded-2xl border border-line bg-surface p-6">
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+              <p className="font-mono text-xs uppercase tracking-[0.08em] text-muted">
                 <span className="text-brand">{number(i)}</span> — {scene.kicker}
               </p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">{scene.title}</h2>
-              <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.15em] text-brand">{scene.cite}</p>
+              <p className="mt-2 font-mono text-xs uppercase tracking-[0.06em] text-brand">{scene.cite}</p>
               <p className="mt-3 text-lg text-body leading-relaxed">{scene.text}</p>
               <Specs items={scene.specs} className="mt-4 flex flex-col gap-1" />
               <MoreLink href={featuresHref} className="mt-auto self-start pt-5" />
@@ -141,7 +141,7 @@ export default function Scrolly() {
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
           {/* En el movil solo se ve la de la zona a la que se va (la escena decide) */}
           {scenes.map((scene, i) => (
-            <Tag key={scene.id} ref={(el) => void (stage.zoneLabels[i] = el)} className="halo text-xs uppercase tracking-[0.15em] text-muted sm:text-[13px]">
+            <Tag key={scene.id} ref={(el) => void (stage.zoneLabels[i] = el)} className="halo text-xs uppercase tracking-[0.06em] text-muted sm:text-[13px]">
               <span className="text-brand">{number(i)}</span> · {scene.kicker}
             </Tag>
           ))}
@@ -189,7 +189,7 @@ export default function Scrolly() {
             style={{ opacity: 0, pointerEvents: 'none' }}
             className="absolute inset-0 flex flex-col items-center justify-center-safe px-4 pt-10 text-center portrait:max-lg:justify-end portrait:max-lg:pb-16 lg:pb-12 lg:pt-[6.5rem] short:pt-12 deskshort:pb-10 deskshort:pt-24"
           >
-            <p className="font-mono text-sm uppercase tracking-[0.2em] text-muted">
+            <p className="font-mono text-sm uppercase tracking-[0.08em] text-muted">
               <span className="text-brand">{number(i)}</span> — {scene.kicker}
             </p>
             {/* Con el indice de la derecha a la vista, el titular deja sitio a los dos lados; en las pantallas bajas, en una
@@ -201,7 +201,7 @@ export default function Scrolly() {
               className="zone-title mt-3 max-w-5xl lg:max-w-[min(64rem,calc(100vw-17rem))] xl:max-w-[min(64rem,calc(100vw-27rem))] low:mt-2 low:lg:max-w-[9em] short:mt-2 leading-[0.95]"
             />
             {/* En el movil en horizontal no cabe: se queda la cita fuera para que quepa el resto de la parada. */}
-            <p className="mt-4 inline-flex max-w-sm items-center justify-center gap-2 text-balance font-mono text-[13px] uppercase tracking-[0.12em] text-brand sm:max-w-none low:mt-2.5 short:mt-2 max-sm:short:hidden">
+            <p className="mt-4 inline-flex max-w-sm items-center justify-center gap-2 text-balance font-mono text-[13px] uppercase tracking-[0.05em] text-brand sm:max-w-none low:mt-2.5 short:mt-2 max-sm:short:hidden">
               <span className="hidden h-px w-5 shrink-0 bg-current sm:block" aria-hidden="true" />
               {scene.cite}
             </p>
@@ -216,7 +216,7 @@ export default function Scrolly() {
 
         {/* Donde se esta: el cerebro, la zona y su carpeta principal, fija, mientras se esta en una zona (en un
             ordenador bajo, algo mas arriba; en el movil en horizontal no cabe) */}
-        <div className="halo pointer-events-none absolute left-6 right-6 top-20 hidden font-mono text-xs uppercase tracking-[0.12em] sm:block xl:left-8 short:hidden deskshort:top-[4.5rem] deskshort:block" aria-hidden="true">
+        <div className="halo pointer-events-none absolute left-6 right-6 top-20 hidden font-mono text-xs uppercase tracking-[0.05em] sm:block xl:left-8 short:hidden deskshort:top-[4.5rem] deskshort:block" aria-hidden="true">
           {scenes.map((scene, i) => {
             const steps = [t('journey.brain'), scene.kicker, scene.path.folder]
             return (
@@ -266,7 +266,7 @@ export default function Scrolly() {
         {/* Lectura en vivo (cambia con un fundido, sin nada que se mueva) y aviso de scroll */}
         <p className="halo absolute bottom-6 right-6 hidden items-center gap-2 font-mono text-xs text-muted lg:flex xl:right-8">
           <span className="inline-flex h-1.5 w-1.5 rounded-full bg-brand" />
-          <span className="uppercase tracking-[0.15em]">{t('demo')}</span>
+          <span className="uppercase tracking-[0.06em]">{t('demo')}</span>
           <span className="text-line">/</span>
           <AnimatePresence mode="wait">
             <motion.span key={active} className="text-ink" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
@@ -277,7 +277,7 @@ export default function Scrolly() {
         <p
           ref={(el) => void (stage.hint = el)}
           className={cn(
-            'pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1.5 font-mono text-xs uppercase tracking-[0.2em] text-muted transition-opacity short:hidden',
+            'pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1.5 font-mono text-xs uppercase tracking-[0.08em] text-muted transition-opacity short:hidden',
             active === 0 ? 'opacity-100' : 'opacity-0'
           )}
         >

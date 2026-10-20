@@ -355,7 +355,8 @@ export function buildHeadline(title: HTMLElement, canvas: DOMRect, wide: boolean
   if (!box.width || !box.height || !canvas.width) return null
   const style = getComputedStyle(title)
   const fontSize = parseFloat(style.fontSize)
-  const step = Math.min(7.5, Math.max(wide ? 3.4 : 2.6, fontSize / 15))
+  // Celdas finas (unas 24 por cuerpo de letra): la letra sale con su forma y se lee sin esfuerzo.
+  const step = Math.min(5, Math.max(wide ? 2.6 : 2.2, fontSize / 24))
   const pad = Math.ceil(fontSize * 0.4)
   const ss = Math.max(1, Math.ceil(8 / step))
   const w = Math.ceil(box.width) + 2 * pad

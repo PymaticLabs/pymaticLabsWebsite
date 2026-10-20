@@ -408,8 +408,8 @@ export const HEADLINE_FRAGMENT = /* glsl */ `
     vec2 up = vec2(-vRight.y, vRight.x);
     vec2 q = vec2(dot(p - vA, vRight), dot(p - vA, up));
     float c = vCell;
-    // En claro, los cuadrados algo mas llenos para que la letra no se rompa.
-    float hs = c * mix(0.37, 0.41, uLight);
+    // Cuadrados casi unidos (en claro, algo mas): la letra se lee maciza y el punteado queda como textura.
+    float hs = c * mix(0.41, 0.43, uLight);
     float rr = c * 0.12;
     vec2 qq = abs(q) - (hs - rr);
     float b = length(max(qq, 0.0)) + min(max(qq.x, qq.y), 0.0) - rr;
