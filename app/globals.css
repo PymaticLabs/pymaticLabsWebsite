@@ -24,7 +24,7 @@
   --color-brand-light: #6AA4FF;
   --color-ink: #000000;
   --color-body: #333842;
-  --color-muted: #5B6474; /* 6:1 sobre blanco y 5:1 sobre lo mas azul del cielo de la home */
+  --color-muted: #525B6A; /* 6,8:1 sobre blanco y 5:1 o mas sobre el hilo del fondo y el cielo de la home */
   --color-line: #E5E7EB; /* separadores */
   --color-field: #7F8794; /* borde de campos y botones de contorno: 3,6:1 sobre blanco */
   --color-danger: #B91C1C; /* errores: 6,5:1 sobre blanco */
@@ -108,24 +108,24 @@ html.dark {
    algunas vueltas. Se genero una vez y va como mascara (negro con alfa): el color lo pone cada tema. Sin
    JS ni imagenes. Los remansos miden segun el lado largo de la pantalla, pero no pasan de una parte del
    alto: en las pantallas bajas y anchas (un portatil con el escalado de Windows) no llegan al centro.
-   En claro, el hilo se queda en un 7 % de azul en lo mas marcado (los nodos, en un 9 %) y la luz de las
-   esquinas en un 5 %: el texto normal sigue por encima de 4,5:1 y el azul de marca, salvo en la misma
-   esquina, tambien. */
+   En claro, el hilo llega a un 17 % de azul en lo mas marcado (los nodos tambien) y la luz de las
+   esquinas a un 7 %: el texto normal y el gris siguen por encima de 4,5:1, y el azul de los textos
+   pequenos pasa al azul hondo de la marca (ver mas abajo), que sobre el hilo tambien. */
 :root {
-  --thread-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='448' height='448'%3E%3Cpath d='M0 434H14h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h56v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-84h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-28h-56v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-28v-56h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h28v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v56h-28v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-56v28h-28v-28h-56v28h28v28h-28v28h56v-28h28v84h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h56v-28h-28v-56h28v28h28v-28h28v56h-28v28h28H448' fill='none' stroke='%23000' stroke-opacity='0.32'/%3E%3Cg fill-opacity='.4'%3E%3Ccircle cx='42' cy='434' r='1.7'/%3E%3Ccircle cx='42' cy='406' r='1.7'/%3E%3Ccircle cx='210' cy='322' r='1.7'/%3E%3Ccircle cx='126' cy='238' r='1.7'/%3E%3Ccircle cx='98' cy='322' r='1.7'/%3E%3Ccircle cx='70' cy='322' r='1.7'/%3E%3Ccircle cx='98' cy='126' r='1.7'/%3E%3Ccircle cx='14' cy='70' r='1.7'/%3E%3Ccircle cx='154' cy='70' r='1.7'/%3E%3Ccircle cx='126' cy='126' r='1.7'/%3E%3Ccircle cx='126' cy='154' r='1.7'/%3E%3Ccircle cx='126' cy='210' r='1.7'/%3E%3Ccircle cx='434' cy='70' r='1.7'/%3E%3Ccircle cx='406' cy='98' r='1.7'/%3E%3Ccircle cx='434' cy='98' r='1.7'/%3E%3Ccircle cx='406' cy='126' r='1.7'/%3E%3Ccircle cx='378' cy='294' r='1.7'/%3E%3Ccircle cx='378' cy='350' r='1.7'/%3E%3Ccircle cx='406' cy='406' r='1.7'/%3E%3C/g%3E%3C/svg%3E");
+  --thread-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='448' height='448'%3E%3Cpath d='M0 434H14h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h56v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-84h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-28h-56v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-28v-56h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h28v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v56h-28v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-56v28h-28v-28h-56v28h28v28h-28v28h56v-28h28v84h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h56v-28h-28v-56h28v28h28v-28h28v56h-28v28h28H448' fill='none' stroke='%23000' stroke-opacity='0.6' stroke-width='1.5'/%3E%3Cg fill-opacity='.6'%3E%3Ccircle cx='42' cy='434' r='2.2'/%3E%3Ccircle cx='42' cy='406' r='2.2'/%3E%3Ccircle cx='210' cy='322' r='2.2'/%3E%3Ccircle cx='126' cy='238' r='2.2'/%3E%3Ccircle cx='98' cy='322' r='2.2'/%3E%3Ccircle cx='70' cy='322' r='2.2'/%3E%3Ccircle cx='98' cy='126' r='2.2'/%3E%3Ccircle cx='14' cy='70' r='2.2'/%3E%3Ccircle cx='154' cy='70' r='2.2'/%3E%3Ccircle cx='126' cy='126' r='2.2'/%3E%3Ccircle cx='126' cy='154' r='2.2'/%3E%3Ccircle cx='126' cy='210' r='2.2'/%3E%3Ccircle cx='434' cy='70' r='2.2'/%3E%3Ccircle cx='406' cy='98' r='2.2'/%3E%3Ccircle cx='434' cy='98' r='2.2'/%3E%3Ccircle cx='406' cy='126' r='2.2'/%3E%3Ccircle cx='378' cy='294' r='2.2'/%3E%3Ccircle cx='378' cy='350' r='2.2'/%3E%3Ccircle cx='406' cy='406' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
   --thread-tile-size: 448px;
-  --thread-color: rgb(4 99 254 / 0.22);
+  --thread-color: rgb(4 99 254 / 0.28);
   --thread-pools:
-    radial-gradient(circle at 100% 0, #000, rgb(0 0 0 / 0.55) min(16vmax, 30vh), transparent min(46vmax, 85vh)),
-    radial-gradient(circle at 0 100%, #000, rgb(0 0 0 / 0.5) min(14vmax, 26vh), transparent min(40vmax, 74vh));
-  /* La luz de las esquinas, en partes del color del hilo (0,23 de 0,22 es un 5 % de azul). */
+    radial-gradient(circle at 100% 0, #000, rgb(0 0 0 / 0.7) min(22vmax, 40vh), transparent min(58vmax, 100vh)),
+    radial-gradient(circle at 0 100%, #000, rgb(0 0 0 / 0.65) min(20vmax, 36vh), transparent min(52vmax, 92vh));
+  /* La luz de las esquinas, en partes del color del hilo (0,25 de 0,28 es un 7 % de azul). */
   --thread-glow:
-    radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.23), transparent min(40vmax, 74vh)),
-    radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.18), transparent min(36vmax, 66vh));
+    radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.25), transparent min(48vmax, 88vh)),
+    radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.2), transparent min(44vmax, 80vh));
 }
 /* En oscuro, el hilo en el azul claro y aun mas tenue: las paginas dejan de ser planas sin ruido. */
 html.dark {
-  --thread-color: rgb(106 164 255 / 0.16);
+  --thread-color: rgb(106 164 255 / 0.2);
   --thread-glow:
     radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.45), transparent min(40vmax, 74vh)),
     radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.32), transparent min(36vmax, 66vh));
@@ -337,7 +337,7 @@ html[data-dots] .dotted[data-drawn] {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-color: rgb(4 99 254 / 0.2);
+  background-color: rgb(4 99 254 / 0.24);
   mask-image: var(--thread-tile), var(--thread-pools);
   mask-size: var(--thread-tile-size), 100% 100%, 100% 100%;
   mask-repeat: repeat, no-repeat, no-repeat;
@@ -362,9 +362,11 @@ html[data-dots] .dotted[data-drawn] {
   }
 }
 
-/* Sobre el cielo de la home, el azul de los textos pequenos, un punto mas hondo (5,7:1 o mas). El lema
-   de la portada, grande y sobre la luz blanca del centro, se queda en el azul de marca. */
-html:not(.dark) .home-journey .text-brand {
+/* En claro, el azul de los textos (en toda la web, sobre el hilo del fondo y sobre el cielo de la home),
+   un punto mas hondo: 6,4:1 sobre blanco y 5,2:1 encima de lo mas marcado del hilo. El lema de la
+   portada, grande y sobre la luz blanca del centro, se queda en el azul de marca. */
+html:not(.dark) .text-brand,
+html:not(.dark) .prose-content a {
   color: var(--color-brand-dark);
 }
 html:not(.dark) .home-journey .home-hero .text-brand {
