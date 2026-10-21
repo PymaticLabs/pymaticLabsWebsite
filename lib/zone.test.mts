@@ -2,13 +2,14 @@ import { test, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { createFakeDelivery } from './delivery/container.ts'
 import { DEMO_PEOPLE, DEMO_VERSION, seedZoneDemo } from './delivery/demo.ts'
-import { downloadLink, invoiceLink, licenseFile, termsFile, zoneOverview } from './delivery/zone.ts'
+import { downloadLink, invoiceLink, licenseFile, termsFile, zoneOverview, zoneProfile } from './delivery/zone.ts'
 import { SupabaseAuth, ZONE_SESSION_DAYS, refreshZoneSession } from './delivery/adapters/supabase-auth.ts'
 import { RateLimitedError, type CookieToSet, type ZoneUser } from './delivery/types.ts'
 import { verifyLicense } from './license.ts'
 import { currentLicense, downloadGroups, formatBytes, monthlyState, otherLicenses, safeZoneReturn, sectionPath, upcomingSessions, zoneSections, type ZoneOverview } from './zone-view.ts'
+import { profileInitials, profileShortcuts } from './zone-profile.ts'
 
-// La zona de clientes: lo que ve cada persona (con la zona de muestra, montada por el camino de
+// La zona de socio: lo que ve cada persona (con la zona de muestra, montada por el camino de
 // verdad con las piezas falsas), la seguridad por filas como segunda comprobacion, los codigos que
 // frenan y la sesion de Supabase (cookies solo del servidor, renovacion) contra un fetch de mentira.
 
@@ -88,6 +89,43 @@ test('zona de muestra: la persona del equipo y el Hazlo tu ven solo lo suyo', as
   assert.deepEqual(downloadGroups(s.version!.files, 'es').map((g) => g.kind), ['mac', 'windows', 'extra'])
   // Ni la licencia ni las descargas de otra empresa.
   await assert.rejects(licenseFile(d, solo, currentLicense(owner.licenses)!.id), /sin acceso|empresa no encontrada/)
+})
+
+test('perfil de la barra de arriba: el correo, las empresas y los atajos de quien entro', async () => {
+  const { d, as } = await demo()
+  const owner = await zoneProfile(d, await as(DEMO_PEOPLE.titular))
+  assert.deepEqual(owner, { email: DEMO_PEOPLE.titular, companies: [{ name: 'Carpintería Muñoz, S.L.', role: 'owner' }] })
+  assert.equal(profileInitials(owner.companies[0].name, owner.email), 'CM')
+  assert.deepEqual(profileShortcuts(owner), ['licencia', 'descargas', 'facturas'])
+
+  // La persona del equipo: sin facturas (la zona solo se las ensena a quien compro).
+  const member = await zoneProfile(d, await as(DEMO_PEOPLE.miembro))
+  assert.deepEqual(member.companies, [{ name: 'Carpintería Muñoz, S.L.', role: 'member' }])
+  assert.deepEqual(profileShortcuts(member), ['licencia', 'descargas'])
+
+  // Con la zona cerrada (devolucion, contracargo o baja): su correo, sin empresas ni atajos.
+  const solo = await as(DEMO_PEOPLE.solo)
+  const [membership] = await d.repo.listMembershipsByEmail(DEMO_PEOPLE.solo)
+  await d.repo.updateCompany(membership.companyId, { accessRevokedAt: NOW.toISOString() })
+  const closed = await zoneProfile(d, solo)
+  assert.deepEqual(closed, { email: DEMO_PEOPLE.solo, companies: [] })
+  assert.deepEqual(profileShortcuts(closed), [])
+  assert.equal(profileInitials(null, closed.email), 'P')
+})
+
+test('perfil: las iniciales son las de la empresa sin su forma juridica o, si no, las del correo', () => {
+  const cases: [string | null, string, string][] = [
+    ['Carpintería Muñoz, S.L.', 'x@y.test', 'CM'],
+    ['Estudio Ruiz Arquitectura, S.L.P.', 'x@y.test', 'ER'],
+    ['Gestoría de la Plana SLU', 'x@y.test', 'GP'],
+    ['Talleres Ferrer S.A.', 'x@y.test', 'TF'],
+    ['Ñandú Software GmbH', 'x@y.test', 'ÑS'],
+    ['ACME', 'x@y.test', 'A'],
+    ['S.L.', 'ana.lopez@y.test', 'AL'],
+    [null, 'ana.lopez@y.test', 'AL'],
+    ['  ', 'info@y.test', 'I'],
+  ]
+  for (const [company, email, expected] of cases) assert.equal(profileInitials(company, email), expected, `${company} / ${email}`)
 })
 
 test('zona: la seguridad por filas manda tambien (si la base de datos no deja ver la empresa, no se abre)', async () => {

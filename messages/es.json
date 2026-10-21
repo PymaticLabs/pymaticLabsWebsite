@@ -24,7 +24,21 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "themeDark": "Activar modo oscuro",
-    "themeLight": "Activar modo claro"
+    "themeLight": "Activar modo claro",
+    "login": "Entrar",
+    "loginLabel": "Entrar en la zona de socio",
+    "account": {
+      "button": "Tu perfil ({initials}): {email}",
+      "menu": "Tu perfil",
+      "moreCompanies": "y {count} más",
+      "zone": "Zona de socio",
+      "licencia": "Licencia",
+      "descargas": "Descargas",
+      "facturas": "Facturas",
+      "logout": "Cerrar sesión",
+      "loggingOut": "Cerrando…",
+      "logoutError": "No hemos podido cerrar la sesión. Prueba otra vez."
+    }
   },
   "home": {
     "hero": {
@@ -646,8 +660,15 @@
     "title": "Pago recibido. ¡Gracias!",
     "subtitle": "En unos minutos te llega un correo con todo lo necesario para montar tu Cerebro Digital.",
     "steps": [
-      "El enlace a tu zona de clientes, donde están tu licencia, las descargas para Mac y Windows y tus facturas.",
+      "El enlace a tu zona de socio, donde están tu licencia, las descargas para Mac y Windows y tus facturas.",
       "Tu licencia, adjunta. Guárdala: el montaje te la pedirá.",
+      "Las condiciones que aceptaste y, en el Acompañado, la cita de tu primera sesión.",
+      "La factura, en un correo aparte."
+    ],
+    "subtitleManual": "En unos minutos te llega un correo de bienvenida con el acceso a tu zona de socio. Tu licencia, en otro correo, en unas horas.",
+    "stepsManual": [
+      "El enlace a tu zona de socio, con las descargas para Mac y Windows y, en cuanto estén, tu licencia y tus facturas.",
+      "Tu licencia, en otro correo en unas horas (y en tu zona de socio). Guárdala: el montaje te la pedirá.",
       "Las condiciones que aceptaste y, en el Acompañado, la cita de tu primera sesión.",
       "La factura, en un correo aparte."
     ],
@@ -656,12 +677,14 @@
   },
   "purchase": {
     "metaTitle": "Comprar el Cerebro Digital",
-    "metaDescription": "Pago con Stripe para empresas y profesionales. La licencia y la zona de clientes llegan al momento.",
+    "metaDescription": "Pago con Stripe para empresas y profesionales. La licencia y la zona de socio llegan al momento.",
+    "metaDescriptionManual": "Pago con Stripe para empresas y profesionales. El acceso a la zona de socio llega al momento y la licencia, en unas horas.",
     "title": "Comprar {product}",
-    "subtitle": "Pagas en Stripe, con tu NIF o NIF-IVA. Al momento te llegan por correo la licencia y el acceso a tu zona de clientes; la factura, aparte.",
+    "subtitle": "Pagas en Stripe, con tu NIF o NIF-IVA. Al momento te llegan por correo la licencia y el acceso a tu zona de socio; la factura, aparte.",
+    "subtitleManual": "Pagas en Stripe, con tu NIF o NIF-IVA. Al momento te llega por correo el acceso a tu zona de socio; la licencia, en unas horas, y la factura, aparte.",
     "price": "Precio de lista: {list}. Los 10 primeros clientes pagan {launch}: se aplica solo en el pago mientras queden plazas. Sin IVA.",
     "chooseTitle": "Elige tu primera sesión de montaje",
-    "chooseText": "Una hora por videollamada, con Eric o con Sergio. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora peninsular. La segunda la reservas desde tu zona de clientes.",
+    "chooseText": "Una hora por videollamada, con Eric o con Sergio. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora peninsular. La segunda la reservas desde tu zona de socio.",
     "thirdWeek": "Las dos próximas semanas están completas: estos son los huecos de la tercera.",
     "noSlots": "Ahora mismo no quedan huecos libres. Escríbenos y te buscamos uno.",
     "slotsError": "No hemos podido cargar los huecos libres. Prueba en un momento o escríbenos.",
@@ -676,8 +699,8 @@
       "session_required": "Elige un hueco para tu primera sesión.",
       "unavailable": "No hemos podido abrir el pago. Prueba de nuevo en un momento.",
       "product": "Ese producto no existe.",
-      "company_required": "Entra en tu zona de clientes para contratarlo.",
-      "already_subscribed": "Ya tienes el mensual: lo cambias desde tu zona de clientes.",
+      "company_required": "Entra en tu zona de socio para contratarlo.",
+      "already_subscribed": "Ya tienes el mensual: lo cambias desde tu zona de socio.",
       "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.",
       "busy": "Ahora mismo hay muchos pagos abiertos con sesión. Prueba en unos minutos o escríbenos a info@pymaticlabs.com."
     }
@@ -722,7 +745,7 @@
       "precios": "Precios",
       "seguridad": "Seguridad",
       "contacto": "Contacto",
-      "zona": "Zona de clientes"
+      "zona": "Zona de socio"
     },
     "legalLinks": {
       "aviso": "Aviso legal",
@@ -745,7 +768,7 @@
     "descriptions": {
       "aviso-legal": "Datos de PYMATICLABS, S.L., titular de pymaticlabs.com, y condiciones de uso del sitio web.",
       "politica-privacidad": "Qué datos personales tratamos cuando visitas pymaticlabs.com o nos escribes desde ella.",
-      "politica-cookies": "pymaticlabs.com solo usa cookies técnicas: la del tema, si la pides, y la de la sesión de la zona de clientes, si entras en ella.",
+      "politica-cookies": "pymaticlabs.com solo usa cookies técnicas: la del tema, si la pides, y la de la sesión de la zona de socio, si entras en ella.",
       "condiciones": "Condiciones de uso y venta del Cerebro Digital, para empresas y profesionales.",
       "privacidad-producto": "Qué datos personales trata Pymatic Labs al vender el Cerebro Digital y dar soporte, y cuáles no."
     },
@@ -756,11 +779,11 @@
   },
   "zone": {
     "meta": {
-      "title": "Zona de clientes",
+      "title": "Zona de socio",
       "description": "Tu licencia, las descargas, las facturas y el equipo del Cerebro Digital.",
-      "loginTitle": "Entrar en la zona de clientes"
+      "loginTitle": "Entrar en la zona de socio"
     },
-    "eyebrow": "Zona de clientes",
+    "eyebrow": "Zona de socio",
     "roles": {
       "owner": "titular de la compra",
       "member": "persona del equipo"
@@ -789,8 +812,8 @@
     },
     "ownerOnly": "Esta parte solo la ve la persona que compró. Si necesitas algo de aquí, pídeselo a ella.",
     "login": {
-      "title": "Entra en tu zona de clientes",
-      "unavailable": "La zona de clientes abre con la venta del Cerebro Digital. Si ya eres cliente y necesitas algo, escríbenos a info@pymaticlabs.com.",
+      "title": "Entra en tu zona de socio",
+      "unavailable": "La zona de socio abre con la venta del Cerebro Digital. Si ya eres cliente y necesitas algo, escríbenos a info@pymaticlabs.com.",
       "intro": "Con el correo de la compra o con el que te dio de alta tu empresa. Te mandamos un código de un solo uso: no hay contraseñas.",
       "emailLabel": "Tu correo",
       "send": "Enviarme el código",
@@ -870,6 +893,11 @@
       "download": "Descargar la licencia",
       "downloadShort": "Descargar",
       "preparing": "Tu licencia se está preparando. En unos minutos estará aquí y en tu correo.",
+      "pending": "Tu licencia está en camino: la firmamos y te llega por correo en unas horas. En cuanto esté, la tienes también aquí.",
+      "pendingTitle": "Tu licencia, en camino",
+      "onTheWay": "En camino",
+      "introPending": "El fichero de licencia prueba que el Cerebro Digital es de tu empresa, y el montaje te lo pide. Te llega por correo en cuanto lo firmemos y, desde entonces, también lo tienes aquí.",
+      "pendingRenewal": "Tu licencia nueva del mensual está en camino: te llega por correo en unas horas y aparecerá aquí. Mientras, la de abajo sigue valiendo.",
       "fields": {
         "id": "Número",
         "holder": "A nombre de",

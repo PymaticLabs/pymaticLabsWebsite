@@ -95,6 +95,12 @@ export interface Purchase {
   createdAt: string
 }
 
+/**
+ * Quien firmo la licencia: la web (clave propia, ids del 5001 al 9999) o Eric en su Mac, a mano
+ * (LICENSE_MODE=manual, ids de su numeracion, del 0001 al 5000).
+ */
+export type LicenseOrigin = 'web' | 'manual'
+
 export interface LicenseRecord {
   id: string
   companyId: string
@@ -109,8 +115,40 @@ export interface LicenseRecord {
   content: string
   keyId: string
   publicKey: string
+  origin: LicenseOrigin
   revokedAt: string | null
   revokedReason: string | null
+  createdAt: string
+}
+
+export type LicenseRequestStatus = 'pending' | 'issued' | 'cancelled'
+
+/**
+ * Una licencia pedida a Eric (LICENSE_MODE=manual): lo que tiene que llevar, sacado de la compra. El
+ * numero lo pone el, de su numeracion; la web no lo reparte. Al subirla firmada, issued.
+ */
+export interface LicenseRequest {
+  id: string
+  purchaseId: string
+  companyId: string
+  kind: PurchaseKind
+  paymentRef: string
+  cliente: string
+  nif: string
+  modalidad: LicenseModality
+  equipo: boolean
+  /** Personas en la zona: 1, o 10 con equipo (la licencia solo dice equipo true o false). */
+  seats: number
+  /** La fecha de la compra (o del cobro del mensual), en hora peninsular. */
+  emitida: string
+  soporteHasta: string
+  livemode: boolean
+  status: LicenseRequestStatus
+  licenseId: string | null
+  /** Por que no se firma ya: refund, dispute (o refund:<compra> si cayo con el pago unico de la empresa). */
+  cancelReason: string | null
+  issuedAt: string | null
+  cancelledAt: string | null
   createdAt: string
 }
 
@@ -275,7 +313,8 @@ export type PurchaseInput = Omit<
   'id' | 'createdAt' | 'amountRefunded' | 'reservedLicenseId' | 'welcomeSentAt' | 'status'
 > & { status?: PurchaseStatus }
 
-export type LicenseInput = Omit<LicenseRecord, 'createdAt' | 'revokedAt' | 'revokedReason'>
+export type LicenseInput = Omit<LicenseRecord, 'createdAt' | 'revokedAt' | 'revokedReason' | 'origin'> & { origin?: LicenseOrigin }
+export type LicenseRequestInput = Omit<LicenseRequest, 'id' | 'createdAt' | 'status' | 'licenseId' | 'cancelReason' | 'issuedAt' | 'cancelledAt'>
 export type InvoiceInput = Omit<InvoiceRecord, 'id' | 'createdAt' | 'approvedAt' | 'sentAt'>
 export type VersionFileInput = Omit<VersionFile, 'id' | 'createdAt'>
 
@@ -328,6 +367,21 @@ export interface Repository {
   listLicensesSince(sinceIso: string): Promise<LicenseRecord[]>
   listRevokedLicenses(): Promise<LicenseRecord[]>
   setLicenseRevoked(id: string, revoked: { at: string; reason: string } | null): Promise<void>
+
+  /** Apunta la licencia a pedir a Eric de una compra, una sola vez (si ya estaba, la devuelve con created false). */
+  createLicenseRequest(input: LicenseRequestInput): Promise<{ request: LicenseRequest; created: boolean }>
+  getLicenseRequestByPurchase(purchaseId: string): Promise<LicenseRequest | null>
+  /** Las pedidas, la mas antigua primero; por estado y por empresa si se dice. */
+  listLicenseRequests(filter: { status?: LicenseRequestStatus; companyId?: string; limit?: number }): Promise<LicenseRequest[]>
+  /**
+   * Cambia la pedida solo si sigue en el estado from (comparar y cambiar, de una vez): null si otro
+   * la cambio antes (una subida y una devolucion a la vez). Asi solo una de las dos gana.
+   */
+  updateLicenseRequest(
+    id: string,
+    from: LicenseRequestStatus,
+    patch: Partial<Pick<LicenseRequest, 'status' | 'licenseId' | 'cancelReason' | 'issuedAt' | 'cancelledAt'>>
+  ): Promise<LicenseRequest | null>
 
   /** Crea la factura por su ref, o devuelve la que ya hay con esa ref. */
   saveInvoice(input: InvoiceInput): Promise<InvoiceRecord>

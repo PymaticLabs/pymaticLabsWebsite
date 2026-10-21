@@ -1,15 +1,16 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Download, KeyRound } from 'lucide-react'
+import { Clock, Download, KeyRound } from 'lucide-react'
 import ZoneFrame from '@/components/zone/zone-frame'
-import { ButtonLink, Card, Facts, Notice, PageTitle } from '@/components/zone/zone-ui'
+import { ButtonLink, Card, Facts, Notice, PageTitle, StatusPill } from '@/components/zone/zone-ui'
 import { formatDate } from '@/lib/delivery/emails'
 import { generatePageMetadata } from '@/lib/metadata'
 import { loadZone } from '@/lib/zone-page'
-import { currentLicense, otherLicenses } from '@/lib/zone-view'
+import { currentLicense, otherLicenses, pendingLicense } from '@/lib/zone-view'
 
 // La licencia: el fichero firmado que pide el montaje, para volver a bajarlo cuando haga falta. La
-// vigente arriba; debajo, las anteriores (cada cobro del mensual da una nueva) y las anuladas.
+// vigente arriba; debajo, las anteriores (cada cobro del mensual da una nueva) y las anuladas. Con
+// las licencias a mano, la que Eric aun no ha firmado sale como en camino.
 
 export const dynamic = 'force-dynamic'
 
@@ -34,14 +35,17 @@ export default async function LicenciaPage({ params, searchParams }: { params: P
   const { data } = state
   const current = currentLicense(data.licenses)
   const others = otherLicenses(data.licenses, current)
+  const pending = current ? null : pendingLicense(data)
   const kind = (l: { modalidad: string; equipo: boolean }) => tOffer(`modalities.${l.modalidad}${l.equipo ? '-equipo' : ''}.name`)
   const href = (id: string) => `/api/zone/licenses/${encodeURIComponent(id)}`
 
   return (
     <ZoneFrame locale={locale} state={state} section="licencia">
-      <PageTitle title={t('license.title')} intro={t('license.intro')} />
+      {/* Sin ninguna aun (a mano, sin firmar), no se dice que se baja aqui otra vez. */}
+      <PageTitle title={t('license.title')} intro={pending ? t('license.introPending') : t('license.intro')} />
 
       <div className="mt-8 max-w-3xl space-y-6">
+        {current && data.pendingLicenses.length > 0 && <Notice role="status">{t('license.pendingRenewal')}</Notice>}
         {current ? (
           <Card icon={KeyRound} title={t('license.current')}>
             <Facts
@@ -64,6 +68,28 @@ export default async function LicenciaPage({ params, searchParams }: { params: P
               </ButtonLink>
               <span className="text-sm text-muted break-all">{current.fileName}</span>
             </div>
+          </Card>
+        ) : pending ? (
+          // A mano: lo que llevara la que Eric aun no ha firmado; en cuanto la sube, sale arriba para bajarla.
+          <Card icon={KeyRound} title={t('license.pendingTitle')}>
+            <div role="status" className="flex flex-wrap items-center gap-3">
+              <StatusPill>
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                {t('license.onTheWay')}
+              </StatusPill>
+              <span>{t('license.pending')}</span>
+            </div>
+            <Facts
+              items={[
+                { label: t('license.fields.holder'), value: `${data.company.name} · ${data.company.taxId}` },
+                { label: t('license.fields.kind'), value: kind(pending) },
+                { label: t('license.fields.people'), value: pending.equipo ? t('license.team', { seats: data.company.seats }) : t('license.solo') },
+                {
+                  label: t('license.fields.support'),
+                  value: pending.soporteHasta > pending.emitida ? formatDate(pending.soporteHasta, loc) : t('license.noSupportShort'),
+                },
+              ]}
+            />
           </Card>
         ) : (
           <Notice role="status">{t('license.preparing')}</Notice>
@@ -93,7 +119,7 @@ export default async function LicenciaPage({ params, searchParams }: { params: P
                     </p>
                   </div>
                   {l.revoked ? (
-                    <span className="rounded-full border border-danger/40 px-3 py-1 text-sm font-medium text-danger">{t('license.revoked')}</span>
+                    <StatusPill tone="danger">{t('license.revoked')}</StatusPill>
                   ) : (
                     <ButtonLink href={href(l.id)} variant="outline" download>
                       {t('license.downloadShort')}

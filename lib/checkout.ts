@@ -234,7 +234,7 @@ export async function createCheckout(d: Delivery, req: CheckoutRequest): Promise
 
   if (isPlanProduct(req.product)) {
     const company = req.company
-    if (!company?.stripeCustomerId) throw new CheckoutError('company_required', 'el mensual se contrata desde la zona de clientes')
+    if (!company?.stripeCustomerId) throw new CheckoutError('company_required', 'el mensual se contrata desde la zona de socio')
     // incomplete tambien: otro pago crearia una segunda suscripcion.
     if (company.subscriptionStatus && ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'].includes(company.subscriptionStatus)) {
       throw new CheckoutError('already_subscribed', 'ya tiene el mensual: se cambia desde el portal de Stripe')

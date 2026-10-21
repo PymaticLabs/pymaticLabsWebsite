@@ -84,6 +84,23 @@ export function launchCouponId(product: OneTimeProductId): string {
   return `cerebro-lanzamiento-${product}`
 }
 
+/** Los avisos de Stripe que usa la entrega: los da de alta scripts/stripe-setup.mts y los mira la comprobacion de produccion. */
+export const WEBHOOK_EVENTS = [
+  'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.async_payment_failed',
+  'checkout.session.expired',
+  'invoice.paid',
+  'charge.refunded',
+  'charge.dispute.created',
+  'charge.dispute.updated',
+  'charge.dispute.funds_withdrawn',
+  'charge.dispute.closed',
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+] as const
+
 /** Personas en la zona: hasta 10 con equipo, una sin equipo. */
 export function seatsFor(product: OneTimeProductId): number {
   return modality(product).team ? TEAM_MAX_PEOPLE : 1

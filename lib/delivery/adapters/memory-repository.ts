@@ -17,6 +17,9 @@ import type {
   Job,
   LicenseInput,
   LicenseRecord,
+  LicenseRequest,
+  LicenseRequestInput,
+  LicenseRequestStatus,
   Member,
   NewJob,
   Purchase,
@@ -33,6 +36,7 @@ export interface MemoryState {
   companies: Record<string, Company>
   purchases: Record<string, Purchase>
   licenses: Record<string, LicenseRecord>
+  licenseRequests: Record<string, LicenseRequest>
   invoices: Record<string, InvoiceRecord>
   members: Record<string, Member>
   bookings: Record<string, Booking>
@@ -51,6 +55,7 @@ export function emptyMemoryState(): MemoryState {
     companies: {},
     purchases: {},
     licenses: {},
+    licenseRequests: {},
     invoices: {},
     members: {},
     bookings: {},
@@ -232,7 +237,7 @@ export class MemoryRepository implements Repository {
     if (Object.values(this.state.licenses).some((l) => l.purchaseId === input.purchaseId)) {
       throw new Error(`la compra ${input.purchaseId} ya tiene licencia`)
     }
-    const license: LicenseRecord = { ...input, revokedAt: null, revokedReason: null, createdAt: this.now() }
+    const license: LicenseRecord = { ...input, origin: input.origin ?? 'web', revokedAt: null, revokedReason: null, createdAt: this.now() }
     this.state.licenses[license.id] = license
     return copy(license)
   }
@@ -264,6 +269,36 @@ export class MemoryRepository implements Repository {
     if (!license) throw new Error(`no existe la licencia ${id}`)
     license.revokedAt = revoked?.at ?? null
     license.revokedReason = revoked?.reason ?? null
+  }
+
+  async createLicenseRequest(input: LicenseRequestInput) {
+    const existing = Object.values(this.state.licenseRequests).find((r) => r.purchaseId === input.purchaseId)
+    if (existing) return { request: copy(existing), created: false }
+    const request: LicenseRequest = { ...input, id: newId(), status: 'pending', licenseId: null, cancelReason: null, issuedAt: null, cancelledAt: null, createdAt: this.now() }
+    this.state.licenseRequests[request.id] = request
+    return { request: copy(request), created: true }
+  }
+
+  async getLicenseRequestByPurchase(purchaseId: string) {
+    const request = Object.values(this.state.licenseRequests).find((r) => r.purchaseId === purchaseId)
+    return request ? copy(request) : null
+  }
+
+  async listLicenseRequests(filter: { status?: LicenseRequestStatus; companyId?: string; limit?: number }) {
+    return copy(
+      Object.values(this.state.licenseRequests)
+        .filter((r) => (!filter.status || r.status === filter.status) && (!filter.companyId || r.companyId === filter.companyId))
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .slice(0, filter.limit ?? 500)
+    )
+  }
+
+  async updateLicenseRequest(id: string, from: LicenseRequestStatus, patch: Partial<Pick<LicenseRequest, 'status' | 'licenseId' | 'cancelReason' | 'issuedAt' | 'cancelledAt'>>) {
+    const request = this.state.licenseRequests[id]
+    if (!request) throw new Error(`no existe la licencia pedida ${id}`)
+    if (request.status !== from) return null
+    Object.assign(request, patch)
+    return copy(request)
   }
 
   async saveInvoice(input: InvoiceInput) {

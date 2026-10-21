@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Una compra a revisar ya completada a mano (empresa puesta y status paid): se entrega.
     const purchase = await delivery.repo.getPurchase(String(body.purchaseId))
     if (!purchase?.companyId || purchase.status !== 'paid') return NextResponse.json({ error: 'la compra no existe, no tiene empresa o no esta pagada' }, { status: 409 })
-    await delivery.repo.enqueueJobs(purchase.kind === 'one_time' ? oneTimeJobs(purchase) : renewalJobs(purchase), delivery.clock())
+    await delivery.repo.enqueueJobs(purchase.kind === 'one_time' ? oneTimeJobs(purchase) : renewalJobs(purchase, delivery.config.licenseMode === 'manual'), delivery.clock())
     return NextResponse.json({ queued: true, run: await runJobs(delivery, { budgetMs: 40_000 }) })
   }
   return NextResponse.json({ error: 'action: retry, run o deliver' }, { status: 400 })

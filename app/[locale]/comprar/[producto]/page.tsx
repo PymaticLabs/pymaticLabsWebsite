@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
 import { firstSessionSlots, isCheckoutOpen } from '@/lib/checkout'
+import { licenseModeOf } from '@/lib/delivery/config'
 import { getDelivery } from '@/lib/delivery/container'
 import { hostName, isGuided, isOneTimeProduct, modality } from '@/lib/delivery/products'
 import { formatPrice } from '@/lib/offer'
@@ -14,6 +15,7 @@ import type { Slot } from '@/lib/delivery/types'
 // La pagina de compra de una modalidad: el resumen y el boton al pago de Stripe. En el Acompanado,
 // antes se elige la primera sesion y con quien, entre los huecos libres de Cal.com (si las dos
 // semanas siguientes estan llenas, salen los de la tercera). Los errores del pago vuelven aqui.
+// Con las licencias a mano, dice que la licencia llega en unas horas (como la bienvenida y la zona).
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +24,8 @@ type Params = Promise<{ locale: string; producto: string }>
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale, producto } = await params
   const t = await getTranslations({ locale, namespace: 'purchase' })
-  return generatePageMetadata({ title: t('metaTitle'), description: t('metaDescription'), path: `/comprar/${producto}`, locale, noindex: true })
+  const description = t(licenseModeOf() === 'manual' ? 'metaDescriptionManual' : 'metaDescription')
+  return generatePageMetadata({ title: t('metaTitle'), description, path: `/comprar/${producto}`, locale, noindex: true })
 }
 
 const ERRORS = ['closed', 'slot_taken', 'session_required', 'unavailable', 'product', 'company_required', 'already_subscribed', 'rate_limited', 'busy'] as const
@@ -65,7 +68,7 @@ export default async function ComprarPage({ params, searchParams }: { params: Pa
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
           {t('title', { product: tOffer(`modalities.${producto}.name`) })}
         </h1>
-        <p className="mt-4 text-lg text-body">{t('subtitle')}</p>
+        <p className="mt-4 text-lg text-body">{t(licenseModeOf() === 'manual' ? 'subtitleManual' : 'subtitle')}</p>
         <p className="mt-3 text-sm text-muted">
           {t('price', { list: formatPrice(offer.listPrice, locale), launch: formatPrice(offer.launchPrice, locale) })}
         </p>

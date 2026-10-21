@@ -1,6 +1,6 @@
 # Entrega automática tras el pago: guía de puesta en marcha
 
-Lo que diseñó Eric el 21-10-2026 (PML-KB-0261, *Entrega automática tras el pago del Cerebro Digital*), construido en la web. El pago en Stripe lanza solo, a cualquier hora, la factura, la licencia, la cuenta en la zona de clientes y los correos, sin que nadie de PymaticLabs intervenga, y aguanta 100 ventas seguidas.
+Lo que diseñó Eric el 21-10-2026 (PML-KB-0261, *Entrega automática tras el pago del Cerebro Digital*), construido en la web. El pago en Stripe lanza solo, a cualquier hora, la factura, la licencia, la cuenta en la zona de socio y los correos, sin que nadie de PymaticLabs intervenga, y aguanta 100 ventas seguidas. Hasta que el producto acepte la clave de la web, la licencia es lo único que no va solo: se le pide a Eric, que la firma y la sube (sección 0).
 
 Esta guía dice **qué hay que crear y configurar en cada servicio**, en qué orden, todas las variables y cómo probarlo: primero sin ninguna cuenta (modo falso) y después con las cuentas en modo de prueba. Nada de esto cobra de verdad mientras `CHECKOUT_OPEN` no sea `true` y las claves sean de prueba.
 
@@ -8,7 +8,95 @@ Reglas que valen para todo:
 
 - **Todo primero en pruebas:** claves `sk_test_` de Stripe, un proyecto de Supabase solo para pruebas, una cuenta de Holded de pruebas. Lo de producción se monta igual, al final, con otras claves.
 - **Ningún secreto en el repo.** Van en `.env.local` (en tu ordenador, ya ignorado por git) y en Vercel. `.env.example` solo tiene los nombres.
-- **`CHECKOUT_OPEN=false`** hasta que el abogado revise las condiciones y Eric publique la versión del esqueleto que acepta la clave de la web (sección 9).
+- **`CHECKOUT_OPEN=false`** hasta acabar la sección 0. Con las licencias a mano no hay que esperar a la versión del esqueleto que acepta la clave de la web (sección 9).
+
+## 0. Abrir la venta hoy
+
+Con las licencias **a mano** (`LICENSE_MODE=manual`). Hasta que Eric publique la versión del esqueleto que acepta la clave de la web, la web no firma licencias: cada venta se la pide a Eric por correo, él la firma en su Mac con la clave que el producto ya conoce y la sube. Todo lo demás va solo: pago, factura, cuenta en la zona, bienvenida, sesiones, mensual, devoluciones y conciliación. Para abrir no hace falta Google Cloud KMS.
+
+**Lo legal, primero.** Las condiciones de uso y venta y las políticas son **borradores pendientes del abogado**. Abrir la venta con ellas es una decisión de los fundadores, no de la web. La web guarda la versión y la huella de las condiciones que acepta cada cliente, y le manda la copia, así que una versión revisada después no cambia las compras ya hechas.
+
+El camino mínimo, en orden. Los tiempos cuentan con las cuentas ya creadas. Dar de alta la empresa en Stripe en vivo puede tardar días, y el DNS de Brevo, de minutos a unas horas.
+
+| # | Qué | Tiempo | Dónde |
+|---|---|---|---|
+| 1 | **Supabase de producción**: proyecto en Frankfurt (plan Pro), las cuatro migraciones, los dos secretos de Vault y el acceso con código | 45 min | 3.1 |
+| 2 | **Brevo**: dominio autenticado, remitente verificado, la clave de la API y la SMTP (va en Supabase) | 30 min + DNS | 3.2 |
+| 3 | **Stripe en vivo**: Stripe Tax con el registro de España, los datos públicos y `stripe-setup.mts --live --webhook https://pymaticlabs.com/api/stripe/webhook` | 45 min | 3.4 |
+| 4 | **Holded**: la clave de la API y los ids de los impuestos, con `HOLDED_INVOICE_MODE=draft` | 20 min | 3.5 |
+| 5 | **Cal.com**: el equipo, los dos eventos con su horario y la clave | 30 min | 3.6 |
+| 6 | **Vercel**: las variables de Production (abajo), la región fra1 y volver a desplegar | 20 min | 3.7 |
+| 7 | **La comprobación**, hasta que no diga FALTA | 10 min | abajo |
+| 8 | **Una compra de prueba** de punta a punta, en Preview | 45 min | abajo |
+| 9 | **Abrir**: `CHECKOUT_OPEN=true` en Production y volver a desplegar | 5 min | — |
+
+En total, unas cuatro horas y media de trabajo, más lo que tarden el DNS y, si hace falta, la verificación de Stripe.
+
+### Las variables de Production
+
+`DELIVERY_MODE=live` (o sin poner), **`LICENSE_MODE=manual`**, escrita, y `LICENSE_REQUEST_EMAIL` con el correo de Eric. Sin KMS, `manual` es lo que sale por defecto; pero si `GCP_KMS_KEY_VERSION` y `GOOGLE_SERVICE_ACCOUNT_JSON` siguen en Production de antes (esta guía pedía montarlas), sin `LICENSE_MODE` firmaría la web, con una clave que el producto de hoy no acepta, y cada cliente recibiría una licencia que no vale. La comprobación lo da como FALTA. Después, `NEXT_PUBLIC_SITE_URL`, `DELIVERY_IP_SALT`, `JOBS_SECRET`, `ADMIN_SECRET`, `STRIPE_SECRET_KEY` (la `sk_live_`), `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `BREVO_API_KEY`, `DELIVERY_FROM_EMAIL`, `DELIVERY_INTERNAL_EMAIL`, `DELIVERY_ALERT_EMAIL`, `HOLDED_API_KEY`, `HOLDED_INVOICE_MODE=draft`, los `HOLDED_TAX_*`, `CALCOM_API_KEY`, `CALCOM_EVENT_TYPES` y `CHECKOUT_OPEN=false` hasta el paso 9.
+
+**No** van en Production: `GCP_KMS_KEY_VERSION`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `LICENSE_MANUAL_PUBLIC_KEY` (sin ella vale la clave del Mac de Eric, que es la que tiene que ser) ni ninguna `DELIVERY_*` de piezas falsas. Todo lo de la sección 4 que no se dice aquí tiene un valor por defecto que vale.
+
+**Las páginas se hacen al desplegar.** El botón **Entrar** solo sale si Supabase y `DELIVERY_IP_SALT` ya estaban puestos al desplegar. Los botones de compra solo salen si `CHECKOUT_OPEN=true` ya estaba puesto, y `/gracias` dice cuándo llega la licencia según el `LICENSE_MODE` de ese despliegue (a mano, «en unas horas»). Tras cambiar cualquiera de esas variables, hay que volver a desplegar (*Redeploy*).
+
+**Las migraciones, antes que el código.** Esta versión de la web lee la tabla `license_requests` (de `20261021130000_licencias_a_mano.sql`). Hay que aplicar `npx supabase db push` en cada proyecto de Supabase que use (también el de Preview) **antes** de desplegarla. Sin la tabla, la zona y las devoluciones siguen funcionando, pero con `LICENSE_MODE=manual` ninguna venta podría pedir su licencia. La comprobación da FALTA si no está.
+
+### La comprobación
+
+```bash
+node --env-file=.env.local scripts/comprobar-produccion.mts --web https://pymaticlabs.com
+```
+
+En `.env.local` va el `ADMIN_SECRET` de producción. El script pregunta a la web desplegada (`GET /api/admin/health`), que tiene sus variables, también las marcadas *Sensitive*. Con el entorno en un fichero, sin `--web`: `node --env-file=<fichero> scripts/comprobar-produccion.mts` (si `vercel env pull` deja vacías las *Sensitive*, usar `--web`).
+
+Mira que estén todas las variables de los modos elegidos. Después pregunta a cada servicio, solo leyendo:
+
+- **Supabase**: que contesta, las migraciones aplicadas, las tareas de pg_cron, los dos secretos de Vault (sin leerlos), los buckets privados, el acceso con correo y las altas libres apagadas.
+- **Stripe**: la clave en vivo, el webhook con sus 13 avisos, Tax activo con el registro de España, los precios, los cupones y el portal.
+- **Brevo**: el remitente verificado y el dominio autenticado.
+- **Holded**: la clave, los permisos y los impuestos.
+- **Cal.com**: los huecos de Eric y de Sergio.
+- **KMS**: solo si firma la web.
+- **La web publicada**: la zona, el botón Entrar y los botones de compra según `CHECKOUT_OPEN`.
+
+Nunca enseña el valor de un secreto. Cada FALTA dice cómo arreglarlo, y el script sale con error mientras falte algo. Lo que no se ve desde fuera (el SMTP de Supabase, la plantilla del código, Verifactu...) sale al final como «a mano», para repasarlo en su panel.
+
+### La compra de prueba (en Preview)
+
+Preview lleva Stripe de prueba, su Supabase de pruebas, `LICENSE_MODE=manual`, `CHECKOUT_OPEN=true` y una **clave de pruebas** para las licencias. Con la clave del Mac, la web no acepta licencias de pagos de prueba: así nadie tiene una licencia de verdad pagando con la tarjeta `4242…`.
+
+1. `node scripts/subir-licencia.mts --crear-clave-prueba`. `LICENSE_TEST_SEED` va a tu `.env.local`, junto con el `ADMIN_SECRET` de Preview. `LICENSE_MANUAL_PUBLIC_KEY` va a Preview, nunca a Production. Después, volver a desplegar Preview.
+2. `node --env-file=.env.local scripts/comprobar-produccion.mts --web <la web de pruebas> --pruebas`.
+3. Comprar un Hazlo tú con equipo con la tarjeta `4242 4242 4242 4242` (sección 5, paso 1). Tienen que llegar:
+   - la bienvenida, sin licencia («te llega en unas horas»);
+   - «PRUEBA · Licencia a firmar» en `LICENSE_REQUEST_EMAIL`;
+   - el aviso «Venta: licencia a mano» y la factura en borrador en Holded.
+
+   En la zona, la licencia sale «en camino».
+4. `node --env-file=.env.local scripts/subir-licencia.mts --web <la web de pruebas> --compra <la compra del correo> --firmar-prueba`. Llega «Tu licencia del Cerebro Digital» con el `.zip`, y la zona la ofrece para bajarla.
+5. Devolver el pago en Stripe. La licencia queda anulada, la zona se cierra y el cliente recibe el correo.
+
+Abierta la venta, cada compra se sigue con `scripts/comprobar-compra.mts <correo>`.
+
+### Cuando llega una licencia a firmar (Eric)
+
+1. El correo «Licencia a firmar: <empresa> (<modalidad>)» lleva la compra, los campos tal cual y cómo subirla. Los campos son `cliente`, `nif`, `modalidad`, `equipo`, `emitida` y `soporte_hasta`, también en JSON. El cliente ya tiene la bienvenida y la zona, y espera la licencia en unas horas.
+2. Firmarla en el Mac con `firmar_licencia.py`, con esos campos y el número siguiente de **su** numeración: `PML-LIC-<año>-NNNN`, del 0001 al 5000. La web no reparte ninguno y rechaza los del 5001 en adelante. `emitida` es la fecha del pago: en un Hazlo tú, `soporte_hasta` es ese mismo día, y una `emitida` posterior no vale.
+3. Subirla, con el `ADMIN_SECRET` de producción en `.env.local`:
+   ```bash
+   node --env-file=.env.local scripts/subir-licencia.mts --web https://pymaticlabs.com --compra <compra> --fichero licencia-<cliente>.cerebro-licencia
+   ```
+   Sin el repo, vale lo mismo con curl:
+   ```bash
+   curl -X POST -H "Authorization: Bearer <ADMIN_SECRET>" --data-binary @licencia-<cliente>.cerebro-licencia "https://pymaticlabs.com/api/admin/licenses?compra=<compra>"
+   ```
+   La web la comprueba con la publica del Mac (`licencias.pub`) y con la compra: NIF, modalidad, equipo y plazas, `emitida`, `soporte_hasta` y el pago, si lo lleva. Si algo no cuadra, dice qué y no la guarda: hay que firmarla otra vez. «No verifica con la clave del Mac» es que la firma no es de esa clave (u otro fichero); «la firma es buena, pero los campos no valen» es que la firma vale y un campo no (lo más común, `emitida` con la fecha de hoy en vez de la del pago). Si la acepta, se la manda al cliente en un `.zip` y la deja en su zona. Subirla dos veces no duplica nada. Con curl vale también `-H "Content-Type: application/json"`: el fichero ya es JSON.
+4. Las que faltan: `scripts/subir-licencia.mts --pendientes`. A las 12 horas sin firmar (`LICENSE_PENDING_ALERT_HOURS`) llega un aviso a Eric y a las alertas, y la conciliación lo repite cada día.
+5. «No firmar: <empresa>»: el pago se devolvió, o hay un contracargo, antes de firmarla. La web ya no la acepta. Si el contracargo se gana, llega «Otra vez: Licencia a firmar». Si la devolución llega justo mientras se sube, gana la devolución: la web la guarda anulada, contesta 409 y no se la manda al cliente. Si era un contracargo y se gana, se la manda entonces, sin pedirla otra vez.
+6. El mensual: cada cobro pide su licencia nueva igual, con el `soporte_hasta` del periodo pagado. Al subirla, sale el correo del mensual.
+
+Cuando Eric publique la versión que acepta la clave de la web (sección 9), toca montar KMS (3.3), poner `LICENSE_MODE=kms` (escrita: la comprobación no da por buena la que sale sola) y volver a desplegar. Las licencias que sigan pedidas se suben a mano igual.
 
 ## 1. Qué pasa cuando un cliente paga
 
@@ -18,20 +106,20 @@ Reglas que valen para todo:
 4. **Lo que no se entrega solo**, sino que va a revisar a mano con un aviso a PymaticLabs (sección 7): una compra sin razón social, NIF o correo; **una compra con el NIF de una empresa que ya es cliente desde un correo que no es de sus titulares** (Stripe solo mira el formato del NIF: si se fusionara, cualquiera vería las facturas, las licencias y el portal de esa empresa; sus titulares reciben un aviso); un cobro del mensual de una empresa sin pago único vigente o con otro NIF; un pago de un producto que la web no conoce (un enlace de pago antiguo).
 5. **Cola** (tabla `jobs`), cada paso idempotente:
    - `invoice`: el IVA lo dice Stripe Tax (el motivo de cada impuesto y la verificación del NIF-IVA en VIES), no se adivina. Contacto por NIF en Holded, factura y, con `HOLDED_INVOICE_MODE=emit`, emitirla (Verifactu), que Holded la mande y guardar su PDF para la zona. Por defecto (`draft`) queda en borrador y el aviso interno dice que hay que emitirla a mano. **Nunca se emite sola** (queda en borrador con su motivo y un aviso) si el NIF-IVA de una inversión del sujeto pasivo no está verificado en VIES (Stripe la aplica con un NIF bien escrito aunque VIES no lo confirme), si está en dólares (falta el cambio a euros) o si el total y el IVA que da Holded no son los que cobró Stripe. **Ni se crea** (aviso «Facturar a mano») si es una venta en España sin IVA o a la UE sin IVA ni inversión.
-   - `license`: firma con la clave de la web en Google Cloud KMS, con la modalidad, el equipo y el `soporte_hasta` del producto. Id `PML-LIC-<año>-NNNN` de una secuencia atómica, **del 5001 al 9999** (del 0001 al 5000 son del Mac de Eric). Un pago de prueba nunca se firma con la clave de producción, ni al revés (`LICENSE_KEY_ENV`).
+   - `license`: con `LICENSE_MODE=manual` (lo de hoy, sección 0), no firma. Apunta la licencia pedida (tabla `license_requests`, con la modalidad, el equipo y el `soporte_hasta` del producto), se la pide a Eric por correo y, si a las 12 horas sigue sin firmar, avisa. Al subirla firmada, llega al cliente (`license_email`) y a la zona. Con `LICENSE_MODE=kms`, firma con la clave de la web en Google Cloud KMS, con id `PML-LIC-<año>-NNNN` de una secuencia atómica **del 5001 al 9999** (del 0001 al 5000 son del Mac de Eric). Un pago de prueba nunca se firma con la clave de producción, ni al revés (`LICENSE_KEY_ENV`); a mano, lo mismo con la clave del Mac y una de pruebas.
    - `account`: la cuenta en la zona (Supabase Auth) con el correo de la compra, como titular por esa compra.
    - `booking` (Acompañado): reserva en Cal.com el hueco elegido. Si se ocupó durante el pago, el cliente elige otro en la zona. Si Cal.com no responde, a los 3 intentos se da por fallida: la bienvenida sale igual («te la confirmamos») y el aviso de la venta dice que hay que reservarla a mano.
-   - `welcome`: el correo con el enlace a la zona, la licencia (en un `.zip`: Brevo no admite `.cerebro-licencia`), la copia de las condiciones aceptadas y, en el Acompañado, la cita.
+   - `welcome`: el correo con el enlace a la zona, la licencia (en un `.zip`: Brevo no admite `.cerebro-licencia`), la copia de las condiciones aceptadas y, en el Acompañado, la cita. A mano, sale sin la licencia y dice que llega en unas horas.
    - `notice`: un correo a PymaticLabs por venta.
 6. **Reintentos.** Un fallo temporal se reintenta con espera (30 s, 1 min, 2 min… hasta 1 h, o lo que diga `Retry-After`). Al tercer fallo seguido llega un aviso a PymaticLabs; al décimo, o con un error permanente (una clave mal puesta, un IVA sin configurar), el paso se para y llega un aviso urgente. pg_cron llama al trabajador cada minuto mientras quede algo pendiente.
 
-**Mensual.** Se contrata desde la zona (página *Mensual*). Si aún quedan meses incluidos (o pagados), con ese plan o uno menor el primer cobro llega al día siguiente de su `soporte_hasta`; con uno mayor, se cobra desde que se contrata. Cada cobro (`invoice.paid`) da factura y licencia nueva con el `soporte_hasta` del periodo pagado, con el plan del precio cobrado (si se cambia de plan en el portal, el cobro siguiente ya es del nuevo). Solo con un pago único vigente: si no, a revisar y sin licencia.
+**Mensual.** Se contrata desde la zona (página *Mensual*). Si aún quedan meses incluidos (o pagados), con ese plan o uno menor el primer cobro llega al día siguiente de su `soporte_hasta`; con uno mayor, se cobra desde que se contrata. Cada cobro (`invoice.paid`) da factura y licencia nueva (a mano, pedida a Eric como la del pago único) con el `soporte_hasta` del periodo pagado, con el plan del precio cobrado (si se cambia de plan en el portal, el cobro siguiente ya es del nuevo). Solo con un pago único vigente: si no, a revisar y sin licencia.
 
-**Devolución o contracargo** (cláusula 5). Licencia anulada, zona cerrada, una factura rectificativa por cada devolución de Stripe (o aviso para hacerla a mano si la factura seguía en borrador) y correo al cliente. Sin otro pago único vigente, también se anulan las licencias del mensual y, si es definitivo (devolución o contracargo perdido), se cancela la suscripción en Stripe. Si la empresa sigue por otra compra, quien entró como titular por la devuelta pierde ese acceso. Una **petición de información** del banco (`warning_*`) solo avisa; un **contracargo** anula mientras dura, y si se gana (o la petición se cierra sin contracargo) vuelven la licencia, las del mensual y la zona. La rectificativa queda en borrador con un aviso (`HOLDED_CREDIT_NOTE_MODE=draft`): la API v2 de Holded no la enlaza con su factura y Verifactu lo pide.
+**Devolución o contracargo** (cláusula 5). Licencia anulada (o, si aún estaba pedida a Eric sin firmar, cancelada, con un «No firmar» para él), zona cerrada, una factura rectificativa por cada devolución de Stripe (o aviso para hacerla a mano si la factura seguía en borrador) y correo al cliente. Sin otro pago único vigente, también se anulan las licencias del mensual y, si es definitivo (devolución o contracargo perdido), se cancela la suscripción en Stripe. Si la empresa sigue por otra compra, quien entró como titular por la devuelta pierde ese acceso. Una **petición de información** del banco (`warning_*`) solo avisa; un **contracargo** anula mientras dura, y si se gana (o la petición se cierra sin contracargo) vuelven la licencia, las del mensual y la zona. La rectificativa queda en borrador con un aviso (`HOLDED_CREDIT_NOTE_MODE=draft`): la API v2 de Holded no la enlaza con su factura y Verifactu lo pide.
 
 **Versión nueva.** `scripts/publicar-version.mts` sube los ficheros al almacén privado y la publica; cada persona de cada cliente recibe un correo.
 
-**Conciliación diaria** (05:15 UTC). Toda licencia de la web tiene que tener su pago cobrado en Stripe: una sin pago es un aviso urgente (sale en cuanto se ve, de pocos en pocos a la vez y con tiempo tasado; si no da tiempo a todas, el aviso lo dice). Un pago cobrado que la web no conoce (un aviso perdido) se entrega en ese momento, salvo que ya se haya devuelto o tenga contracargo.
+**Conciliación diaria** (05:15 UTC). Toda licencia de la web (también las firmadas a mano) tiene que tener su pago cobrado en Stripe: una sin pago es un aviso urgente (sale en cuanto se ve, de pocos en pocos a la vez y con tiempo tasado; si no da tiempo a todas, el aviso lo dice). Un pago cobrado que la web no conoce (un aviso perdido) se entrega en ese momento, salvo que ya se haya devuelto o tenga contracargo. Una licencia pedida a Eric que lleva más de `LICENSE_PENDING_ALERT_HOURS` sin firmar da un aviso cada día.
 
 ## 2. Probar sin ninguna cuenta (modo falso)
 
@@ -43,13 +131,13 @@ Los comandos van con `node` y `npx`: no hace falta pnpm (para instalar dependenc
    ```bash
    node --test lib/*.test.mts
    ```
-   Pago, reintentos, devoluciones, mensual, 100 ventas seguidas, la zona (lo que ve cada persona, la seguridad por filas, los códigos que frenan) y los adaptadores de verdad contra un `fetch` de mentira (KMS, Holded, Brevo, Cal.com, Supabase Storage y Supabase Auth). `lib/delivery-review.test.mts` prueba lo de la revisión: compras con el NIF de otro cliente, devoluciones a la vez, peticiones de información y contracargos con el mensual, el IVA de Stripe Tax, límites de la zona y del pago, etc.
+   Pago, reintentos, devoluciones, mensual, 100 ventas seguidas, la zona (lo que ve cada persona, la seguridad por filas, los códigos que frenan) y los adaptadores de verdad contra un `fetch` de mentira (KMS, Holded, Brevo, Cal.com, Supabase Storage y Supabase Auth). `lib/delivery-review.test.mts` prueba lo de la revisión: compras con el NIF de otro cliente, devoluciones a la vez, peticiones de información y contracargos con el mensual, el IVA de Stripe Tax, límites de la zona y del pago, etc. `lib/manual-license.test.mts`, las licencias a mano: la pedida y su correo, la bienvenida sin licencia, lo que se comprueba al subirla, el aviso si tarda, la devolución y el contracargo antes de firmarla y el mensual. `lib/production-check.test.mts`, la comprobación de producción contra servicios de mentira (y que no enseña secretos).
 2. **Punta a punta contra la web de verdad** (`next start` en modo falso, con avisos de Stripe firmados con un secreto de prueba):
    ```bash
    npx next build
    node scripts/e2e-entrega.mts --start
    ```
-   Recorre: aviso firmado y repetido, Acompañado comprado desde `/comprar`, compra con equipo, entrar en la zona con el código del buzón, bajar la licencia, dar de alta a alguien del equipo, publicar una versión y bajarla con enlace firmado, las páginas de la zona con y sin sesión, un cobro del mensual, una compra con el NIF de otro cliente (a revisar, sin acceso), una devolución, la conciliación y la zona de muestra. Tiene que acabar en `OK`.
+   Recorre: aviso firmado y repetido, Acompañado comprado desde `/comprar`, compra con equipo, entrar en la zona con el código del buzón, bajar la licencia, dar de alta a alguien del equipo, publicar una versión y bajarla con enlace firmado, las páginas de la zona con y sin sesión, un cobro del mensual, una compra con el NIF de otro cliente (a revisar, sin acceso), una devolución, la conciliación y la zona de muestra. Después levanta otra web con `LICENSE_MODE=manual` (en el puerto siguiente) y recorre las licencias a mano: la compra, el correo a Eric con los campos, `scripts/subir-licencia.mts` contra esa web (una que no cuadra y la buena), el correo al cliente con la licencia, bajarla de la zona, un cobro del mensual firmado con `--firmar-prueba` y `/api/admin/health`. Tiene que acabar en `OK`.
 3. **La zona de muestra**, para verla o sacar capturas sin Supabase:
    ```bash
    DELIVERY_MODE=fake DELIVERY_SITE_URL=http://127.0.0.1:3005 CHECKOUT_OPEN=true STRIPE_WEBHOOK_SECRET=whsec_local npx next start -p 3005
@@ -66,19 +154,19 @@ En este orden: Supabase y Brevo primero (Supabase manda los códigos por el SMTP
 
 1. **Proyecto.** En [supabase.com](https://supabase.com), *New project*, región **Central EU (Frankfurt)**. Uno para pruebas y, más adelante, otro para producción. Para producción, el plan **Pro**: el gratuito pausa el proyecto tras una semana sin uso (se pararían la cola y la zona) y no tiene copias de seguridad diarias.
 2. **Claves.** *Project Settings > API Keys*: la URL del proyecto (`SUPABASE_URL`), la clave publicable `sb_publishable_...` (`SUPABASE_ANON_KEY`) y una clave secreta `sb_secret_...` (`SUPABASE_SERVICE_ROLE_KEY`). Valen también las antiguas `anon` y `service_role`, pero con la secreta nueva los límites de los códigos cuentan por la IP de cada persona (paso 7). La secreta, solo en el servidor: nunca en una variable `NEXT_PUBLIC_`.
-3. **Las tablas.** Aplicar las tres migraciones de `supabase/migrations/`, en orden. Con la CLI:
+3. **Las tablas.** Aplicar las cuatro migraciones de `supabase/migrations/`, en orden. Con la CLI:
    ```bash
    npx supabase login
    npx supabase link --project-ref <ref del proyecto>
    npx supabase db push
    ```
-   o pegándolas una a una en *SQL Editor*. Crean las tablas, las funciones atómicas, la seguridad por filas (RLS), los dos buckets privados (`releases` y `customer-files`), las extensiones `pg_cron` y `pg_net` y las tres tareas programadas (la cola cada minuto, la conciliación diaria y el borrado de las huellas de IP). Comprobar en *Database > Extensions* que `pg_cron` y `pg_net` quedan activas.
+   o pegándolas una a una en *SQL Editor*. Crean las tablas, las funciones atómicas, la seguridad por filas (RLS), los dos buckets privados (`releases` y `customer-files`), las extensiones `pg_cron` y `pg_net`, las tareas programadas (la cola cada minuto, la conciliación diaria y los borrados de huellas de IP y de límites), las licencias pedidas a Eric (`license_requests`) y `entrega_estado()`, que usa la comprobación de producción para ver las tareas, Vault y los buckets. Comprobar en *Database > Extensions* que `pg_cron` y `pg_net` quedan activas (la comprobación de producción también lo mira).
 4. **Los secretos del trabajador**, en *SQL Editor* (viven en Vault, nunca en el repo; la URL es la de la web que recibe las llamadas: la de pruebas en el proyecto de pruebas):
    ```sql
    select vault.create_secret('https://<la web de pruebas>', 'entrega_site_url');
    select vault.create_secret('<el mismo valor que JOBS_SECRET>', 'entrega_jobs_secret');
    ```
-5. **La secuencia de licencias.** No hay que sembrarla: la web numera sola **del 5001 al 9999 de cada año** (la tabla `licenses` no admite otros). Del 0001 al 5000 son del Mac de Eric: que no pase de ahí (sección 9).
+5. **La secuencia de licencias.** No hay que sembrarla: la web numera sola **del 5001 al 9999 de cada año**. Del 0001 al 5000 son del Mac de Eric: las que él sube a mano (`origin = 'manual'`) solo pueden ir ahí, y las de la web solo del 5001 (la tabla `licenses` lo comprueba).
 6. **El acceso con código** (*Authentication*):
    - *Sign In / Providers > Email*: activo. **Email OTP Expiration: 600** (10 minutos) y **Email OTP Length: 8** (la zona lo dice así; 8 cifras en vez de 6 hacen inútil probar códigos).
    - *Sign In / Providers > Email*: **«Confirm email» y «Secure email change» encendidos**. La zona reconoce por su correo confirmado a quien se dio de alta antes de tener cuenta; sin esos dos, un cambio de correo sin confirmar podría heredar esas altas.
@@ -86,11 +174,11 @@ En este orden: Supabase y Brevo primero (Supabase manda los códigos por el SMTP
    - *Emails > SMTP Settings*: **SMTP propio con Brevo** (sección 3.2): host `smtp-relay.brevo.com`, puerto `587`, usuario el *SMTP login* de Brevo, contraseña una *SMTP key* de Brevo, remitente `info@pymaticlabs.com` (o el que esté verificado en Brevo) con el nombre «Pymatic Labs». El correo propio de Supabase solo sirve para probar: manda 2 a la hora.
    - *Emails > Templates > Magic Link*: es el que lleva el código. Asunto `Tu código para entrar · Your access code` y un cuerpo con `{{ .Token }}`, por ejemplo:
      ```html
-     <p>Tu código para entrar en la zona de clientes del Cerebro Digital:</p>
+     <p>Tu código para entrar en la zona de socio del Cerebro Digital:</p>
      <p style="font-size:28px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
      <p>Vale 10 minutos y una sola vez. Si no lo has pedido tú, ignora este correo.</p>
      <hr>
-     <p>Your code to sign in to the Digital Brain customer area: <strong>{{ .Token }}</strong>. It is valid for 10 minutes, once.</p>
+     <p>Your code to sign in to the Digital Brain member area: <strong>{{ .Token }}</strong>. It is valid for 10 minutes, once.</p>
      ```
      Sin enlaces: la zona no usa el enlace mágico.
    - *URL Configuration*: *Site URL* la de la web (`https://pymaticlabs.com`; en pruebas, la de pruebas).
@@ -112,6 +200,8 @@ En este orden: Supabase y Brevo primero (Supabase manda los códigos por el SMTP
 6. Si se puede, apagar el seguimiento de aperturas y clics en los correos transaccionales: los correos llevan enlaces a la zona y no hace falta medirlos.
 
 ### 3.3 Google Cloud KMS (la clave que firma las licencias)
+
+**Solo con `LICENSE_MODE=kms`**, cuando el producto acepte la publica de la web (sección 9). Para abrir la venta hoy no hace falta: las licencias las firma Eric (sección 0).
 
 La web firma con una **clave propia, distinta de la del Mac de Eric**, que no sale nunca de KMS: el servidor solo puede pedir firmas.
 
@@ -241,6 +331,11 @@ Las mismas que en `.env.example`. «Prueba» es lo que va en `.env.local` y en P
 
 | Variable | Qué es | De dónde sale | Prueba / producción |
 |---|---|---|---|
+| `LICENSE_MODE` | `manual`: la web no firma; pide cada licencia a Eric y él la sube (sección 0). `kms`: la firma la web con su clave de KMS. Sin poner: `manual` en vivo salvo que KMS esté puesto; en falso, firma la clave local de prueba. En Production, siempre escrita (sin ella y con KMS puesto, la comprobación da FALTA) | — | `manual` / **`manual`** hasta la sección 9 |
+| `LICENSE_REQUEST_EMAIL` | A quién se piden las licencias a mano (y los «No firmar») | — | el de Eric |
+| `LICENSE_MANUAL_PUBLIC_KEY` | La publica con la que tienen que verificar las licencias subidas. Sin poner, la del Mac de Eric (`licencias.pub`), que solo entrega pagos en vivo; otra es una clave de pruebas, que solo entrega pagos de prueba | `scripts/subir-licencia.mts --crear-clave-prueba` | la de pruebas en Preview / **sin poner** |
+| `LICENSE_PENDING_ALERT_HOURS` | Horas sin firmar tras las que una licencia pedida da aviso | — | `12` |
+| `LICENSE_TEST_SEED` | Solo en tu `.env.local`, para `subir-licencia.mts --firmar-prueba`: la privada de la clave de pruebas | `--crear-clave-prueba` | la de pruebas / nunca |
 | `GCP_KMS_KEY_VERSION` | La versión de la clave de la web en KMS | Google Cloud (3.3) | **una clave distinta en cada entorno**: la de pruebas nunca va al producto |
 | `LICENSE_KEY_ENV` | De qué entorno es la clave: `production` solo firma pagos en vivo; `test` solo de prueba | — | `test` / sin poner (`production`) |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | La cuenta de servicio que solo firma (JSON o base64) | Google Cloud | **una por entorno**; la de producción, Sensitive y solo en Production |
@@ -263,17 +358,20 @@ Las mismas que en `.env.example`. «Prueba» es lo que va en `.env.local` y en P
 | Variable | Qué es | De dónde sale | Prueba / producción |
 |---|---|---|---|
 | `JOBS_SECRET` | Lo manda pg_cron a `/api/jobs/run` y `/api/jobs/reconcile` (también en Vault) | `openssl rand -hex 32` | uno por entorno |
-| `ADMIN_SECRET` | Para `/api/admin/*` (versiones, cola, anuladas, publica) | `openssl rand -hex 32` | uno por entorno |
+| `ADMIN_SECRET` | Para `/api/admin/*` (licencias a mano, comprobación, versiones, cola, anuladas, publica) | `openssl rand -hex 32` | uno por entorno |
 | `JOBS_MAX_ATTEMPTS`, `JOBS_ALERT_AFTER`, `JOBS_BASE_DELAY_MS`, `JOBS_MAX_DELAY_MS`, `JOBS_LOCK_SECONDS`, `JOBS_CONCURRENCY` | Reintentos: tope, aviso tras N fallos, esperas, bloqueo de un intento y pasos a la vez | — | `10`, `3`, `30000`, `3600000`, `120`, `4` |
 | `DOWNLOAD_URL_TTL_SECONDS` | Lo que valen los enlaces de descarga | — | `300` |
 | `RECONCILE_DAYS` | Días hacia atrás que mira la conciliación | — | `40` |
 | `E2E_BASE_URL`, `E2E_PORT` | Solo para `scripts/e2e-entrega.mts` sin `--start` | — | sin poner |
+| `E2E_MANUAL_BASE_URL`, `E2E_MANUAL_SEED` | Solo para `scripts/e2e-entrega.mts` sin `--start`: la web con `LICENSE_MODE=manual` y la semilla de su `LICENSE_MANUAL_PUBLIC_KEY` | — | sin poner |
 
 ## 5. Prueba de punta a punta con las cuentas de prueba
 
 Con todo lo de la sección 3 en pruebas y la web de pruebas desplegada (o en local con `stripe listen`), `CHECKOUT_OPEN=true` en Preview. En cada paso, `node --env-file=.env.local scripts/comprobar-compra.mts <correo o pi_...>` dice cómo va cada paso de la cola de esa compra, si la licencia verifica con la publica de la web, la factura, quién está en la zona y las sesiones. Sale con error si algo está parado.
 
 Tarjeta de prueba: `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. En modo de prueba Stripe acepta cualquier NIF con el formato correcto.
+
+Con `LICENSE_MODE=manual` (lo de hoy), donde abajo dice que llega la licencia, llega primero la bienvenida sin ella y la pedida a Eric: se firma con la clave de pruebas y se sube con `scripts/subir-licencia.mts --firmar-prueba` (sección 0), y entonces llega.
 
 1. **Hazlo tú, empresa española.** Comprar desde `/precios` con un correo tuyo, NIF `A12345678` (tipo «ES NIF») y dirección en España. Probar también un NIF de autónomo con letra al final (`12345678Z`): Stripe lo pide como «ES NIF» (`es_cif`) y tiene que aceptarlo. Comprobar:
    - Stripe: el pago con **21 % de IVA** y, en *Developers > Webhooks*, el aviso entregado con 200.
@@ -300,16 +398,18 @@ Tarjeta de prueba: `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC
 
 ## 6. Antes de abrir la venta
 
-1. El abogado revisa las condiciones y las políticas (son borradores) y Eric confirma lo pendiente.
-2. Eric publica la versión del esqueleto que acepta la publica de la web y la lista de anuladas (sección 9).
-3. Todo lo de la sección 3 otra vez, en producción: proyecto de Supabase de producción (plan Pro), claves `sk_live_`, `stripe-setup.mts --live --webhook https://pymaticlabs.com/api/stripe/webhook`, Holded de verdad con Verifactu y `HOLDED_INVOICE_MODE=draft` hasta confirmarlo, Vault con la URL de producción.
-4. Una compra real de las baratas con una empresa de PymaticLabs, de principio a fin, y devolverla.
-5. `CHECKOUT_OPEN=true` en Production.
+1. La sección 0, entera: con las licencias a mano no hace falta esperar a Eric ni a KMS.
+2. Las condiciones y las políticas son borradores: que las revise el abogado. Abrir antes con ellas es decisión de los fundadores. Eric confirma lo pendiente.
+3. Si se quiere, además de la de Preview, una compra real de las baratas con una empresa de PymaticLabs, de principio a fin (con la licencia firmada por Eric), y devolverla.
+4. `CHECKOUT_OPEN=true` en Production y volver a desplegar.
+5. Más adelante, para que la web firme sola: Eric publica la versión del esqueleto que acepta la publica de la web y la lista de anuladas (sección 9), se monta KMS (3.3), `LICENSE_MODE=kms`, y la comprobación otra vez.
 
 ## 7. Operación
 
 - **Pasos parados.** `GET /api/admin/jobs?status=dead` (con `Authorization: Bearer <ADMIN_SECRET>`). Arreglada la causa: `POST /api/admin/jobs {"action":"retry","id":"<id>"}`. En SQL: `select key, attempts, last_error from jobs where status <> 'done' order by updated_at desc;`.
-- **Cómo va una compra:** `scripts/comprobar-compra.mts <correo | pi_...>`.
+- **Cómo va una compra:** `scripts/comprobar-compra.mts <correo | pi_...>` (con las licencias a mano, también si la pedida sigue sin firmar).
+- **Licencias a mano** (sección 0): las que faltan, `scripts/subir-licencia.mts --pendientes` o `GET /api/admin/licenses` (`?estado=issued|cancelled` para las demás, `?compra=<id>` para una con sus campos); subir una, `scripts/subir-licencia.mts --compra <id> --fichero <licencia>` o `POST /api/admin/licenses?compra=<id>` con el fichero tal cual. En SQL: `select purchase_id, cliente, status, created_at from license_requests where status = 'pending' order by created_at;`.
+- **La comprobación de producción:** `scripts/comprobar-produccion.mts --web https://pymaticlabs.com` (o `GET /api/admin/health`), tras cualquier cambio de variables o de cuentas.
 - **Reenviar una licencia.** Está en la zona; el fichero, en `licenses.content`.
 - **Lista de anuladas** para el esqueleto: `GET /api/admin/revocations`.
 - **Compras a revisar**: llega «Venta a revisar» (o «URGENTE · Compra con el NIF de otro cliente»); quedan en `purchases` con `status = 'needs_review'` y el motivo en `review_data.reason`:
@@ -319,14 +419,14 @@ Tarjeta de prueba: `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC
   - `tax_id_changed` (el NIF de la factura de Stripe no es el de la empresa) y `unknown_company`: mirarlo en Stripe antes de facturar.
 - **Facturas retenidas**: «Facturar a mano» (ni se creó: IVA dudoso) o «Factura en borrador, sin emitir» (`invoices.hold_reason`: NIF-IVA sin verificar, dólares, totales que no cuadran). Revisarla en Holded y emitirla a mano; la conciliación guarda su PDF para la zona cuando esté emitida.
 
-## 8. La zona de clientes
+## 8. La zona de socio
 
-En `/zona` (`/en/zona`), donde enlazan los correos, y en el pie de la web. Se entra en `/zona/entrar` con el correo y un código de un solo uso (Supabase Auth, sin contraseñas). Las páginas se pintan en el servidor con la sesión:
+En `/zona` (`/en/zona`), donde enlazan los correos, en el pie de la web y en el botón **Entrar** de arriba a la derecha (los dos, solo con la zona montada: Supabase y `DELIVERY_IP_SALT`, o el modo falso). Se entra en `/zona/entrar` con el correo y un código de un solo uso (Supabase Auth, sin contraseñas). Con la sesión abierta, en lugar de Entrar sale el perfil (las iniciales de la empresa): su correo, su empresa, la zona de socio, la licencia, las descargas, las facturas (solo quien compró) y cerrar la sesión. Las páginas de la web siguen siendo estáticas: la barra pregunta quién es a `/api/zone/me?perfil=1` desde el navegador. Entrar y el perfil ocupan el mismo hueco, así que la barra no se mueve al saberlo; y en un navegador donde ya se entró (una pista en `localStorage`, `pymatic_socio`, sin datos de nadie), mientras pregunta sale un círculo neutro en vez de Entrar. La pista no da acceso a nada: sin sesión, se quita y vuelve Entrar. Las de la zona se pintan en el servidor con la sesión:
 
 | Página | Quién | Qué hay |
 |---|---|---|
 | `/zona` | todos | Lo de la compra de un vistazo: licencia, versión, próxima sesión, mensual, equipo y facturas |
-| `/zona/licencia` | todos | La licencia vigente para bajarla, las anteriores y las anuladas |
+| `/zona/licencia` | todos | La licencia vigente para bajarla, las anteriores y las anuladas (con las licencias a mano, la que Eric aún no ha firmado sale «en camino») |
 | `/zona/descargas` | todos | La última versión para Mac y Windows, en castellano e inglés, el instalador del registro (con equipo) y el SBOM. Cada botón firma el enlace al pulsarlo |
 | `/zona/sesiones` | Acompañado | Las sesiones reservadas y, si falta alguna, los huecos de Eric y de Sergio para reservarla (solo quien compró) |
 | `/zona/equipo` | quien compró, con equipo | Altas y bajas hasta las plazas de la licencia |
@@ -343,6 +443,7 @@ La API que usan las páginas (y que se puede llamar con la sesión):
 | `POST /api/zone/verify` `{email, code}` | Abre la sesión; 429 si hay demasiados intentos |
 | `POST /api/zone/logout` | La cierra |
 | `GET /api/zone/me[?company=]` | Todo lo de la zona de una vez |
+| `GET /api/zone/me?perfil=1` | Para la barra de arriba: `{available, user}` con el correo y las empresas (sin sesión, `user: null`; sin la zona montada, `available: false`). Siempre 200 |
 | `GET /api/zone/licenses/<id>` | El fichero de la licencia |
 | `GET /api/zone/downloads/<id>[?json=1]` | Enlace firmado de una descarga |
 | `GET /api/zone/invoices/<id>[?json=1]` | El PDF de una factura (solo quien compró) |
@@ -354,7 +455,7 @@ La API que usan las páginas (y que se puede llamar con la sesión):
 
 ## 9. Cambios en el producto (Eric)
 
-Lo que el esqueleto necesita, en una versión anterior a abrir la venta (la extensión que se vende tiene que conocer la publica de la web):
+Lo que el esqueleto necesita para que la web firme sola (`LICENSE_MODE=kms`: la extensión que se vende tiene que conocer la publica de la web). Hasta entonces, las licencias las firma Eric a mano con la clave de siempre (sección 0), así que esto no frena la venta:
 
 1. **Varias publicas de licencias.** `esqueleto/firmas/licencias.pub` con una línea por clave (la del Mac y la de la web; las líneas con `#` son comentarios), y `verificar()` que acepte la firma de cualquiera. La de la web sale de `scripts/clave-web-publica.mts` (sección 3.3, paso 5).
 2. **Lista de anuladas** que viaja con cada versión, por ejemplo `esqueleto/firmas/licencias-anuladas.json`, con el formato de `GET /api/admin/revocations`:
@@ -365,12 +466,13 @@ Lo que el esqueleto necesita, en una versión anterior a abrir la venta (la exte
     "claves": ["<publica anulada en base64>"]}
    ```
    Una licencia de la lista no vale, pero **se compara por su `clave` y su `huella`** (SHA-256 del fichero tal cual), no solo por el id: así nunca se anula una del Mac con el mismo número. Y una firmada con una clave de `claves` tampoco vale.
-3. **Los números de licencia, repartidos.** La web numera del **5001 al 9999** de cada año; el Mac de Eric, del 0001 al 5000. `firmar_licencia.py` debería negarse a pasar del 5000 (su secuencia está en `<CLAVE>.ids.json`).
+3. **Los números de licencia, repartidos.** La web numera del **5001 al 9999** de cada año; el Mac de Eric, del 0001 al 5000 (la web ya no acepta subir una del Mac por encima del 5000). `firmar_licencia.py` debería negarse a pasar del 5000 (su secuencia está en `<CLAVE>.ids.json`).
 4. **El pago dentro de la licencia.** El diseño pide el identificador del pago de Stripe en la licencia, pero `licencia.py` rechaza cualquier campo que no sea uno de los siete. Propuesta: un campo opcional `pago` (`pi_...` en el pago único, `in_...` en cada cobro del mensual), firmado como los demás. `lib/license.ts` ya lo sabe escribir y comprobar. Hasta que el esqueleto lo acepte, `LICENSE_INCLUDE_PAYMENT=false`: el pago queda junto a la licencia en la base de datos (`licenses.payment_ref`), que es lo que cruza la conciliación.
 5. **Lo nuevo según `soporte_hasta`**, como dice la cláusula 11 (una sola línea de versiones; lo nuevo, apagado si la licencia no cubre la fecha de la versión).
 
 ## 10. Pendiente
 
+- Las licencias a mano dependen de que Eric las firme en unas horas: el aviso a las 12 horas y la conciliación diaria lo vigilan, pero si Eric no está, alguien tiene que tener su Mac (o esperar). Lo que lo quita del todo es la sección 9.
 - Confirmar con Holded que aprobar por la API registra en Verifactu (hasta entonces, borrador), el signo de las rectificativas, si `POST /documents/convert` sirve para las rectificativas vinculadas (hasta entonces, borrador) y en qué sentido va `currency_change` para poner el cambio de Stripe en las facturas en dólares (hasta entonces, borrador).
 - El NIF-IVA se comprueba al facturar (verificación de Stripe en VIES); si VIES tarda más de un par de minutos, la factura queda en borrador con aviso.
 - No hay comprobación contra bots (Turnstile o similar) antes de apartar un hueco: los límites por IP y el tope de huecos a la vez frenan, pero alguien con muchas IP podría ocupar ese tope.
@@ -387,6 +489,8 @@ Lo que el esqueleto necesita, en una versión anterior a abrir la venta (la exte
 | `supabase/migrations/` | Tablas, funciones atómicas, seguridad por filas, buckets y pg_cron |
 | `lib/checkout.ts` | Las sesiones de Stripe Checkout y los huecos de la primera sesión |
 | `lib/delivery/events.ts`, `steps.ts`, `jobs.ts` | Del aviso de Stripe a la cola, los pasos y el trabajador |
+| `lib/delivery/manual-license.ts`, `app/api/admin/licenses/` | Las licencias a mano: pedirlas a Eric, comprobar y guardar la que sube, cancelarlas y avisar si tardan |
+| `lib/delivery/health.ts`, `app/api/admin/health/` | La comprobación de producción |
 | `lib/delivery/tax.ts` | El IVA de cada factura, con lo que dice Stripe Tax, y cuándo se retiene |
 | `lib/delivery/limits.ts` | Límites por IP (por /64 en IPv6) y por correo, con huellas |
 | `lib/delivery/zone.ts` | Lo que hace la zona (y comprueba quién puede) |
@@ -395,4 +499,4 @@ Lo que el esqueleto necesita, en una versión anterior a abrir la venta (la exte
 | `lib/delivery/reconcile.ts`, `versions.ts` | Conciliación, versiones y lista de anuladas |
 | `lib/delivery/adapters/` | Un adaptador por proveedor, con su versión falsa (`fakes.ts`, `memory-repository.ts`) |
 | `proxy.ts` | Idiomas y la renovación de la sesión de la zona |
-| `scripts/` | `e2e-entrega.mts`, `comprobar-compra.mts`, `stripe-setup.mts`, `publicar-version.mts`, `clave-web-publica.mts` |
+| `scripts/` | `e2e-entrega.mts`, `comprobar-produccion.mts`, `subir-licencia.mts`, `comprobar-compra.mts`, `stripe-setup.mts`, `publicar-version.mts`, `clave-web-publica.mts` |

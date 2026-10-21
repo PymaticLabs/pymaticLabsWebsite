@@ -1,12 +1,13 @@
 // Para la prueba de punta a punta con las cuentas de prueba (docs/entrega-automatica.md, seccion 5):
 // como va la entrega de una compra en la base de datos de verdad (Supabase), paso a paso, y si su
-// licencia verifica con la publica de la web. Solo lee: no cambia nada.
+// licencia verifica con la publica de la web (o con la del Mac de Eric, si se firmo a mano). Con
+// LICENSE_MODE=manual, tambien si la licencia pedida sigue sin firmar. Solo lee: no cambia nada.
 //
 //   node --env-file=.env.local scripts/comprobar-compra.mts <correo de la compra | pi_... | in_... | cs_...>
 //
-// Necesita SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y LICENSE_WEB_PUBLIC_KEY (o GCP_KMS_KEY_VERSION
-// con GOOGLE_SERVICE_ACCOUNT_JSON, para leer la publica de KMS). Sale con error si algun paso esta
-// parado o si una licencia no verifica.
+// Necesita SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY y, si firma la web, LICENSE_WEB_PUBLIC_KEY (o
+// GCP_KMS_KEY_VERSION con GOOGLE_SERVICE_ACCOUNT_JSON, para leer la publica de KMS). Sale con error
+// si algun paso esta parado, si una licencia no verifica o si una pedida pasa de las horas de aviso.
 
 import { createDelivery } from '../lib/delivery/container.ts'
 import { verifyLicense } from '../lib/license.ts'
@@ -31,6 +32,8 @@ async function purchases(): Promise<Purchase[]> {
 
 async function publicKey(): Promise<string | null> {
   if (process.env.LICENSE_WEB_PUBLIC_KEY) return process.env.LICENSE_WEB_PUBLIC_KEY.trim()
+  // A mano, la web no firma: las licencias se comprueban con la publica del Mac.
+  if (d.config.licenseMode === 'manual') return null
   try {
     return await d.signer.publicKey()
   } catch (error) {
@@ -48,9 +51,19 @@ const pub = await publicKey()
 
 for (const purchase of list.sort((a, b) => a.paidAt.localeCompare(b.paidAt))) {
   console.log(`\n${purchase.product} · ${purchase.paymentRef} · ${purchase.status} · ${(purchase.amountTotal / 100).toFixed(2)} ${purchase.currency.toUpperCase()} (IVA: ${purchase.taxTreatment}${purchase.taxRate !== null ? ` ${purchase.taxRate} %` : ''})`)
-  const kinds = purchase.kind === 'renewal' ? ['invoice', 'license', 'renewal_email', 'notice'] : ['invoice', 'license', 'account', ...(purchase.sessionHost ? ['booking'] : []), 'welcome', 'notice']
+  // A mano (LICENSE_MODE=manual), el correo con la licencia sale al subirla: hasta entonces no esta en la cola.
+  const requested = await d.repo.getLicenseRequestByPurchase(purchase.id)
+  const afterUpload = purchase.kind === 'renewal' ? 'renewal_email' : 'license_email'
+  const kinds =
+    purchase.kind === 'renewal'
+      ? ['invoice', 'license', 'renewal_email', 'notice']
+      : ['invoice', 'license', 'account', ...(purchase.sessionHost ? ['booking'] : []), 'welcome', 'notice', ...(requested ? ['license_email'] : [])]
   for (const kind of kinds) {
     const job = await d.repo.getJobByKey(`${kind}:${purchase.id}`)
+    if (!job && requested && kind === afterUpload && requested.status !== 'issued') {
+      line(null, `${kind}: sale al subir la licencia`)
+      continue
+    }
     if (!job) {
       line(false, `${kind}: no esta en la cola`)
       failed = true
@@ -61,19 +74,30 @@ for (const purchase of list.sort((a, b) => a.paidAt.localeCompare(b.paidAt))) {
     line(ok, `${kind}: ${job.status}${job.attempts > 1 ? ` (${job.attempts} intentos)` : ''}${job.lastError && job.status !== 'done' ? ` · ${job.lastError}` : ''}`)
   }
 
+  if (requested) {
+    const hours = Math.floor((Date.now() - new Date(requested.createdAt).getTime()) / 3600_000)
+    const late = requested.status === 'pending' && hours >= d.config.licensePendingAlertHours
+    if (late) failed = true
+    line(
+      requested.status === 'issued' ? true : requested.status === 'cancelled' ? null : late ? false : null,
+      `licencia a mano: ${requested.status === 'pending' ? `pedida hace ${hours} h, sin firmar${late ? ' (pasa del aviso)' : ''}` : requested.status === 'issued' ? `subida (${requested.licenseId})` : `cancelada (${requested.cancelReason})`}`
+    )
+  }
   const license = await d.repo.getLicenseByPurchase(purchase.id)
   if (license) {
     let verified: boolean | null = null
-    if (pub) {
+    // Las firmadas a mano, con la publica del Mac de Eric (o la de pruebas); las de la web, con la suya.
+    const key = license.origin === 'manual' ? d.config.manualPublicKey : pub
+    if (key) {
       try {
-        verifyLicense(license.content, pub, { allowPayment: true })
+        verifyLicense(license.content, key, { allowPayment: true })
         verified = true
       } catch {
         verified = false
         failed = true
       }
     }
-    line(verified, `licencia ${license.id}: ${license.modalidad}${license.equipo ? ' con equipo' : ''}, soporte hasta ${license.soporteHasta}${license.revokedAt ? `, ANULADA (${license.revokedReason})` : ''}${verified === false ? ' · NO VERIFICA con la publica de la web' : ''}`)
+    line(verified, `licencia ${license.id}${license.origin === 'manual' ? ' (firmada a mano)' : ''}: ${license.modalidad}${license.equipo ? ' con equipo' : ''}, soporte hasta ${license.soporteHasta}${license.revokedAt ? `, ANULADA (${license.revokedReason})` : ''}${verified === false ? ` · NO VERIFICA con la publica ${license.origin === 'manual' ? 'del Mac' : 'de la web'}` : ''}`)
   }
   const invoice = await d.repo.getInvoiceByRef(`invoice:${purchase.id}`)
   if (invoice) line(null, `factura: ${invoice.status}${invoice.number ? ` ${invoice.number}` : ''}${invoice.storagePath ? ', PDF en la zona' : ''}`)

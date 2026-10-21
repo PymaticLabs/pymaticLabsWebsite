@@ -6,9 +6,18 @@
 // verdad (KMS) nunca se mezcla con pagos de mentira: firmaria licencias sin cobrar.
 
 import { randomBytes } from 'node:crypto'
+import { LICENSES_PUBLIC_KEY } from '../license.ts'
 import { LAUNCH_CUSTOMERS } from '../offer.ts'
 
 export type DeliveryMode = 'fake' | 'live'
+
+/**
+ * Quien firma las licencias. manual: la web no firma; pide cada licencia a Eric (correo con los
+ * campos), que la firma en su Mac con la clave que el producto ya conoce y la sube
+ * (scripts/subir-licencia.mts). kms: la firma la web, con su clave de KMS (en modo falso, con la
+ * clave local de prueba); solo cuando el producto acepte la publica de la web.
+ */
+export type LicenseMode = 'manual' | 'kms'
 
 export interface AdapterChoice {
   repository: 'memory' | 'supabase'
@@ -81,6 +90,18 @@ export interface DeliveryConfig {
    * Stripe en vivo; test (la local, o una clave de KMS solo de pruebas) solo pagos de prueba.
    */
   licenseKeyEnv: 'production' | 'test'
+  licenseMode: LicenseMode
+  /**
+   * La publica con la que tienen que verificar las licencias subidas a mano: la del Mac de Eric
+   * (licencias.pub) por defecto. Otra (LICENSE_MANUAL_PUBLIC_KEY) es una clave de pruebas.
+   */
+  manualPublicKey: string
+  /** production (la del Mac de Eric) solo entrega pagos en vivo; test, solo pagos de prueba. */
+  manualKeyEnv: 'production' | 'test'
+  /** A quien se piden las licencias a mano (Eric o un buzon de PymaticLabs). */
+  licenseRequestEmail: string
+  /** Horas sin firmar tras las que una licencia pedida da aviso. */
+  licensePendingAlertHours: number
   /** Si las claves de Stripe son de vivo (sk_live_), de prueba, o no se sabe (sin clave). */
   stripeLive: boolean | null
   /** La sal de las huellas de IP y de correo (HMAC): obligatoria en vivo, nunca una constante. */
@@ -114,6 +135,26 @@ function pick<T extends string>(value: string | undefined, allowed: readonly T[]
   return value as T
 }
 
+/**
+ * Sin LICENSE_MODE: a mano en vivo (hasta que el producto acepte la clave de la web), salvo que la
+ * clave de KMS ya este puesta; con la clave local de prueba (en falso), firma la web.
+ */
+function defaultLicenseMode(env: Env, signer: AdapterChoice['signer']): LicenseMode {
+  const kmsConfigured = Boolean(env.GCP_KMS_KEY_VERSION?.trim() && env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim())
+  return signer === 'local' || kmsConfigured ? 'kms' : 'manual'
+}
+
+/**
+ * Quien firma las licencias, para las paginas que cuentan cuando llega (comprar y gracias), sin
+ * leer el resto de la configuracion ni fallar si falta algo: la misma regla que readConfig. Las
+ * paginas estaticas lo leen al desplegar, como CHECKOUT_OPEN.
+ */
+export function licenseModeOf(env: Env = process.env): LicenseMode {
+  if (env.LICENSE_MODE === 'manual' || env.LICENSE_MODE === 'kms') return env.LICENSE_MODE
+  const signer = env.DELIVERY_SIGNER === 'local' || env.DELIVERY_SIGNER === 'gcp-kms' ? env.DELIVERY_SIGNER : env.DELIVERY_MODE === 'fake' ? 'local' : 'gcp-kms'
+  return defaultLicenseMode(env, signer)
+}
+
 export function readConfig(env: Env = process.env): DeliveryConfig {
   const mode = pick(env.DELIVERY_MODE, ['fake', 'live'] as const, 'live', 'DELIVERY_MODE')
   if (mode === 'fake' && env.VERCEL_ENV === 'production') {
@@ -137,6 +178,11 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
   }
   const licenseKeyEnv = pick(env.LICENSE_KEY_ENV, ['production', 'test'] as const, adapters.signer === 'local' ? 'test' : 'production', 'LICENSE_KEY_ENV')
   if (adapters.signer === 'local' && licenseKeyEnv !== 'test') throw new Error('LICENSE_KEY_ENV=production con la clave local de prueba')
+  const licenseMode = pick(env.LICENSE_MODE, ['manual', 'kms'] as const, defaultLicenseMode(env, adapters.signer), 'LICENSE_MODE')
+  const manualPublicKey = env.LICENSE_MANUAL_PUBLIC_KEY?.trim() || LICENSES_PUBLIC_KEY
+  if (Buffer.from(manualPublicKey, 'base64').length !== 32 || Buffer.from(manualPublicKey, 'base64').toString('base64') !== manualPublicKey) {
+    throw new Error('LICENSE_MANUAL_PUBLIC_KEY: no son 32 bytes en base64 (como licencias.pub)')
+  }
   const stripeKey = env.STRIPE_SECRET_KEY?.trim() ?? ''
   const stripeLive = adapters.payments === 'fake' ? false : stripeKey ? /^(sk|rk)_live_/.test(stripeKey) : null
   const ipSalt = env.DELIVERY_IP_SALT?.trim() || (fake ? env.DELIVERY_FAKE_SECRET || randomBytes(32).toString('hex') : '')
@@ -155,6 +201,11 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
     licenseIncludePayment: env.LICENSE_INCLUDE_PAYMENT === 'true',
     licensePublicKey: env.LICENSE_WEB_PUBLIC_KEY?.trim() || null,
     licenseKeyEnv,
+    licenseMode,
+    manualPublicKey,
+    manualKeyEnv: manualPublicKey === LICENSES_PUBLIC_KEY ? 'production' : 'test',
+    licenseRequestEmail: env.LICENSE_REQUEST_EMAIL?.trim() || internalEmail,
+    licensePendingAlertHours: int(env.LICENSE_PENDING_ALERT_HOURS, 12),
     stripeLive,
     ipSalt,
     limits: {
@@ -186,7 +237,7 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
 }
 
 /**
- * Si la zona de clientes se puede abrir: en falso, o con Supabase y la sal de las IP puestas. Sin
+ * Si la zona de socio se puede abrir: en falso, o con Supabase y la sal de las IP puestas. Sin
  * ellas (la web publicada antes de montar la venta, o una vista previa sin claves) la zona dice que
  * abre con la venta en vez de fallar, y el pie no la enlaza.
  */

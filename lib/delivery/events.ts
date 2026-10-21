@@ -122,9 +122,17 @@ export function oneTimeJobs(purchase: Purchase): NewJob[] {
   return jobs
 }
 
-export function renewalJobs(purchase: Purchase): NewJob[] {
+/** manualLicense (LICENSE_MODE=manual): el correo con la licencia nueva sale al subirla, no aqui. */
+export function renewalJobs(purchase: Purchase, manualLicense = false): NewJob[] {
   const payload = { purchaseId: purchase.id }
   const key = (kind: string) => `${kind}:${purchase.id}`
+  if (manualLicense) {
+    return [
+      { key: key('invoice'), kind: 'invoice', payload },
+      { key: key('license'), kind: 'license', payload },
+      { key: key('notice'), kind: 'notice', payload: { ...payload, event: 'renewal' }, dependsOn: [key('license'), key('invoice')] },
+    ]
+  }
   return [
     { key: key('invoice'), kind: 'invoice', payload },
     { key: key('license'), kind: 'license', payload },
@@ -381,7 +389,7 @@ export async function ingestInvoice(d: Delivery, invoice: Stripe.Invoice): Promi
     return 'needs-review'
   }
   if (company && company.subscriptionPlan !== product) await d.repo.updateCompany(company.id, { subscriptionPlan: product })
-  await d.repo.enqueueJobs(renewalJobs(purchase), d.clock())
+  await d.repo.enqueueJobs(renewalJobs(purchase, d.config.licenseMode === 'manual'), d.clock())
   return 'renewal'
 }
 

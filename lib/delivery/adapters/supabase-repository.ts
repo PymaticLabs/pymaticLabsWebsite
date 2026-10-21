@@ -20,6 +20,9 @@ import {
   type Job,
   type LicenseInput,
   type LicenseRecord,
+  type LicenseRequest,
+  type LicenseRequestInput,
+  type LicenseRequestStatus,
   type Member,
   type NewJob,
   type Purchase,
@@ -51,6 +54,8 @@ function fromJob(row: Row): Job {
 }
 
 const UNIQUE = '23505'
+/** La tabla no existe (PostgREST no la conoce, o Postgres no la tiene). */
+const NO_TABLE = ['PGRST205', '42P01']
 
 function fail(what: string, error: PostgrestError): never {
   throw new RetryableError(`Supabase ${what}: ${error.message}`)
@@ -230,6 +235,41 @@ export class SupabaseRepository implements Repository {
       .update({ revoked_at: revoked?.at ?? null, revoked_reason: revoked?.reason ?? null })
       .eq('id', id)
     if (error) fail('licenses', error)
+  }
+
+  async createLicenseRequest(input: LicenseRequestInput) {
+    const { data, error } = await this.db.from('license_requests').insert(toRow(input)).select('*').single()
+    if (!error) return { request: fromRow<LicenseRequest>(data), created: true }
+    if (error.code !== UNIQUE) fail('license_requests', error)
+    // Un reintento del paso: ya estaba pedida.
+    const existing = await this.getLicenseRequestByPurchase(input.purchaseId)
+    if (!existing) fail('license_requests', error)
+    return { request: existing, created: false }
+  }
+
+  // Sin la migracion de las licencias a mano (20261021130000) aplicada, leer las pedidas da "ninguna":
+  // asi la zona, las devoluciones y los avisos siguen funcionando con LICENSE_MODE=kms. Apuntar una
+  // si falla (el paso license se reintenta y avisa), y la comprobacion de produccion lo dice.
+  async getLicenseRequestByPurchase(purchaseId: string) {
+    const { data, error } = await this.db.from('license_requests').select('*').eq('purchase_id', purchaseId).maybeSingle()
+    if (error && NO_TABLE.includes(error.code)) return null
+    if (error) fail('license_requests', error)
+    return data ? fromRow<LicenseRequest>(data) : null
+  }
+
+  async listLicenseRequests(filter: { status?: LicenseRequestStatus; companyId?: string; limit?: number }) {
+    let query = this.db.from('license_requests').select('*').order('created_at').limit(filter.limit ?? 500)
+    if (filter.status) query = query.eq('status', filter.status)
+    if (filter.companyId) query = query.eq('company_id', filter.companyId)
+    const { data, error } = await query
+    if (error && NO_TABLE.includes(error.code)) return []
+    if (error) fail('license_requests', error)
+    return ((data as Row[] | null) ?? []).map((row) => fromRow<LicenseRequest>(row))
+  }
+
+  async updateLicenseRequest(id: string, from: LicenseRequestStatus, patch: Partial<Pick<LicenseRequest, 'status' | 'licenseId' | 'cancelReason' | 'issuedAt' | 'cancelledAt'>>) {
+    // Un solo update con el estado de antes en el where: si otro la cambio, no toca ninguna fila.
+    return this.one<LicenseRequest>('license_requests', this.db.from('license_requests').update(toRow(patch)).eq('id', id).eq('status', from).select('*').maybeSingle())
   }
 
   async saveInvoice(input: InvoiceInput) {

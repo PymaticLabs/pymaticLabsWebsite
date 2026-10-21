@@ -7,7 +7,7 @@ import type { CookieToSet } from './lib/delivery/types'
 
 const intl = createMiddleware(routing)
 
-/** Las paginas de la zona de clientes (/zona y /en/zona). */
+/** Las paginas de la zona de socio (/zona y /en/zona). */
 const ZONE_PAGE = /^\/(en\/)?zona(\/|$)/
 
 // En las paginas de la zona, antes de pintarlas, se renueva la sesion de Supabase si su token ha

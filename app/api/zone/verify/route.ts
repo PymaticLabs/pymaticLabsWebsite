@@ -4,7 +4,7 @@ import { getDelivery } from '@/lib/delivery/container'
 import { normalizeEmail } from '@/lib/delivery/util'
 import { verifyCode } from '@/lib/delivery/zone'
 
-// Zona de clientes, paso 2: el codigo. Si vale, deja la sesion en cookies (httpOnly). Con limites
+// Zona de socio, paso 2: el codigo. Si vale, deja la sesion en cookies (httpOnly). Con limites
 // por IP y por correo (lib/delivery/zone.ts): de mas, 429.
 
 export const runtime = 'nodejs'

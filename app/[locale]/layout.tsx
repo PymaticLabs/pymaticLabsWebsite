@@ -7,8 +7,10 @@ import { Analytics } from '@vercel/analytics/next'
 import { locales } from '@/lib/i18n'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
+import { zoneAvailable } from '@/lib/delivery/config'
 import { ThemeProvider } from '@/components/theme-provider'
 import { noFlashScript } from '@/lib/theme'
+import { profileHintScript } from '@/lib/zone-profile'
 import '@/app/globals.css'
 
 const CLIENT_NAMESPACES = ['nav', 'home', 'contact'] as const
@@ -81,17 +83,20 @@ export default async function LocaleLayout({
   const messages = await getMessages()
   // Al navegador solo van los textos de los componentes de cliente.
   const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]))
+  const zone = zoneAvailable()
 
   return (
     // El tema se lee en el navegador (cookie o sistema) para que las paginas sigan siendo estaticas.
     <html lang={locale} className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+        {/* El tema y, con la zona montada, la pista de quien ya entro (sin saltos al pintar). */}
+        <script dangerouslySetInnerHTML={{ __html: zone ? noFlashScript + profileHintScript : noFlashScript }} />
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
           <NextIntlClientProvider messages={clientMessages}>
-            <Navbar />
+            {/* Entrar (o el perfil), solo con la zona de socio montada: como el enlace del pie. */}
+            <Navbar zone={zone} />
             <main className="flex-1">{children}</main>
             <Footer />
           </NextIntlClientProvider>

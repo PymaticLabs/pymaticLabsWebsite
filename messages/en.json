@@ -24,7 +24,21 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "themeDark": "Switch to dark mode",
-    "themeLight": "Switch to light mode"
+    "themeLight": "Switch to light mode",
+    "login": "Sign in",
+    "loginLabel": "Sign in to the member area",
+    "account": {
+      "button": "Your profile ({initials}): {email}",
+      "menu": "Your profile",
+      "moreCompanies": "and {count} more",
+      "zone": "Member area",
+      "licencia": "License",
+      "descargas": "Downloads",
+      "facturas": "Invoices",
+      "logout": "Sign out",
+      "loggingOut": "Signing out…",
+      "logoutError": "We could not sign you out. Please try again."
+    }
   },
   "home": {
     "hero": {
@@ -646,8 +660,15 @@
     "title": "Payment received. Thank you!",
     "subtitle": "In a few minutes you will get an email with everything you need to set up your Digital Brain.",
     "steps": [
-      "The link to your customer area, with your license, the downloads for Mac and Windows and your invoices.",
+      "The link to your member area, with your license, the downloads for Mac and Windows and your invoices.",
       "Your license, attached. Keep it: setup will ask you for it.",
+      "The terms you accepted and, with Guided, your first session appointment.",
+      "The invoice, in a separate email."
+    ],
+    "subtitleManual": "In a few minutes you will get a welcome email with access to your member area. Your license follows in another email within a few hours.",
+    "stepsManual": [
+      "The link to your member area, with the downloads for Mac and Windows and, as soon as they are ready, your license and your invoices.",
+      "Your license, in another email within a few hours (and in your member area). Keep it: setup will ask you for it.",
       "The terms you accepted and, with Guided, your first session appointment.",
       "The invoice, in a separate email."
     ],
@@ -656,12 +677,14 @@
   },
   "purchase": {
     "metaTitle": "Buy the Digital Brain",
-    "metaDescription": "Payment with Stripe for businesses and professionals. The license and the customer area arrive right away.",
+    "metaDescription": "Payment with Stripe for businesses and professionals. The license and the member area arrive right away.",
+    "metaDescriptionManual": "Payment with Stripe for businesses and professionals. Access to the member area arrives right away and the license within a few hours.",
     "title": "Buy {product}",
-    "subtitle": "You pay on Stripe, with your tax ID or EU VAT number. Your license and access to your customer area arrive by email right away; the invoice, separately.",
+    "subtitle": "You pay on Stripe, with your tax ID or EU VAT number. Your license and access to your member area arrive by email right away; the invoice, separately.",
+    "subtitleManual": "You pay on Stripe, with your tax ID or EU VAT number. Access to your member area arrives by email right away; the license within a few hours, and the invoice separately.",
     "price": "List price: {list}. The first 10 customers pay {launch}: it is applied at payment while places last. VAT not included.",
     "chooseTitle": "Choose your first setup session",
-    "chooseText": "One hour by video call, with Eric or with Sergio. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Spanish peninsular time. You book the second one from your customer area.",
+    "chooseText": "One hour by video call, with Eric or with Sergio. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Spanish peninsular time. You book the second one from your member area.",
     "thirdWeek": "The next two weeks are full: these are the slots of the third one.",
     "noSlots": "There are no free slots right now. Write to us and we will find one for you.",
     "slotsError": "We could not load the free slots. Try again in a moment or write to us.",
@@ -676,8 +699,8 @@
       "session_required": "Choose a slot for your first session.",
       "unavailable": "We could not open the payment. Try again in a moment.",
       "product": "That product does not exist.",
-      "company_required": "Sign in to your customer area to subscribe.",
-      "already_subscribed": "You already have the monthly plan: change it from your customer area.",
+      "company_required": "Sign in to your member area to subscribe.",
+      "already_subscribed": "You already have the monthly plan: change it from your member area.",
       "rate_limited": "Too many attempts in a row. Wait a few minutes and try again.",
       "busy": "There are many payments with a session open right now. Try again in a few minutes or write to info@pymaticlabs.com."
     }
@@ -722,7 +745,7 @@
       "precios": "Pricing",
       "seguridad": "Security",
       "contacto": "Contact",
-      "zona": "Customer area"
+      "zona": "Member area"
     },
     "legalLinks": {
       "aviso": "Legal notice",
@@ -745,7 +768,7 @@
     "descriptions": {
       "aviso-legal": "Details of PYMATICLABS, S.L., owner of pymaticlabs.com, and terms of use of the website.",
       "politica-privacidad": "Which personal data we process when you visit pymaticlabs.com or write to us from it.",
-      "politica-cookies": "pymaticlabs.com only uses technical cookies: the theme one, if you ask for it, and the customer area session one, if you sign in.",
+      "politica-cookies": "pymaticlabs.com only uses technical cookies: the theme one, if you ask for it, and the member area session one, if you sign in.",
       "condiciones": "Terms of use and sale of the Digital Brain, for businesses and professionals.",
       "privacidad-producto": "Which personal data Pymatic Labs processes when selling the Digital Brain and providing support, and which it does not."
     },
@@ -756,11 +779,11 @@
   },
   "zone": {
     "meta": {
-      "title": "Customer area",
+      "title": "Member area",
       "description": "Your license, downloads, invoices and team for the Digital Brain.",
-      "loginTitle": "Sign in to the customer area"
+      "loginTitle": "Sign in to the member area"
     },
-    "eyebrow": "Customer area",
+    "eyebrow": "Member area",
     "roles": {
       "owner": "purchase holder",
       "member": "team member"
@@ -789,8 +812,8 @@
     },
     "ownerOnly": "Only the person who bought can see this part. If you need something from here, ask them.",
     "login": {
-      "title": "Sign in to your customer area",
-      "unavailable": "The customer area opens when the Digital Brain goes on sale. If you are already a customer and need anything, write to info@pymaticlabs.com.",
+      "title": "Sign in to your member area",
+      "unavailable": "The member area opens when the Digital Brain goes on sale. If you are already a customer and need anything, write to info@pymaticlabs.com.",
       "intro": "With the email you bought with, or the one your company added you with. We send you a one-time code: there are no passwords.",
       "emailLabel": "Your email",
       "send": "Send me the code",
@@ -870,6 +893,11 @@
       "download": "Download the license",
       "downloadShort": "Download",
       "preparing": "Your license is being prepared. In a few minutes it will be here and in your email.",
+      "pending": "Your license is on its way: we sign it and it reaches you by email within a few hours. As soon as it is ready, it is here too.",
+      "pendingTitle": "Your license, on its way",
+      "onTheWay": "On its way",
+      "introPending": "The license file proves the Digital Brain belongs to your company, and the setup asks for it. It reaches you by email as soon as we sign it and, from then on, it is here too.",
+      "pendingRenewal": "Your new monthly license is on its way: it reaches you by email within a few hours and will appear here. Meanwhile, the one below is still valid.",
       "fields": {
         "id": "Number",
         "holder": "Issued to",

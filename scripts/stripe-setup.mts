@@ -20,7 +20,7 @@
 
 import Stripe from 'stripe'
 import { LAUNCH_CUSTOMERS, modalities, plans } from '../lib/offer.ts'
-import { launchCouponId, lookupKey, productName, type ProductId } from '../lib/delivery/products.ts'
+import { WEBHOOK_EVENTS, launchCouponId, lookupKey, productName, type ProductId } from '../lib/delivery/products.ts'
 
 const key = process.env.STRIPE_SECRET_KEY
 if (!key) throw new Error('STRIPE_SECRET_KEY sin configurar')
@@ -107,21 +107,7 @@ async function main() {
   console.log('  portal de cliente: listo')
 
   if (webhookUrl) {
-    const events: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
-      'checkout.session.completed',
-      'checkout.session.async_payment_succeeded',
-      'checkout.session.async_payment_failed',
-      'checkout.session.expired',
-      'invoice.paid',
-      'charge.refunded',
-      'charge.dispute.created',
-      'charge.dispute.updated',
-      'charge.dispute.funds_withdrawn',
-      'charge.dispute.closed',
-      'customer.subscription.created',
-      'customer.subscription.updated',
-      'customer.subscription.deleted',
-    ]
+    const events: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [...WEBHOOK_EVENTS]
     const endpoints = await stripe.webhookEndpoints.list({ limit: 100 })
     const existing = endpoints.data.find((e) => e.url === webhookUrl)
     if (existing) {

@@ -378,6 +378,19 @@ html:not(.dark) .home-journey .home-hero .text-brand {
   color: var(--color-brand);
 }
 
+/* La barra de arriba, para quien ya entro en la zona en este navegador (la pista de lib/zone-profile.ts):
+   mientras pregunta la sesion, un circulo neutro donde ira su perfil en vez de Entrar. Sin la pista, o
+   en cuanto se sabe que no hay sesion, Entrar. */
+.nav-ghost {
+  visibility: hidden;
+}
+html[data-socio='1'] .nav-ghost {
+  visibility: visible;
+}
+html[data-socio='1'] .nav-login {
+  visibility: hidden;
+}
+
 /* Textos de los instrumentos y etiquetas sobre el hilo: un halo del color del fondo los separa de las lineas. */
 .halo {
   text-shadow: 0 0 6px var(--color-paper), 0 0 2px var(--color-paper);

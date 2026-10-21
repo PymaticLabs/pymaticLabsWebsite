@@ -10,7 +10,7 @@ Solo contratan empresas y profesionales, para su actividad: al comprar, el Clien
 
 Se contrata en la página de compra: el Cliente elige el producto, lee estas condiciones, las acepta marcando la casilla y paga. Antes de pagar puede corregir sus datos en el resumen del pedido. Después recibe por correo la confirmación y estas condiciones en un formato que puede guardar; PymaticLabs archiva el contrato y lo facilita si se le pide. Se contrata en castellano o en inglés; si las versiones difieren, prevalece la castellana.
 
-Las condiciones aceptadas llegan en el correo de bienvenida y quedan en la [zona de clientes](/zona).
+Las condiciones aceptadas llegan en el correo de bienvenida y quedan en la [zona de socio](/zona).
 
 ## 3. Qué incluye cada producto
 
@@ -85,7 +85,7 @@ El soporte, para quien lo tenga, es por correo ([info@pymaticlabs.com](mailto:in
 
 **Mantenimiento y soporte.** Los da la Suscripción, o sus meses incluidos en la compra, según el plan: mejoras y versiones nuevas, contenido y soporte. Sin ellos, el Cliente conserva la licencia y el uso de lo instalado y pierde el mantenimiento y el soporte. Decide cuándo instalar cada versión.
 
-**Versiones sin Suscripción.** Hay una sola línea de versiones y el Cliente puede instalar siempre la última, que trae las correcciones de seguridad. Lo nuevo de cada versión (procedimientos, packs, conectores y funciones) solo se activa si el fin del mantenimiento y soporte de su fichero de licencia cubre la fecha de esa versión. Cada cobro de la Suscripción da un fichero de licencia nuevo con la fecha nueva, en la zona de clientes.
+**Versiones sin Suscripción.** Hay una sola línea de versiones y el Cliente puede instalar siempre la última, que trae las correcciones de seguridad. Lo nuevo de cada versión (procedimientos, packs, conectores y funciones) solo se activa si el fin del mantenimiento y soporte de su fichero de licencia cubre la fecha de esa versión. Cada cobro de la Suscripción da un fichero de licencia nuevo con la fecha nueva, en la zona de socio.
 
 **Seguridad.** Las correcciones de seguridad no dependen de la Suscripción: llegan gratis a todo Cliente durante el periodo de soporte de seguridad de su versión, que no es el fin del mantenimiento y soporte del fichero, y, si solo se corrige la última, el Cliente puede pasar a ella gratis (artículo 13.10 del Reglamento (UE) 2024/2847 de ciberresiliencia, CRA). Las vulnerabilidades se gestionan según la [política de vulnerabilidades del Cerebro Digital](/seguridad#vulnerabilidades).
 

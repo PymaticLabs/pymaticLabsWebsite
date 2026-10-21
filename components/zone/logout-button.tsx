@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { localePath } from '@/lib/i18n'
+import { setProfileHint } from '@/lib/zone-profile'
 
 // Cerrar la sesion de la zona en este navegador. Sin sesion ya (401), se da por cerrada.
 export default function LogoutButton() {
@@ -19,6 +20,7 @@ export default function LogoutButton() {
     try {
       const res = await fetch('/api/zone/logout', { method: 'POST' })
       if (!res.ok && res.status !== 401) throw new Error(String(res.status))
+      setProfileHint(false)
       window.location.assign(localePath(locale, '/zona/entrar'))
     } catch {
       setFailed(true)

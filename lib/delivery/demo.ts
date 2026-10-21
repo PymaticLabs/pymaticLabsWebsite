@@ -1,4 +1,4 @@
-// La zona de clientes de muestra, solo en modo falso (DELIVERY_MODE=fake): para verla y sacar
+// La zona de socio de muestra, solo en modo falso (DELIVERY_MODE=fake): para verla y sacar
 // capturas sin Supabase ni ninguna cuenta. No se inventan filas a mano: se compra por el camino de
 // verdad (aviso de Stripe de mentira -> cola -> factura, licencia, cuenta, sesion y bienvenida), se
 // publica una version y se da de alta al equipo, todo con las piezas falsas.

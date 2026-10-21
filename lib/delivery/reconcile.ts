@@ -7,12 +7,16 @@
 //    pago (o con el pago devuelto y la licencia sin anular) es un aviso urgente, que sale en cuanto
 //    acaba este paso: la clave de la web pudo usarse fuera de la entrega. Se pregunta a Stripe de
 //    pocos en pocos a la vez y con tiempo tasado: si no da tiempo a todas, el aviso lo dice.
+//    Las firmadas a mano por Eric (LICENSE_MODE=manual) cuentan igual: tambien tienen su pago.
 // 3. Facturas en borrador (emision a mano): si ya se emitieron en Holded, se guardan para la zona.
 // 4. Pasos parados en la cola.
+// 5. Licencias pedidas a mano que siguen sin firmar pasadas LICENSE_PENDING_ALERT_HOURS horas:
+//    aviso cada dia hasta que se suban (el primero lo da license_reminder a esas horas).
 
 import type Stripe from 'stripe'
 import { internalEmail } from './emails.ts'
 import { ingestCheckoutSession, ingestInvoice } from './events.ts'
+import { overdueLicenseRequests, sendOverdueNotice } from './manual-license.ts'
 import { storeInvoicePdf } from './steps.ts'
 import { errorMessage } from './util.ts'
 import type { Delivery } from './container.ts'
@@ -28,6 +32,8 @@ export interface ReconcileReport {
   skipped: { ref: string; reason: string }[]
   invoicesStored: string[]
   deadJobs: number
+  /** Pedidas a Eric y sin firmar pasadas las horas de aviso. */
+  pendingLicenses: Awaited<ReturnType<typeof overdueLicenseRequests>>
   errors: string[]
 }
 
@@ -40,7 +46,7 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
   const now = d.clock()
   const since = new Date(now.getTime() - (options.days ?? d.config.reconcileDays) * 86400_000)
   const sinceUnix = Math.floor(since.getTime() / 1000)
-  const report: ReconcileReport = { since: since.toISOString(), checkedLicenses: 0, unchecked: 0, orphans: [], recovered: [], skipped: [], invoicesStored: [], deadJobs: 0, errors: [] }
+  const report: ReconcileReport = { since: since.toISOString(), checkedLicenses: 0, unchecked: 0, orphans: [], recovered: [], skipped: [], invoicesStored: [], deadJobs: 0, pendingLicenses: [], errors: [] }
 
   // 1. Pagos sin entregar
   for (const raw of await d.payments.listPaidCheckoutSessions(sinceUnix)) {
@@ -147,6 +153,10 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
 
   // 4. Pasos parados
   report.deadJobs = (await d.repo.listJobs({ status: 'dead', limit: 500 })).length
+
+  // 5. Licencias a mano sin firmar
+  report.pendingLicenses = await overdueLicenseRequests(d)
+  await sendOverdueNotice(d, report.pendingLicenses, `reconcile:${now.toISOString().slice(0, 10)}:sin-firmar`)
 
   if (!report.orphans.length && (report.recovered.length || report.skipped.length || report.deadJobs || report.errors.length || report.unchecked)) {
     const mail = internalEmail(`Conciliación: ${report.recovered.length} recuperada(s), ${report.deadJobs} paso(s) parado(s)`, {

@@ -8,9 +8,16 @@
 // Con --start levanta `next start` en el puerto 3101 con el entorno de prueba y lo para al acabar.
 // Sin el, usa E2E_BASE_URL y los mismos secretos (STRIPE_WEBHOOK_SECRET, JOBS_SECRET, ADMIN_SECRET)
 // que la web que ya este corriendo con DELIVERY_MODE=fake y CHECKOUT_OPEN=true.
+//
+// Despues, las licencias a mano (LICENSE_MODE=manual, como ira en produccion hasta que el producto
+// acepte la clave de la web): con --start, otra web en el puerto siguiente; sin el, la de
+// E2E_MANUAL_BASE_URL (con LICENSE_MANUAL_PUBLIC_KEY de la clave de E2E_MANUAL_SEED), o se salta.
+// Compra, correo a Eric con los campos, scripts/subir-licencia.mts contra la web, correo al cliente
+// con la licencia, descarga desde la zona y el cobro del mensual.
 
-import { spawn, type ChildProcess } from 'node:child_process'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import assert from 'node:assert/strict'
+import { generateKeyPairSync } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -18,49 +25,63 @@ import { fileURLToPath } from 'node:url'
 import { fakeCharge, fakeCheckoutSession, fakeEvent, fakeInvoice, signPayload } from '../lib/delivery/fake-stripe.ts'
 import { priceCents } from '../lib/delivery/products.ts'
 import { unzip } from '../lib/delivery/zip.ts'
-import { verifyLicense } from '../lib/license.ts'
+import { privateKeyFromSeed, rawPublicKey, signLicense, verifyLicense, type LicenseData } from '../lib/license.ts'
 import { LEGAL_VERSIONS } from '../lib/legal-versions.ts'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const start = process.argv.includes('--start')
 const port = Number(process.env.E2E_PORT || 3101)
 const base = (process.env.E2E_BASE_URL || `http://127.0.0.1:${port}`).replace(/\/+$/, '')
+const manualBase = (process.env.E2E_MANUAL_BASE_URL || (start ? `http://127.0.0.1:${port + 1}` : '')).replace(/\/+$/, '')
 const secrets = {
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_e2e_solo_pruebas',
   JOBS_SECRET: process.env.JOBS_SECRET || 'e2e-jobs-solo-pruebas',
   ADMIN_SECRET: process.env.ADMIN_SECRET || 'e2e-admin-solo-pruebas',
 }
 const fakeDir = process.env.DELIVERY_FAKE_DIR || fs.mkdtempSync(path.join(os.tmpdir(), 'entrega-e2e-'))
+const manualDir = fs.mkdtempSync(path.join(os.tmpdir(), 'entrega-e2e-manual-'))
+// "La clave del Mac de Eric" de la prueba: una de pruebas (la de verdad no sale de su Mac).
+const ericSeed =
+  process.env.E2E_MANUAL_SEED ||
+  (() => {
+    const der = generateKeyPairSync('ed25519').privateKey.export({ format: 'der', type: 'pkcs8' })
+    return der.subarray(der.length - 32).toString('base64')
+  })()
+const ericPublic = rawPublicKey(privateKeyFromSeed(ericSeed))
+const ericEmail = 'eric@e2e.test'
 
-let server: ChildProcess | null = null
+const servers: ChildProcess[] = []
+// La web a la que hablan las ayudas de abajo: la de siempre y, despues, la de las licencias a mano.
+let site = base
 let step = 0
 function log(message: string) {
   console.log(`  ${String(++step).padStart(2, '0')}. ${message}`)
 }
 
-async function startServer() {
+async function startServer(url: string, listen: number, env: Record<string, string>) {
   const next = path.join(root, 'node_modules', 'next', 'dist', 'bin', 'next')
   // Sin -H: con -H 127.0.0.1, el middleware de idiomas reescribe a localhost y entra en bucle.
-  server = spawn(process.execPath, [next, 'start', '-p', String(port)], {
+  const server = spawn(process.execPath, [next, 'start', '-p', String(listen)], {
     cwd: root,
     env: {
       ...process.env,
       ...secrets,
       NODE_ENV: 'production',
       DELIVERY_MODE: 'fake',
-      DELIVERY_FAKE_DIR: fakeDir,
-      DELIVERY_SITE_URL: base,
+      DELIVERY_SITE_URL: url,
       CHECKOUT_OPEN: 'true',
       VERCEL_ENV: '',
+      ...env,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
+  servers.push(server)
   const output: string[] = []
   server.stdout?.on('data', (chunk) => output.push(String(chunk)))
   server.stderr?.on('data', (chunk) => output.push(String(chunk)))
   for (let i = 0; i < 120; i++) {
     try {
-      const res = await fetch(`${base}/api/dev/state`)
+      const res = await fetch(`${url}/api/dev/state`)
       if (res.ok) return
     } catch {
       // aun arrancando
@@ -71,8 +92,18 @@ async function startServer() {
   throw new Error(`next start no arranco:\n${output.join('')}`)
 }
 
+/** scripts/subir-licencia.mts contra la web de las licencias a mano, como lo correria Eric. */
+function uploadScript(args: string[], env: Record<string, string> = {}) {
+  const run = spawnSync(process.execPath, [path.join(root, 'scripts', 'subir-licencia.mts'), '--web', site, ...args], {
+    cwd: root,
+    env: { ...process.env, ADMIN_SECRET: secrets.ADMIN_SECRET, ...env },
+    encoding: 'utf-8',
+  })
+  return { status: run.status, out: `${run.stdout}${run.stderr}` }
+}
+
 async function state() {
-  const res = await fetch(`${base}/api/dev/state`)
+  const res = await fetch(`${site}/api/dev/state`)
   assert.equal(res.status, 200, 'la web tiene que correr con DELIVERY_MODE=fake')
   return (await res.json()) as {
     db: Record<string, Record<string, any>>
@@ -94,14 +125,14 @@ async function until<T>(what: string, check: (s: Awaited<ReturnType<typeof state
 }
 
 async function runWorker() {
-  const res = await fetch(`${base}/api/jobs/run`, { method: 'POST', headers: { Authorization: `Bearer ${secrets.JOBS_SECRET}` } })
+  const res = await fetch(`${site}/api/jobs/run`, { method: 'POST', headers: { Authorization: `Bearer ${secrets.JOBS_SECRET}` } })
   assert.equal(res.status, 200)
   return res.json()
 }
 
 async function sendEvent(type: string, object: Record<string, unknown>) {
   const payload = JSON.stringify(fakeEvent(type, object))
-  const res = await fetch(`${base}/api/stripe/webhook`, {
+  const res = await fetch(`${site}/api/stripe/webhook`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Stripe-Signature': signPayload(payload, secrets.STRIPE_WEBHOOK_SECRET) },
     body: payload,
@@ -113,12 +144,12 @@ async function sendEvent(type: string, object: Record<string, unknown>) {
 async function buyThroughWeb(product: string, buyer: { company: string; taxId: string; email: string }, slot?: string) {
   const form = new URLSearchParams({ product, locale: 'es' })
   if (slot) form.set('slot', slot)
-  const checkout = await fetch(`${base}/api/checkout`, { method: 'POST', body: form, redirect: 'manual' })
+  const checkout = await fetch(`${site}/api/checkout`, { method: 'POST', body: form, redirect: 'manual' })
   assert.equal(checkout.status, 303, `checkout de ${product}`)
   const payUrl = checkout.headers.get('location')!
   assert.match(payUrl, /\/api\/dev\/checkout\?id=cs_fake_/)
   const id = new URL(payUrl).searchParams.get('id')!
-  const pay = await fetch(`${base}/api/dev/checkout`, {
+  const pay = await fetch(`${site}/api/dev/checkout`, {
     method: 'POST',
     body: new URLSearchParams({ id, company: buyer.company, taxId: buyer.taxId, email: buyer.email, country: 'ES' }),
     redirect: 'manual',
@@ -130,22 +161,22 @@ async function buyThroughWeb(product: string, buyer: { company: string; taxId: s
 
 async function zoneLogin(email: string) {
   const before = (await state()).mail.filter((m) => m.tags.includes('zona-codigo') && m.to === email).length
-  const login = await fetch(`${base}/api/zone/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, locale: 'es' }) })
+  const login = await fetch(`${site}/api/zone/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, locale: 'es' }) })
   assert.equal(login.status, 200)
   const code = await until(`codigo para ${email}`, (s) => {
     const mails = s.mail.filter((m) => m.tags.includes('zona-codigo') && m.to === email)
     return mails.length > before ? mails[mails.length - 1].text : null
   })
-  const verify = await fetch(`${base}/api/zone/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code }) })
+  const verify = await fetch(`${site}/api/zone/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code }) })
   assert.equal(verify.status, 200)
   const cookie = verify.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ')
   assert.ok(cookie, 'la sesion queda en una cookie')
-  return (url: string, init: RequestInit = {}) => fetch(`${base}${url}`, { ...init, redirect: 'manual', headers: { ...(init.headers as Record<string, string>), Cookie: cookie } })
+  return (url: string, init: RequestInit = {}) => fetch(`${site}${url}`, { ...init, redirect: 'manual', headers: { ...(init.headers as Record<string, string>), Cookie: cookie } })
 }
 
 async function main() {
   console.log(`Entrega automatica, de punta a punta contra ${base} (modo falso)`)
-  if (start) await startServer()
+  if (start) await startServer(base, port, { DELIVERY_FAKE_DIR: fakeDir })
   const ts = Date.now().toString(36)
 
   // 1. Un aviso firmado de Hazlo tu, repetido, y el trabajador protegido.
@@ -198,7 +229,10 @@ async function main() {
   const add = await zone('/api/zone/team', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ company: me.company.id, email: `equipo-${ts}@e2e.test` }) })
   assert.deepEqual(await add.json(), { added: true })
   assert.equal((await fetch(`${base}/api/zone/me`)).status, 401)
-  log('zona: codigo por correo, sesion, licencia para volver a bajar y alta en el equipo')
+  // La barra de arriba de cada pagina (estatica) pregunta quien es: sin sesion, 200 y nadie.
+  assert.deepEqual(await (await fetch(`${base}/api/zone/me?perfil=1`)).json(), { available: true, user: null })
+  assert.deepEqual(await (await zone('/api/zone/me?perfil=1')).json(), { available: true, user: { email: c.email, companies: [{ name: me.company.name, role: 'owner' }] } })
+  log('zona: codigo por correo, sesion, licencia para volver a bajar, alta en el equipo y el perfil de la barra de arriba')
 
   // 4. Version nueva: ficheros en el almacen, aviso a todos, descarga con enlace firmado.
   const version = `9.${Number.parseInt(ts.slice(-4), 36) % 1000}.0`
@@ -294,7 +328,98 @@ async function main() {
   assert.ok((await demoHome.text()).includes('Carpintería Muñoz'), 'la zona de muestra se pinta')
   log('zona de muestra: /api/dev/zona-demo entra como la titular de Carpinteria Munoz')
 
+  await manualLicenses(ts)
+
   console.log('OK: la entrega automatica funciona de punta a punta')
+}
+
+/** Lo que dice el correo a Eric: la compra y los campos (en JSON) de la licencia a firmar. */
+function askedFields(text: string): { purchaseId: string; fields: Omit<LicenseData, 'id'> } {
+  const purchaseId = /^Compra: (\S+)$/m.exec(text)?.[1]
+  const fields = /^Campos \(JSON\): (\{.*\})$/m.exec(text)?.[1]
+  assert.ok(purchaseId && fields, 'el correo a Eric lleva la compra y los campos')
+  return { purchaseId, fields: JSON.parse(fields) }
+}
+
+async function manualLicenses(ts: string) {
+  if (!manualBase) {
+    console.log('  (sin --start ni E2E_MANUAL_BASE_URL: se saltan las licencias a mano)')
+    return
+  }
+  if (start) {
+    await startServer(manualBase, port + 1, { DELIVERY_FAKE_DIR: manualDir, LICENSE_MODE: 'manual', LICENSE_MANUAL_PUBLIC_KEY: ericPublic, LICENSE_REQUEST_EMAIL: ericEmail })
+  }
+  site = manualBase
+
+  // 9. Compra con equipo: la licencia se pide a Eric y la bienvenida sale sin ella.
+  const m = { company: `Despacho Manual ${ts} SL`, taxId: `B4${ts.slice(-7).toUpperCase()}`, email: `manual-${ts}@e2e.test` }
+  await buyThroughWeb('hazlo-tu-equipo', m)
+  const welcome = await until('bienvenida a mano', (s) => s.mail.find((x) => x.to === m.email && x.tags.includes('bienvenida')))
+  assert.match(welcome.text, /Tu licencia te llega en unas horas/)
+  assert.ok(!welcome.attachments.some((x) => x.name.endsWith('.zip')), 'la bienvenida no lleva licencia')
+  const ask = await until('la licencia pedida a Eric', (s) => s.mail.find((x) => x.to === ericEmail && /Licencia a firmar: Despacho Manual/.test(x.subject)))
+  const { purchaseId, fields } = askedFields(ask.text)
+  assert.deepEqual([fields.cliente, fields.nif, fields.modalidad, fields.equipo], [m.company, m.taxId, 'hazlo-tu', true])
+  assert.ok(ask.text.includes(`scripts/subir-licencia.mts --web ${manualBase} --compra ${purchaseId}`))
+  const zone = await zoneLogin(m.email)
+  const me = await (await zone('/api/zone/me')).json()
+  assert.deepEqual([me.licenses.length, me.pendingLicenses.length], [0, 1])
+  const pendingPage = await (await zone('/zona/licencia')).text()
+  assert.ok(pendingPage.includes('Tu licencia está en camino'), 'la zona la ensena en camino')
+  log('a mano: la compra pide la licencia a Eric con los campos, la bienvenida sale sin ella y la zona dice que esta en camino')
+
+  // 10. Eric la firma (aqui, con la clave de prueba) y la sube con el script: una que no cuadra, no.
+  const file = path.join(manualDir, `licencia-${ts}.cerebro-licencia`)
+  const id = `PML-LIC-${fields.emitida.slice(0, 4)}-0042`
+  fs.writeFileSync(file, signLicense({ id, ...fields, nif: 'B00000000' }, ericSeed, ericPublic).text)
+  const wrong = uploadScript(['--compra', purchaseId, '--fichero', file])
+  assert.equal(wrong.status, 1, wrong.out)
+  assert.match(wrong.out, /NO SE HA SUBIDO \(409\): no cuadra con la compra: nif/)
+  const text = signLicense({ id, ...fields }, ericSeed, ericPublic).text
+  fs.writeFileSync(file, text)
+  const good = uploadScript(['--compra', purchaseId, '--fichero', file])
+  assert.equal(good.status, 0, good.out)
+  assert.match(good.out, new RegExp(`OK: licencia ${id} guardada`))
+  log(`a mano: subir-licencia.mts rechaza una que no cuadra (NIF) y sube la buena (${id}) contra la web`)
+
+  // 11. El cliente la recibe en .zip y la baja de la zona; no queda ninguna sin firmar.
+  const mail = await until('la licencia al cliente', (s) => s.mail.find((x) => x.to === m.email && x.tags.includes('licencia')))
+  assert.equal(unzip(Buffer.from(mail.attachments.find((x) => x.name.endsWith('.zip'))!.base64, 'base64'))[0].content.toString('utf-8'), text)
+  const download = await zone(`/api/zone/licenses/${id}`)
+  assert.equal(download.status, 200)
+  assert.equal(await download.text(), text)
+  assert.equal(verifyLicense(text, ericPublic).id, id)
+  const after = await (await zone('/api/zone/me')).json()
+  assert.deepEqual([after.licenses.map((l: { id: string }) => l.id), after.pendingLicenses.length], [[id], 0])
+  const admin = { Authorization: `Bearer ${secrets.ADMIN_SECRET}` }
+  assert.deepEqual((await (await fetch(`${site}/api/admin/licenses`, { headers: admin })).json()).pedidas, [])
+  assert.equal(uploadScript(['--compra', purchaseId, '--fichero', file]).status, 0, 'subirla otra vez no falla ni la repite')
+  // El fichero ya es JSON: mandado tal cual con ese tipo (curl -H "Content-Type: application/json"), tambien vale.
+  const asJson = await fetch(`${site}/api/admin/licenses?compra=${purchaseId}`, { method: 'POST', headers: { ...admin, 'Content-Type': 'application/json' }, body: text })
+  assert.equal(asJson.status, 200, await asJson.clone().text())
+  assert.equal((await asJson.json()).already, true)
+  assert.equal((await state()).mail.filter((x) => x.to === m.email && x.tags.includes('licencia')).length, 1, 'sin correos de mas')
+  log('a mano: el cliente recibe la licencia en .zip, la baja de la zona y no queda ninguna sin firmar')
+
+  // 12. Un cobro del mensual: su licencia nueva se pide igual; firmada de prueba, sale el correo del mensual.
+  const company = Object.values((await state()).db.companies).find((x) => x.taxId === m.taxId)!
+  const periodEnd = Math.floor(Date.now() / 1000) + 120 * 86400
+  const invoice = fakeInvoice({ customer: company.stripeCustomerId, amount: 9900, periodEnd, metadata: { product: 'plan-esencial', company_id: company.id } })
+  assert.equal((await sendEvent('invoice.paid', invoice)).body.outcome, 'renewal')
+  await until('la licencia del mensual pedida a Eric', (s) => s.mail.find((x) => x.to === ericEmail && /Licencia a firmar: Despacho Manual/.test(x.subject) && x.text.includes('Cobro del mensual')))
+  const signed = uploadScript(['--compra', String(invoice.id), '--firmar-prueba'], { LICENSE_TEST_SEED: ericSeed })
+  assert.equal(signed.status, 0, signed.out)
+  const monthly = await until('el correo del mensual', (s) => s.mail.find((x) => x.to === m.email && x.tags.includes('mensual')))
+  assert.ok(monthly.attachments.some((x) => x.name.endsWith('.zip')))
+  log('a mano: el cobro del mensual pide su licencia y, firmada con --firmar-prueba, sale el correo del mensual con ella')
+
+  // 13. La comprobacion de produccion por la web: con secreto; en modo falso, no esta lista.
+  assert.equal((await fetch(`${site}/api/admin/health`)).status, 401)
+  const health = await (await fetch(`${site}/api/admin/health`, { headers: admin })).json()
+  assert.equal(health.ready, false)
+  assert.ok(health.checks.some((c: { item: string; status: string }) => c.item === 'Entrega' && c.status === 'falta'))
+  assert.ok(!JSON.stringify(health).includes(secrets.ADMIN_SECRET), 'sin secretos')
+  log('comprobacion de produccion: /api/admin/health pide el secreto y, en modo falso, dice que no esta lista')
 }
 
 main()
@@ -304,6 +429,7 @@ main()
     process.exitCode = 1
   })
   .finally(() => {
-    if (server) server.kill()
+    for (const server of servers) server.kill()
     if (start && !process.env.DELIVERY_FAKE_DIR) fs.rmSync(fakeDir, { recursive: true, force: true })
+    fs.rmSync(manualDir, { recursive: true, force: true })
   })

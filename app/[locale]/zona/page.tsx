@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { CalendarClock, Download, FileText, KeyRound, LifeBuoy, Users } from 'lucide-react'
+import { CalendarClock, Clock, Download, FileText, KeyRound, LifeBuoy, Users } from 'lucide-react'
 import ZoneFrame from '@/components/zone/zone-frame'
-import { ButtonLink, Card, Notice, PageTitle } from '@/components/zone/zone-ui'
+import { ButtonLink, Card, Notice, PageTitle, StatusPill } from '@/components/zone/zone-ui'
 import { formatDate, formatDateTime } from '@/lib/delivery/emails'
 import { hostName } from '@/lib/delivery/products'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
 import { companyParam, loadZone } from '@/lib/zone-page'
-import { currentLicense, monthlyState, planName, sectionPath, upcomingSessions, zoneSections } from '@/lib/zone-view'
+import { currentLicense, monthlyState, pendingLicense, planName, sectionPath, upcomingSessions, zoneSections } from '@/lib/zone-view'
 
-// Inicio de la zona de clientes: lo de la compra de un vistazo, con lo que mas se usa a mano
+// Inicio de la zona de socio: lo de la compra de un vistazo, con lo que mas se usa a mano
 // (bajar la licencia, ir a las descargas, la proxima sesion).
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +38,7 @@ export default async function ZonaPage({ params, searchParams }: { params: Param
   const company = companyParam(data)
   const sections = zoneSections(data)
   const license = currentLicense(data.licenses)
+  const pending = license ? null : pendingLicense(data)
   const monthly = monthlyState(data, now)
   const next = upcomingSessions(data, now)[0]
   const booked = data.sessions.bookings.filter((b) => b.status === 'booked').length
@@ -66,6 +67,27 @@ export default async function ZonaPage({ params, searchParams }: { params: Param
                   <Download className="h-5 w-5" aria-hidden="true" />
                   {t('license.download')}
                 </ButtonLink>
+                <ButtonLink href={link('licencia')} variant="outline" internal>
+                  {t('home.license.more')}
+                </ButtonLink>
+              </div>
+            </>
+          ) : pending ? (
+            // A mano: lo que llevara la licencia que Eric aun no ha firmado, y que esta en camino.
+            <>
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-lg font-medium text-ink">
+                <span>
+                  {tOffer(`modalities.${pending.modalidad}${pending.equipo ? '-equipo' : ''}.name`)} ·{' '}
+                  {pending.equipo ? t('license.team', { seats: data.company.seats }) : t('license.solo')}
+                </span>
+                <StatusPill>
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                  {t('license.onTheWay')}
+                </StatusPill>
+              </p>
+              <p>{pending.soporteHasta > pending.emitida ? t('license.supportUntil', { date: formatDate(pending.soporteHasta, loc) }) : t('license.noSupport')}</p>
+              <p>{t('license.pending')}</p>
+              <div className="pt-2">
                 <ButtonLink href={link('licencia')} variant="outline" internal>
                   {t('home.license.more')}
                 </ButtonLink>

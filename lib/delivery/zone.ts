@@ -1,4 +1,4 @@
-// Lo que hace la zona de clientes, sin la interfaz (la construye otra pieza sobre /api/zone/*).
+// Lo que hace la zona de socio, sin la interfaz (la construye otra pieza sobre /api/zone/*).
 //
 // - Entrar: correo y codigo de un solo uso. Solo reciben codigo los correos con acceso (titular o
 //   equipo de una empresa con acceso vigente); a los demas no se les dice nada distinto (ni tardando
@@ -17,6 +17,7 @@ import { isGuided, isSessionHost } from './products.ts'
 import { termsAttachment } from './terms.ts'
 import { madridDate, normalizeEmail } from './util.ts'
 import type { Delivery } from './container.ts'
+import type { ZoneProfile } from '../zone-profile.ts'
 import { RateLimitedError, SeatLimitError, SlotUnavailableError, type Company, type CookieJar, type Locale, type Member, type Slot, type ZoneUser } from './types.ts'
 
 export class ZoneError extends Error {
@@ -112,17 +113,27 @@ export async function verifyCode(d: Delivery, rawEmail: string, code: string, ja
   return user
 }
 
+/**
+ * Lo poco que ensena la barra de arriba de la web de quien tiene sesion: su correo y sus empresas con
+ * acceso vigente (ninguna si se le cerro la zona). Sin los datos de la zona: va en cada pagina.
+ */
+export async function zoneProfile(d: Delivery, user: ZoneUser): Promise<ZoneProfile> {
+  const all = await accesses(d, user)
+  return { email: user.email, companies: all.map((a) => ({ name: a.company.name, role: a.owner ? 'owner' : 'member' })) }
+}
+
 export async function zoneOverview(d: Delivery, user: ZoneUser, companyId?: string | null) {
   const all = await accesses(d, user)
   if (!all.length) throw new ZoneError(403, 'sin acceso a la zona')
   const { company, owner } = await access(d, user, companyId)
-  const [licenses, invoices, purchases, members, bookings, latest] = await Promise.all([
+  const [licenses, invoices, purchases, members, bookings, latest, requested] = await Promise.all([
     d.repo.listLicensesByCompany(company.id),
     owner ? d.repo.listInvoicesByCompany(company.id) : Promise.resolve([]),
     owner ? d.repo.listPurchasesByCompany(company.id) : Promise.resolve([]),
     owner ? d.repo.listMembers(company.id) : Promise.resolve([]),
     d.repo.listBookingsByCompany(company.id),
     d.repo.getLatestVersion(),
+    d.repo.listLicenseRequests({ companyId: company.id, status: 'pending' }),
   ])
   const guided = purchases.some((p) => p.kind === 'one_time' && isGuided(p.product) && p.status === 'paid')
   const booked = bookings.filter((b) => b.status === 'booked')
@@ -149,6 +160,8 @@ export async function zoneOverview(d: Delivery, user: ZoneUser, companyId?: stri
       fileName: l.fileName,
       revoked: Boolean(l.revokedAt),
     })),
+    // Las que Eric aun tiene que firmar (LICENSE_MODE=manual): la zona dice que llegan en unas horas.
+    pendingLicenses: requested.map((r) => ({ kind: r.kind, modalidad: r.modalidad, equipo: r.equipo, emitida: r.emitida, soporteHasta: r.soporteHasta, requestedAt: r.createdAt })),
     invoices: invoices
       .filter((i) => i.status !== 'draft')
       .map((i) => ({ id: i.id, kind: i.kind, number: i.number, amountTotal: i.amountTotal, currency: i.currency, date: i.approvedAt ?? i.createdAt, downloadable: Boolean(i.storagePath) })),

@@ -13,7 +13,7 @@ export default function Footer() {
     { href: localePath(locale, '/precios'), label: t('links.precios') },
     { href: localePath(locale, '/seguridad'), label: t('links.seguridad') },
     { href: localePath(locale, '/contacto'), label: t('links.contacto') },
-    // La zona de clientes, solo cuando esta montada (ver zoneAvailable).
+    // La zona de socio, solo cuando esta montada (ver zoneAvailable).
     ...(zoneAvailable() ? [{ href: localePath(locale, '/zona'), label: t('links.zona') }] : []),
   ]
 

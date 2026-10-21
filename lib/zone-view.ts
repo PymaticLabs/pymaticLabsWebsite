@@ -1,4 +1,4 @@
-// Lo que ensena la zona de clientes (app/[locale]/zona) a partir de zoneOverview, sin React: que
+// Lo que ensena la zona de socio (app/[locale]/zona) a partir de zoneOverview, sin React: que
 // secciones ve cada persona, la licencia que vale ahora, en que punto esta su mantenimiento y
 // soporte, las descargas por sistema y a donde se vuelve tras entrar. Lo prueba lib/zone.test.mts.
 //
@@ -44,6 +44,14 @@ export function currentLicense(licenses: ZoneLicense[]): ZoneLicense | null {
       .filter((l) => !l.revoked)
       .sort((a, b) => b.soporteHasta.localeCompare(a.soporteHasta) || b.emitida.localeCompare(a.emitida) || b.id.localeCompare(a.id))[0] ?? null
   )
+}
+
+/**
+ * La que Eric aun tiene que firmar (LICENSE_MODE=manual) y se ensena en su lugar mientras no hay
+ * ninguna: la del pago unico antes que la de un cobro del mensual.
+ */
+export function pendingLicense(o: ZoneOverview): ZoneOverview['pendingLicenses'][number] | null {
+  return o.pendingLicenses.find((p) => p.kind === 'one_time') ?? o.pendingLicenses[0] ?? null
 }
 
 /** Las demas, de la mas nueva a la mas antigua, anuladas incluidas. */

@@ -3,7 +3,7 @@ import { clientIp, errorResponse, localeOf, readBody, sameOrigin } from '@/lib/a
 import { getDelivery } from '@/lib/delivery/container'
 import { allowCodeRequest, requestCode } from '@/lib/delivery/zone'
 
-// Zona de clientes, paso 1: el correo. Si tiene acceso, le llega un codigo de un solo uso. La
+// Zona de socio, paso 1: el correo. Si tiene acceso, le llega un codigo de un solo uso. La
 // respuesta es siempre la misma y en el mismo tiempo: se contesta antes de mirar si es cliente y el
 // codigo se pide despues (after). Demasiadas peticiones desde una IP: 429, a todos por igual.
 

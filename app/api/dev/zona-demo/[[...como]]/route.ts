@@ -4,7 +4,7 @@ import { devToolsEnabled } from '@/lib/delivery/config'
 import { getDelivery } from '@/lib/delivery/container'
 import { DEMO_PEOPLE, seedZoneDemo, type DemoPerson } from '@/lib/delivery/demo'
 
-// Solo en modo falso: la zona de clientes de muestra, para verla y sacar capturas sin Supabase.
+// Solo en modo falso: la zona de socio de muestra, para verla y sacar capturas sin Supabase.
 // Monta la muestra (lib/delivery/demo.ts), entra como esa persona por el camino de verdad (codigo
 // del buzon falso y sesion en cookie) y lleva a la zona.
 //

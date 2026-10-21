@@ -3,14 +3,17 @@
 //
 // Pago unico: invoice, license, account, booking (Acompanado) -> welcome -> notice.
 // Mensual (cada cobro): invoice, license -> renewal_email -> notice.
+// Con LICENSE_MODE=manual, license no firma: pide la licencia a Eric (license_reminder si tarda) y
+// la bienvenida sale sin ella; al subirla, license_email (o renewal_email en un cobro del mensual).
 // Devolucion o contracargo: revoke (y, sin pago unico vigente, cancel_subscription), rectify (tras
 // invoice), refund_email, notice; contracargo ganado: reinstate.
 // Version nueva: announce (uno por persona). Alta en el equipo: team_invite. Compra con el NIF de
 // otra empresa cliente: company_alert (a sus titulares).
 
 import { addMonths, formatLicenseId, type LicenseModality } from '../license.ts'
-import { companyAlertEmail, formatDate, formatDateTime, internalEmail, refundEmail, renewalEmail, teamInviteEmail, versionEmail, welcomeEmail, zoneUrl } from './emails.ts'
+import { companyAlertEmail, formatDate, formatDateTime, internalEmail, licenseReadyEmail, refundEmail, renewalEmail, teamInviteEmail, versionEmail, welcomeEmail, zoneUrl } from './emails.ts'
 import { issueLicense } from './license-issue.ts'
+import { cancelLicenseRequests, requestManualLicense, restoreLicenseRequests, sendOverdueNotice } from './manual-license.ts'
 import { hostName, isGuided, isOneTimeProduct, licenseTermsFor, productName, priceCents } from './products.ts'
 import { decideTax } from './tax.ts'
 import { termsAttachment } from './terms.ts'
@@ -27,6 +30,7 @@ import {
   type InvoiceRecord,
   type Job,
   type LicenseRecord,
+  type LicenseRequest,
   type Locale,
   type MailAttachment,
   type Purchase,
@@ -327,8 +331,10 @@ const license: StepHandler = async (d, job) => {
   const existing = await d.repo.getLicenseByPurchase(purchase.id)
   if (existing) return { licenseId: existing.id }
   const company = await companyOf(d, purchase)
-  // Un pago de prueba nunca se firma con la clave que conoce el producto (ni uno de verdad con la de pruebas).
-  if (purchase.livemode !== (d.config.licenseKeyEnv === 'production')) {
+  const manual = d.config.licenseMode === 'manual'
+  // Un pago de prueba nunca se firma con la clave que conoce el producto (ni uno de verdad con la de
+  // pruebas). A mano, lo mismo se comprueba al subirla (y el correo a Eric lo avisa).
+  if (!manual && purchase.livemode !== (d.config.licenseKeyEnv === 'production')) {
     throw new PermanentError(
       `pago ${purchase.livemode ? 'en vivo' : 'de prueba'} y clave de licencias de ${d.config.licenseKeyEnv === 'production' ? 'produccion' : 'pruebas'} (LICENSE_KEY_ENV): no se firma`
     )
@@ -346,11 +352,28 @@ const license: StepHandler = async (d, job) => {
     const bases = company.accessRevokedAt ? [] : await validBases(d, company.id)
     if (!bases.length) throw new PermanentError(`${company.name} cobra el mensual sin pago unico vigente: revisar y, si toca, cancelar la suscripcion`)
     const licenses = (await d.repo.listLicensesByCompany(company.id)).filter((l) => !l.revokedAt).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-    const base = licenses.find((l) => bases.some((p) => p.id === l.purchaseId)) ?? licenses[0]
+    // A mano, la del pago unico puede estar aun pedida, sin firmar: vale lo que se pidio.
+    const pending = (await d.repo.listLicenseRequests({ companyId: company.id, status: 'pending' })).filter((r) => r.purchaseId !== purchase.id)
+    const base: { modalidad: LicenseModality; equipo: boolean } | undefined =
+      licenses.find((l) => bases.some((p) => p.id === l.purchaseId)) ?? pending.find((r) => bases.some((p) => p.id === r.purchaseId)) ?? licenses[0]
     if (!base) throw new PermanentError(`${company.name} cobra el mensual sin licencia de pago unico`)
     const paid = (await d.repo.listPurchasesByCompany(company.id)).filter((p) => p.kind === 'renewal' && p.status === 'paid' && p.supportUntil)
-    const best = [purchase.supportUntil ?? addMonths(emitida, 1), emitida, ...licenses.map((l) => l.soporteHasta), ...paid.map((p) => p.supportUntil!)].sort().pop()!
+    const best = [
+      purchase.supportUntil ?? addMonths(emitida, 1),
+      emitida,
+      ...licenses.map((l) => l.soporteHasta),
+      ...pending.map((r) => r.soporteHasta),
+      ...paid.map((p) => p.supportUntil!),
+    ]
+      .sort()
+      .pop()!
     terms = { modalidad: base.modalidad, equipo: base.equipo, soporte_hasta: best }
+  }
+
+  if (manual) {
+    // La firma Eric en su Mac (la clave que el producto ya conoce): se le pide, y la bienvenida sale sin esperarla.
+    const request = await requestManualLicense(d, purchase, company, terms, emitida)
+    return { manual: true, requestId: request.id, status: request.status }
   }
 
   // El id se reserva una vez por compra: un reintento usa el mismo (sin huecos ni repetidos).
@@ -449,7 +472,10 @@ const welcome: StepHandler = async (d, job) => {
   if (purchase.welcomeSentAt) return { sent: false, reason: 'ya enviado' }
   const company = await companyOf(d, purchase)
   const lic = await d.repo.getLicenseByPurchase(purchase.id)
-  if (!lic) throw new PermanentError(`la compra ${purchase.id} no tiene licencia`)
+  // A mano: la licencia aun pedida a Eric; la bienvenida sale ya y dice que llega en unas horas.
+  const requested = lic ? null : await d.repo.getLicenseRequestByPurchase(purchase.id)
+  if (!lic && !requested) throw new PermanentError(`la compra ${purchase.id} no tiene licencia`)
+  if (!lic && requested?.status === 'cancelled') return { sent: false, reason: `licencia cancelada (${requested.cancelReason})` }
   const guided = isGuided(purchase.product)
   const first = guided ? await d.repo.getBooking(purchase.id, 1) : null
   const terms = await termsAttachment(d.storage, {
@@ -464,9 +490,9 @@ const welcome: StepHandler = async (d, job) => {
     locale: purchase.locale,
     company: company.name,
     product: purchase.product,
-    licenseId: lic.id,
-    supportUntil: lic.soporteHasta,
-    emitida: lic.emitida,
+    licenseId: lic?.id ?? null,
+    supportUntil: lic?.soporteHasta ?? requested!.soporteHasta,
+    emitida: lic?.emitida ?? requested!.emitida,
     zoneUrl: zoneUrl(d.config.siteUrl, purchase.locale),
     guided,
     booking:
@@ -480,12 +506,47 @@ const welcome: StepHandler = async (d, job) => {
   await d.mailer.send({
     to: purchase.email,
     ...mail,
-    attachments: [licenseAttachment(lic), ...(terms ? [terms.attachment] : [])],
+    attachments: [...(lic ? [licenseAttachment(lic)] : []), ...(terms ? [terms.attachment] : [])],
     idempotencyKey: job.key,
     tags: ['bienvenida'],
   })
   await d.repo.updatePurchase(purchase.id, { welcomeSentAt: now(d) })
-  return { sent: true, termsVersion: terms?.version ?? null }
+  // license: la que llevo (license_email no la repite si se subio antes de mandar la bienvenida).
+  return { sent: true, termsVersion: terms?.version ?? null, license: lic?.id ?? null }
+}
+
+/** Las compras cuya licencia se manda: pagadas, o devueltas solo en parte. */
+const DELIVERABLE: Purchase['status'][] = ['paid', 'partially_refunded']
+
+/** La licencia firmada a mano, al subirla (tras la bienvenida, si no la llevo ya). */
+const licenseMail: StepHandler = async (d, job) => {
+  const purchase = await purchaseOf(d, job)
+  const company = await companyOf(d, purchase)
+  const lic = await d.repo.getLicenseByPurchase(purchase.id)
+  if (!lic) throw new PermanentError(`la compra ${purchase.id} no tiene licencia`)
+  if (lic.revokedAt) return { sent: false, reason: 'anulada' }
+  // Devuelta o con contracargo mientras se subia: revoke la anula; el correo no sale.
+  if (!DELIVERABLE.includes(purchase.status)) return { sent: false, reason: purchase.status }
+  if ((await d.repo.getJobByKey(`welcome:${purchase.id}`))?.result?.license === lic.id) return { sent: false, reason: 'ya iba en la bienvenida' }
+  const mail = licenseReadyEmail({
+    locale: purchase.locale,
+    company: company.name,
+    licenseId: lic.id,
+    supportUntil: lic.soporteHasta,
+    emitida: lic.emitida,
+    zoneUrl: zoneUrl(d.config.siteUrl, purchase.locale),
+  })
+  await d.mailer.send({ to: purchase.email, ...mail, attachments: [licenseAttachment(lic)], idempotencyKey: job.key, tags: ['licencia'] })
+  return { sent: true, licenseId: lic.id }
+}
+
+/** Una licencia pedida a mano que sigue sin firmar a las horas de aviso. */
+const licenseReminder: StepHandler = async (d, job) => {
+  const request = await d.repo.getLicenseRequestByPurchase(text(job, 'purchaseId'))
+  if (request?.status !== 'pending') return { sent: false, reason: request?.status ?? 'sin pedir' }
+  const hours = Math.max(d.config.licensePendingAlertHours, Math.floor((d.clock().getTime() - new Date(request.createdAt).getTime()) / 3600_000))
+  await sendOverdueNotice(d, [{ purchaseId: request.purchaseId, company: request.cliente, kind: request.kind, hours }], job.key)
+  return { sent: true }
 }
 
 const renewalMail: StepHandler = async (d, job) => {
@@ -493,6 +554,8 @@ const renewalMail: StepHandler = async (d, job) => {
   const company = await companyOf(d, purchase)
   const lic = await d.repo.getLicenseByPurchase(purchase.id)
   if (!lic) throw new PermanentError(`el cobro ${purchase.id} no tiene licencia`)
+  if (lic.revokedAt) return { sent: false, reason: 'anulada' }
+  if (!DELIVERABLE.includes(purchase.status)) return { sent: false, reason: purchase.status }
   const mail = renewalEmail({
     locale: purchase.locale,
     company: company.name,
@@ -589,8 +652,10 @@ const revoke: StepHandler = async (d, job) => {
   const reason = text(job, 'reason')
   // final: devolucion o contracargo perdido. Si no, un contracargo abierto (puede volver: reinstate).
   const final = job.payload.final === true
-  const lic = await d.repo.getLicenseByPurchase(purchase.id)
-  if (lic && !lic.revokedAt) await d.repo.setLicenseRevoked(lic.id, { at: now(d), reason })
+  // A mano y aun sin firmar: deja de pedirse (y Eric lo sabe). Las pedidas se miran antes que las
+  // licencias: una que Eric sube a la vez, o pierde (ya no esta pedida) o ya esta guardada y se anula.
+  const own = await d.repo.getLicenseRequestByPurchase(purchase.id)
+  const unrequested: { request: LicenseRequest; reason: string }[] = own?.status === 'pending' ? [{ request: own, reason }] : []
   let accessRevoked = false
   let subscriptionCanceled = false
   const cascaded: string[] = []
@@ -604,6 +669,10 @@ const revoke: StepHandler = async (d, job) => {
       // el contracargo se gana.
       if (!company.accessRevokedAt) await d.repo.updateCompany(company.id, { accessRevokedAt: now(d) })
       accessRevoked = true
+      // Y las del mensual pedidas a mano, sin firmar, tampoco (antes que las licencias, por lo mismo).
+      for (const other of await d.repo.listLicenseRequests({ companyId: company.id, status: 'pending' })) {
+        if (other.purchaseId !== purchase.id) unrequested.push({ request: other, reason: `${reason}:${purchase.id}` })
+      }
       for (const other of await d.repo.listLicensesByCompany(company.id)) {
         if (other.purchaseId === purchase.id || other.revokedAt) continue
         await d.repo.setLicenseRevoked(other.id, { at: now(d), reason: `${reason}:${purchase.id}` })
@@ -621,7 +690,11 @@ const revoke: StepHandler = async (d, job) => {
       dropped = await dropPurchaseOwners(d, purchase, bases)
     }
   }
-  return { licenseId: lic?.id ?? null, accessRevoked, cascaded, subscriptionCanceled, dropped }
+  const cancelledRequests = await cancelLicenseRequests(d, unrequested, job.key)
+  // La de esta compra, al final: tambien la que se acaba de subir mientras.
+  const lic = await d.repo.getLicenseByPurchase(purchase.id)
+  if (lic && !lic.revokedAt) await d.repo.setLicenseRevoked(lic.id, { at: now(d), reason })
+  return { licenseId: lic?.id ?? null, accessRevoked, cascaded, subscriptionCanceled, dropped, cancelledRequests }
 }
 
 const reinstate: StepHandler = async (d, job) => {
@@ -630,6 +703,9 @@ const reinstate: StepHandler = async (d, job) => {
   const lic = await d.repo.getLicenseByPurchase(purchase.id)
   if (lic?.revokedAt && lic.revokedReason === reason) await d.repo.setLicenseRevoked(lic.id, null)
   const restored: string[] = []
+  // A mano: la que se dejo de pedir por el contracargo se vuelve a pedir.
+  const own = await d.repo.getLicenseRequestByPurchase(purchase.id)
+  const rerequest = own?.status === 'cancelled' && own.cancelReason === reason && !['refunded', 'dispute_lost'].includes(purchase.status) ? [own] : []
   if (purchase.kind === 'one_time' && purchase.companyId && purchase.status !== 'refunded') {
     // Las licencias del mensual que se anularon por esta compra vuelven con ella.
     for (const other of await d.repo.listLicensesByCompany(purchase.companyId)) {
@@ -637,10 +713,14 @@ const reinstate: StepHandler = async (d, job) => {
       await d.repo.setLicenseRevoked(other.id, null)
       restored.push(other.id)
     }
+    for (const other of await d.repo.listLicenseRequests({ companyId: purchase.companyId, status: 'cancelled' })) {
+      if (other.cancelReason === `${reason}:${purchase.id}`) rerequest.push(other)
+    }
     const company = await d.repo.getCompany(purchase.companyId)
     if (company?.accessRevokedAt) await d.repo.updateCompany(company.id, { accessRevokedAt: null })
   }
-  return { licenseId: lic?.id ?? null, restored }
+  const requested = await restoreLicenseRequests(d, rerequest, job.key)
+  return { licenseId: lic?.id ?? null, restored, requested }
 }
 
 /** Sin pago unico vigente, el mensual se cancela en Stripe (si no, seguiria cobrando y firmando). */
@@ -677,11 +757,13 @@ const notice: StepHandler = async (d, job) => {
   const companyId = purchase?.companyId ?? (typeof job.payload.companyId === 'string' ? job.payload.companyId : null)
   const company = companyId ? await d.repo.getCompany(companyId) : null
   const lic = purchase ? await d.repo.getLicenseByPurchase(purchase.id) : null
+  const requested = purchase && !lic ? await d.repo.getLicenseRequestByPurchase(purchase.id) : null
   const inv = purchase ? await d.repo.getInvoiceByRef(`invoice:${purchase.id}`) : null
   const invoiceJob = purchase ? await d.repo.getJobByKey(`invoice:${purchase.id}`) : null
   const first = purchase && isGuided(purchase.product) ? await d.repo.getBooking(purchase.id, 1) : null
   const money = (cents: number) => formatMoney(cents, purchase?.currency ?? 'eur', 'es')
   const todo: string[] = []
+  if (requested?.status === 'pending') todo.push(`Firmar la licencia a mano y subirla (pedida a ${d.config.licenseRequestEmail})`)
   const held = inv?.holdReason ?? (typeof invoiceJob?.result?.hold === 'string' ? invoiceJob.result.hold : null)
   if (held) todo.push(`Factura retenida: ${held}`)
   else if (inv?.status === 'draft') todo.push('Emitir la factura en Holded (Verifactu) y enviarla')
@@ -700,10 +782,14 @@ const notice: StepHandler = async (d, job) => {
   switch (event) {
     case 'sale':
     case 'renewal':
-      mail = internalEmail(`${event === 'sale' ? 'Venta' : 'Cobro del mensual'}: ${lic?.id ?? 'sin licencia'} · ${company?.name ?? ''}`, {
+      mail = internalEmail(`${event === 'sale' ? 'Venta' : 'Cobro del mensual'}: ${lic?.id ?? (requested ? 'licencia a mano' : 'sin licencia')} · ${company?.name ?? ''}`, {
         'Qué hacer': todo.join('. ') || 'Nada: entregada sola',
         ...base,
-        Licencia: lic ? `${lic.id} (soporte hasta ${lic.soporteHasta})` : null,
+        Licencia: lic
+          ? `${lic.id} (soporte hasta ${lic.soporteHasta})`
+          : requested
+            ? `a mano: ${requested.status === 'pending' ? 'pedida, sin firmar' : requested.status} (soporte hasta ${requested.soporteHasta})`
+            : null,
         Factura: inv ? `${inv.number ?? 'sin número'} (${inv.status})` : held ? 'retenida' : 'pendiente',
         Importe: purchase ? `${money(purchase.amountTotal)} (IVA ${money(purchase.amountTax)}, ${purchase.taxTreatment})` : null,
         Lanzamiento: purchase?.launch ? 'sí' : null,
@@ -795,6 +881,8 @@ export const HANDLERS: Record<string, StepHandler> = {
   account,
   booking,
   welcome,
+  license_email: licenseMail,
+  license_reminder: licenseReminder,
   renewal_email: renewalMail,
   refund_email: refundMail,
   announce,

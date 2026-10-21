@@ -20,15 +20,6 @@ export const ramp = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t)
 }
 
-export function mulberry32(seed: number) {
-  return () => {
-    let t = (seed += 0x6d2b79f5)
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
 /** Numero entre 0 y 1 fijo para cada celda (para repartir puntos, candados y carpetas sin patron). */
 export function hash(i: number, j: number, salt: number) {
   const s = Math.sin(i * 127.1 + j * 311.7 + salt * 74.7) * 43758.5453

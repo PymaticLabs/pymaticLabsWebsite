@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     let company = null
     if (isPlanProduct(product)) {
       const user = await delivery.auth.currentUser(cookieJar(request))
-      if (!user) throw new CheckoutError('company_required', 'entra en la zona de clientes para contratar el mensual')
+      if (!user) throw new CheckoutError('company_required', 'entra en la zona de socio para contratar el mensual')
       company = await ownedCompany(delivery, user, data.company || null)
     }
     const session = await createCheckout(delivery, {

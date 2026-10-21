@@ -58,6 +58,20 @@ export function Notice({ children, tone = 'info', role }: { children: React.Reac
   )
 }
 
+/** Una etiqueta de estado junto a un dato ("En camino", "Anulada"). */
+export function StatusPill({ children, tone = 'info' }: { children: React.ReactNode; tone?: 'info' | 'danger' }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-sm font-medium',
+        tone === 'danger' ? 'border-danger/40 text-danger' : 'border-brand/30 bg-brand-soft text-brand'
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
 /** Un enlace con aspecto de boton (las descargas van a /api/zone/*, que las firma al pulsar). */
 export function ButtonLink({
   href,

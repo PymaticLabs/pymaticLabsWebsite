@@ -20,7 +20,6 @@ import {
   fileKind,
   isLock,
   isTurn,
-  mulberry32,
   namedMarks,
   neighbors,
   outlinePoints,
@@ -145,11 +144,8 @@ const THEMES = {
     mute: rgb('#86A9E3'),
     muteAmt: 0.5,
     off: 0.65,
-    sky: rgb('#9DB6E8'),
-    starOpacity: 0,
-    nebula: ['#FFFFFF', '#FFFFFF', '#FFFFFF'],
-    nebulaOpacity: 0,
-    /** Brillo propio bajo el simbolo (la ultima nebulosa): en claro, una luz blanca. */
+    /** Brillo propio bajo el simbolo: en claro, una luz blanca. */
+    aura: '#FFFFFF',
     auraOpacity: 0.9,
     /** Sombra de contacto, azul, bajo la boveda y abajo a la derecha: sobre fondo claro da mas volumen que un brillo. */
     contact: '#1F4FC4',
@@ -189,10 +185,8 @@ const THEMES = {
     mute: rgb('#000000'),
     muteAmt: 0,
     off: 0.3,
-    sky: rgb('#C9D8FF'),
-    starOpacity: 0.9,
-    nebula: ['#0463FE', '#2B7FFF', '#1FB6FF'],
-    nebulaOpacity: 0.16,
+    // Sin estrellas ni nebulosas: el fondo, liso; solo el brillo azul del simbolo, muy suave.
+    aura: '#2B7FFF',
     auraOpacity: 0.16,
     contact: '#000000',
     contactOpacity: 0,
@@ -225,7 +219,7 @@ const SLOW_STEP = 0.25
 export default function CoreScene(props: CoreSceneProps) {
   const palette = props.dark ? THEMES.dark : THEMES.light
   const wide = useWide()
-  const sky = useRef({ fade: 1 })
+  const aura = useRef({ fade: 1 })
   const canvas = useRef<HTMLCanvasElement>(null)
   const onScreen = useOnScreen(canvas)
   // Resolucion: la de la pantalla hasta un tope (mas bajo en el movil). Mientras se lee un titular en
@@ -249,142 +243,59 @@ export default function CoreScene(props: CoreSceneProps) {
       fallback={null}
     >
       {palette.background && <color attach="background" args={[palette.background]} />}
-      <Sky palette={palette} fade={sky} wide={wide} />
-      <Thread {...props} palette={palette} wide={wide} sky={sky} quality={quality} slowed={top <= 1} onScreen={onScreen} />
+      <Aura palette={palette} fade={aura} />
+      <Thread {...props} palette={palette} wide={wide} aura={aura} quality={quality} slowed={top <= 1} onScreen={onScreen} />
     </Canvas>
   )
 }
 
-// ---------------------------------------------------------------- el espacio
+// ---------------------------------------------------------------- el brillo del simbolo
 
-const SKY_VERTEX = /* glsl */ `
-  attribute float aSize;
-  attribute float aSeed;
-  uniform float uRatio;
-  varying float vAlpha;
-  void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    // Cada estrella con su brillo, fijo (no titilan).
-    vAlpha = 0.3 + 0.6 * aSeed;
-    gl_PointSize = aSize * uRatio * (0.7 + 0.3 * vAlpha);
-  }
-`
-
-const SKY_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uOpacity;
-  varying float vAlpha;
-  void main() {
-    float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.1, d) * vAlpha * uOpacity;
-    if (a < 0.01) discard;
-    gl_FragColor = vec4(uColor, a);
-  }
-`
-
-/** Estrellas de fondo y nebulosas bajo el cerebro, quietas: dan profundidad y se atenuan al acercarse a una zona. */
-function Sky({ palette, fade, wide }: { palette: Palette; fade: { current: { fade: number } }; wide: boolean }) {
-  const { gl } = useThree()
-  const stars = useMemo(() => {
-    const count = wide ? 3200 : 1800
-    const rand = mulberry32(9)
-    const pos = new Float32Array(count * 3)
-    const size = new Float32Array(count)
-    const seed = new Float32Array(count)
-    for (let i = 0; i < count; i++) {
-      const u = rand() * 2 - 1
-      const a = rand() * Math.PI * 2
-      const r = 14 + rand() * 40
-      const ring = Math.sqrt(1 - u * u)
-      pos.set([Math.cos(a) * ring * r, Math.sin(a) * ring * r, u * r], i * 3)
-      size[i] = 0.8 + rand() * rand() * 2.6
-      seed[i] = rand()
-    }
-    const g = new THREE.BufferGeometry()
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
-    g.setAttribute('aSize', new THREE.BufferAttribute(size, 1))
-    g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1))
-    return g
-  }, [wide])
-  useEffect(() => () => stars.dispose(), [stars])
-  const starMaterial = useMemo(
+/**
+ * Bajo el cerebro, quietos: su brillo propio y, en claro, una sombra de contacto que le da volumen. Se
+ * atenuan al acercarse a una zona. Detras no hay nada: en oscuro el fondo es liso.
+ */
+function Aura({ palette, fade }: { palette: Palette; fade: { current: { fade: number } } }) {
+  const glows = useMemo(
     () =>
-      new THREE.ShaderMaterial({
-        vertexShader: SKY_VERTEX,
-        fragmentShader: SKY_FRAGMENT,
-        uniforms: {
-          uRatio: { value: 1 },
-          uColor: { value: new THREE.Vector3(...palette.sky) },
-          uOpacity: { value: palette.starOpacity },
-        },
-        transparent: true,
-        depthTest: false,
-        depthWrite: false,
-        blending: palette.blending,
+      GLOWS.map((g) => {
+        const opacity = g.contact ? palette.contactOpacity : palette.auraOpacity
+        const map = glowTexture(g.contact ? palette.contact : palette.aura)
+        const material = new THREE.SpriteMaterial({ map, transparent: true, opacity, depthTest: false, depthWrite: false, blending: palette.blending })
+        return { ...g, opacity, map, material }
       }),
     [palette]
   )
-  useEffect(() => () => starMaterial.dispose(), [starMaterial])
-
-  // Nebulosas: manchas de luz grandes y muy suaves por debajo del simbolo; la ultima, su propio brillo.
-  // Una textura por color, compartida.
-  const clouds = useMemo(() => {
-    const textures = [...palette.nebula, palette.contact].map((color) => glowTexture(color))
-    const list = CLOUDS.map((c) => ({
-      ...c,
-      opacity: c.contact ? palette.contactOpacity : c.own ? palette.auraOpacity : palette.nebulaOpacity,
-      material: new THREE.SpriteMaterial({
-        map: textures[c.contact ? palette.nebula.length : c.color],
-        transparent: true,
-        opacity: c.contact ? palette.contactOpacity : c.own ? palette.auraOpacity : palette.nebulaOpacity,
-        depthTest: false,
-        depthWrite: false,
-        blending: palette.blending,
-      }),
-    }))
-    return { textures, list }
-  }, [palette])
   useEffect(
-    () => () => {
-      clouds.textures.forEach((t) => t.dispose())
-      clouds.list.forEach((c) => c.material.dispose())
-    },
-    [clouds]
+    () => () =>
+      glows.forEach((g) => {
+        g.map.dispose()
+        g.material.dispose()
+      }),
+    [glows]
   )
 
   useFrame(() => {
-    starMaterial.uniforms.uRatio.value = gl.getPixelRatio()
-    starMaterial.uniforms.uOpacity.value = palette.starOpacity * (0.25 + 0.75 * fade.current.fade)
-    // Sin estrellas (en claro) no se pintan.
-    starMaterial.visible = palette.starOpacity > 0
-    for (const c of clouds.list) {
-      // Apagadas (o sin ellas, en claro) no se pintan.
-      c.material.opacity = c.opacity * fade.current.fade
-      c.material.visible = fade.current.fade > 0.01 && c.opacity > 0
+    for (const g of glows) {
+      // Apagadas (o sin ellas: la sombra, en oscuro) no se pintan.
+      g.material.opacity = g.opacity * fade.current.fade
+      g.material.visible = fade.current.fade > 0.01 && g.opacity > 0
     }
   })
 
   return (
     <>
-      <points geometry={stars} material={starMaterial} frustumCulled={false} renderOrder={-2} />
-      {clouds.list.map((c, k) => (
-        <sprite key={k} position={c.at} scale={c.scale} material={c.material} renderOrder={-1} />
+      {glows.map((g, k) => (
+        <sprite key={k} position={g.at} scale={g.scale} material={g.material} renderOrder={-1} />
       ))}
     </>
   )
 }
 
-/**
- * Nebulosas del fondo, la sombra de contacto (contact, solo en claro; detras del brillo) y, la ultima
- * (own), el brillo propio del simbolo.
- */
-const CLOUDS: { at: [number, number, number]; scale: number; color: number; own?: boolean; contact?: boolean }[] = [
-  { at: [7, 4, -9], scale: 15, color: 0 },
-  { at: [-8, -3, -8], scale: 12, color: 1 },
-  { at: [2, -9, -11], scale: 13, color: 2 },
-  { at: [-4, 8, -12], scale: 11, color: 0 },
-  { at: [0.2, -0.28, -0.95], scale: 3.6, color: 0, contact: true },
-  { at: [0, 0, -0.8], scale: 4.6, color: 1, own: true },
+/** La sombra de contacto (contact, solo en claro; detras del brillo) y el brillo propio del simbolo. */
+const GLOWS: { at: [number, number, number]; scale: number; contact?: boolean }[] = [
+  { at: [0.2, -0.28, -0.95], scale: 3.6, contact: true },
+  { at: [0, 0, -0.8], scale: 4.6 },
 ]
 
 /** Mancha de luz redonda que se desvanece hacia fuera. */
@@ -1025,7 +936,7 @@ const overlaps = (box: number[], x0: number, x1: number, y: number) => x1 > box[
 interface ThreadProps extends CoreSceneProps {
   palette: Palette
   wide: boolean
-  sky: { current: { fade: number } }
+  aura: { current: { fade: number } }
   quality: Quality
   /** La resolucion ya esta al minimo: no hace falta seguir midiendo. */
   slowed: boolean
@@ -1033,7 +944,7 @@ interface ThreadProps extends CoreSceneProps {
   onScreen: boolean
 }
 
-function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, onScreen }: ThreadProps) {
+function Thread({ progress, reduceMotion, palette, wide, aura, quality, slowed, onScreen }: ThreadProps) {
   const { size, gl, camera, scene } = useThree()
   const invalidate = useThree((state) => state.invalidate)
   const viewportDpr = useThree((state) => state.viewport.dpr)
@@ -1455,11 +1366,11 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
         uniforms.uDpr.value = dpr
       }
     }
-    // El cielo se pinta antes que el hilo: si cambia, hace falta un fotograma mas para que lo recoja.
-    // Se atenua al acercarse a una zona.
-    const skyFade = 1 - 0.6 * near
-    const skyChanged = Math.abs(skyFade - sky.current.fade) > 1e-4
-    sky.current.fade = skyFade
+    // El brillo del simbolo se pinta antes que el hilo: si cambia, hace falta un fotograma mas para que
+    // lo recoja. Se atenua al acercarse a una zona.
+    const auraFade = 1 - 0.6 * near
+    const auraChanged = Math.abs(auraFade - aura.current.fade) > 1e-4
+    aura.current.fade = auraFade
 
     // Texto de cada escena: la portada al principio; el de cada zona, con su titular. Ocultos siguen en
     // el arbol de accesibilidad: solo dejan de recibir clics y sus enlaces salen del tabulador.
@@ -1564,8 +1475,8 @@ function Thread({ progress, reduceMotion, palette, wide, sky, quality, slowed, o
 
     // Solo se pide otro fotograma mientras algo se mueve: la camara que aun no ha llegado, el fundido de
     // un salto o de un cambio de vista, un fundido de texto o de nombres, el pulso (mientras dura y se ve)
-    // o el cielo, que lo recoge en el siguiente.
-    const moving = s !== goal || c.leaving || c.level < 1 || fading || pulseSeen || skyChanged
+    // o el brillo del simbolo, que lo recoge en el siguiente.
+    const moving = s !== goal || c.leaving || c.level < 1 || fading || pulseSeen || auraChanged
     continued.current = moving
     if (moving) invalidate()
 

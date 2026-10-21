@@ -8,7 +8,7 @@ import type { CookieJar, ZoneUser } from '@/lib/delivery/types'
 import { localePath } from '@/lib/i18n'
 import type { ZoneOverview } from '@/lib/zone-view'
 
-// Las paginas de la zona de clientes leen la sesion y los datos en el servidor, con las mismas
+// Las paginas de la zona de socio leen la sesion y los datos en el servidor, con las mismas
 // funciones que /api/zone/* (lib/delivery/zone.ts): cada una comprueba que la persona tiene acceso
 // a esa empresa. Las acciones (bajar, dar de alta, reservar, el portal) van a /api/zone/*, que lo
 // vuelve a comprobar. Nada de lo que diga el navegador abre nada.

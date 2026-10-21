@@ -6,6 +6,7 @@ import { CircleAlert, MailCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { setProfileHint } from '@/lib/zone-profile'
 
 // Entrar en la zona: el correo y, despues, el codigo de un solo uso que llega por correo (Supabase
 // Auth, sin contrasenas). La respuesta al pedir el codigo es siempre la misma, tenga o no acceso
@@ -103,7 +104,9 @@ export default function LoginForm({ returnTo, fakeHint }: { returnTo: string; fa
         body: JSON.stringify({ email: email.trim(), code: clean }),
       })
       if (res.ok) {
-        // Una carga entera: la zona se pinta en el servidor con la sesion recien abierta.
+        // Una carga entera: la zona se pinta en el servidor con la sesion recien abierta (y la barra,
+        // con la pista, no ensena Entrar mientras pregunta).
+        setProfileHint(true)
         window.location.assign(returnTo)
         return
       }

@@ -12,7 +12,7 @@ import { localePath } from '@/lib/i18n'
 import { zoneUser } from '@/lib/zone-page'
 import { safeZoneReturn } from '@/lib/zone-view'
 
-// Entrar en la zona de clientes con el correo y un codigo de un solo uso. Con la sesion ya abierta,
+// Entrar en la zona de socio con el correo y un codigo de un solo uso. Con la sesion ya abierta,
 // directamente a la zona.
 
 export const dynamic = 'force-dynamic'
