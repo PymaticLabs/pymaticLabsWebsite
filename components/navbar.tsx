@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import ThemeToggle from '@/components/theme-toggle'
+import { CerebroIcon } from '@/components/cerebro-icon'
 import { ChevronDown, Download, KeyRound, LayoutGrid, LogOut, Menu, Receipt, UserRound, X } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -101,21 +102,23 @@ export default function Navbar({ zone }: { zone: boolean }) {
   ]
 
   const isActive = (href: string) => pathname === href
-  // En la home, en claro, el filo de la barra en un azul apenas marcado: se funde con el cielo del viaje.
-  const onHome = barePath === '' || barePath === '/'
   const loginHref = localePath(locale, '/zona/entrar')
 
   return (
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
-        isScrolled || isMobileOpen ? 'bg-surface/90 backdrop-blur-md border-b' : 'bg-transparent',
-        (isScrolled || isMobileOpen) && (onHome ? 'border-brand/10 dark:border-line' : 'border-line')
+        isScrolled || isMobileOpen ? 'bg-surface/90 backdrop-blur-md border-b border-line' : 'bg-transparent'
       )}
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link href={localePath(locale)} className="flex min-h-11 items-center gap-2" aria-label={t('home')}>
-          <span className="text-lg font-bold text-ink">Pymatic Labs</span>
+        {/* El producto, con su sello, y debajo quien lo hace. */}
+        <Link href={localePath(locale)} className="flex min-h-11 items-center gap-2.5" aria-label={t('home')}>
+          <CerebroIcon className="h-9 w-9" />
+          <span className="flex flex-col">
+            <span className="text-[17px] font-bold leading-tight text-ink">{t('brand')}</span>
+            <span className="text-xs leading-tight text-muted">Pymatic Labs</span>
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-7">

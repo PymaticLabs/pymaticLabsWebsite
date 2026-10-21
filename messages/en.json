@@ -1,8 +1,8 @@
 {
   "meta": {
     "siteTitle": "Pymatic Labs · Digital Brain",
-    "homeTitle": "Digital Brain · Your knowledge, private at all times",
-    "homeDescription": "Everything your company knows, on your computer. Ask Claude and it answers from your documents. And it does your tasks.",
+    "homeTitle": "Digital Brain · The colleague who knows everything about your business",
+    "homeDescription": "Ask in your own words and it answers from your documents, telling you where it found it. It does your repetitive tasks for you. It lives on your computer, and it is yours.",
     "howTitle": "Digital Brain features",
     "howDescription": "Everything the Digital Brain does and what you need to use it, at a glance.",
     "pricingTitle": "Digital Brain pricing",
@@ -13,7 +13,8 @@
     "contactDescription": "Tell us what your company does and we will tell you which Digital Brain option fits."
   },
   "nav": {
-    "home": "Pymatic Labs, home",
+    "home": "Digital Brain, by Pymatic Labs: home",
+    "brand": "Digital Brain",
     "comoFunciona": "Features",
     "precios": "Pricing",
     "seguridad": "Security",
@@ -42,173 +43,205 @@
   },
   "home": {
     "hero": {
-      "title": "Digital Brain",
-      "tagline": "Your knowledge, private at all times.",
-      "text": "Everything your company knows, on your computer. Ask Claude and it answers from your documents. And it does your tasks.",
+      "badge": "AI for small businesses and the self-employed",
+      "title": "The colleague who knows everything about your business.",
+      "text": "Ask in your own words: it answers from your documents and tells you where it found it. It also does your weekly tasks for you. It lives on your computer, and it is yours.",
       "ctaPrimary": "See pricing",
-      "ctaSecondary": "See features",
-      "scroll": "Scroll"
+      "ctaSecondary": "Talk to us",
+      "trustPrice": "One-off payment, from {price}",
+      "trustLicense": "License for good",
+      "trustSystems": "Windows and Mac"
     },
-    "scenes": [
-      {
-        "id": "local",
-        "kicker": "All local",
-        "title": "It lives on your computer.",
-        "text": "Your documents and your brain stay on your computers. Claude looks up only what it needs to answer you, and we set it up so it does not learn from it.",
-        "specs": [
-          "Nothing on our servers",
-          "Passwords in a vault, on your computer",
-          "Mac and Windows"
+    "demo": {
+      "caption": "Sample conversation with the Digital Brain, with made-up data",
+      "name": "Digital Brain",
+      "company": "Ruiz Carpentry",
+      "local": "On your computer",
+      "example": "Example",
+      "q1": "How much did we charge the Gómez family for last year’s kitchen?",
+      "a1": "€6,420 excl. VAT, on invoice 2025-112 from 14 November. It was an L-shaped kitchen with a quartz worktop.",
+      "source1": "Source: Invoices 2025.xlsx · row 112",
+      "q2": "Now they want a built-in wardrobe. Prepare the quote for them.",
+      "a2": "Done, with your logo and this year’s prices:",
+      "file": "Quote 0412.pdf",
+      "fileMeta": "€2,180 excl. VAT",
+      "save": "Shall I save it in Clients › Gómez?",
+      "yes": "Yes, save it",
+      "no": "No"
+    },
+    "compare": {
+      "title": "Sound familiar?",
+      "subtitle": "What happens today in many businesses, and what changes with the Digital Brain.",
+      "before": "Today",
+      "after": "With the Digital Brain",
+      "rows": [
+        [
+          "Everyone asks you: where a document is, what was charged, how something was done.",
+          "They ask the brain, and you get on with your work."
         ],
-        "path": {
-          "folder": "C:\\Company",
-          "file": "Setup.pdf",
-          "folders": [
-            "Desktop"
-          ],
-          "files": [
-            "Budget 2026.xlsx"
-          ]
-        },
-        "cite": "Source: Setup · p. 1"
-      },
-      {
-        "id": "history",
-        "kicker": "History",
-        "title": "Every change, kept forever.",
-        "text": "You know who changed what, when and why. Nothing from before is ever lost.",
-        "specs": [
-          "Who, what and when",
-          "Nothing is lost",
-          "Weekly backup"
+        [
+          "Finding a document takes a while, and sometimes it never turns up.",
+          "It tells you which folder it is in, right away."
         ],
-        "path": {
-          "folder": "Quotes",
-          "file": "Alpha quote.xlsx",
-          "folders": [
-            "Contracts"
-          ],
-          "files": [
-            "Beta quote.xlsx"
-          ]
-        },
-        "cite": "Source: Alpha quote · version 47, from yesterday at 18:04"
-      },
-      {
-        "id": "team",
-        "kicker": "Teams",
-        "title": "Your whole team, one brain.",
-        "text": "Everyone on their own computer. Sensitive things, only for the people you choose.",
-        "specs": [
-          "Up to 10 people",
-          "Locked areas",
-          "Add or remove people in one sentence"
+        [
+          "Every week you repeat the same quotes, job sheets and spreadsheet entries.",
+          "It does them, the same way every time and with your logo. You just say yes."
         ],
-        "path": {
-          "folder": "Ana's computer",
-          "file": "Shifts week 42.xlsx",
-          "folders": [
-            "Luis's laptop"
-          ],
-          "files": [
-            "Payroll October.xlsx · locked"
-          ]
+        [
+          "When someone leaves or is on holiday, what they knew goes with them.",
+          "What your business knows is written down, at hand for the whole team."
+        ]
+      ]
+    },
+    "steps": {
+      "title": "As simple as this",
+      "subtitle": "No menus or buttons to learn: you talk to it and it answers.",
+      "items": [
+        {
+          "title": "Install it",
+          "text": "Double-click and answer three questions: your company’s name, yours and where to keep it. Rather not touch a thing? We set it up for you."
         },
-        "cite": "Source: Shifts week 42 · row 8"
-      },
-      {
-        "id": "documents",
-        "kicker": "Your documents",
-        "title": "It learns from what you already have.",
-        "text": "Point it at the company folder and it reads it. No tidying, renaming or uploading.",
-        "specs": [
-          "PDF, Word, Excel, emails and scans",
-          "Your originals are never touched",
-          "Health files, it does not even open"
-        ],
-        "path": {
-          "folder": "Accounts",
-          "file": "Month-end close.xlsx",
-          "folders": [
-            "Mail"
-          ],
-          "files": [
-            "Delivery note 2291 (scanned).pdf"
-          ]
+        {
+          "title": "Give it your folder",
+          "text": "Pick your company folder and it reads it: PDF, Word, Excel, emails and scans. Nothing to sort or upload, and your originals are never touched."
         },
-        "cite": "Source: Month-end close · sheet 2, row 18"
-      },
-      {
-        "id": "folders",
-        "kicker": "Folders",
-        "title": "And it tidies up.",
-        "text": "It proposes how to organize your folders and makes an organized copy. Your usual ones stay as they are.",
-        "specs": [
-          "Organized copy",
-          "Sensitive files set apart",
-          "Index in Excel"
-        ],
-        "path": {
-          "folder": "Desktop",
-          "file": "final_v2_GOOD.docx",
-          "folders": [
-            "New folder (7)"
-          ],
-          "files": [
-            "Untitled.xlsx"
-          ]
+        {
+          "title": "Ask and delegate",
+          "text": "In your own words, as you would a colleague. If it does not know a task, explain it once and it remembers."
+        }
+      ],
+      "needs": "You need a Windows or Mac computer and a paid Claude account, the AI assistant you talk to.",
+      "needsLink": "See specifications"
+    },
+    "abilities": {
+      "title": "What it does for you",
+      "saying": "You say:",
+      "items": [
+        {
+          "icon": "answers",
+          "title": "Answers from your documents",
+          "text": "And tells you which one each answer comes from. If it does not know, it says so: it never makes things up.",
+          "example": "How often is the compressor serviced?"
         },
-        "cite": "Tidy copy in: 2026 / Clients / Ruiz"
-      },
-      {
-        "id": "tasks",
-        "kicker": "Tasks",
-        "title": "What you do every week, it does.",
-        "text": "Quotes, work reports, entries in your spreadsheets. Explain it once and it repeats it the same way. Before touching anything, it asks for your “yes”.",
-        "specs": [
-          "Asks for permission",
-          "Learns new tasks",
-          "PDFs with your logo"
-        ],
-        "path": {
-          "folder": "Every Monday",
-          "file": "Weekly quote.xlsx",
-          "folders": [
-            "Every month"
-          ],
-          "files": [
-            "Work report 0388.pdf"
-          ]
+        {
+          "icon": "find",
+          "title": "Finds any document",
+          "text": "Tells you which folder each file is in, even if you cannot remember its name.",
+          "example": "Where is the lease for the premises?"
         },
-        "cite": "Source: Weekly quote · step 3 of 5"
-      }
-    ],
-    "more": "See all features",
-    "closing": {
+        {
+          "icon": "tasks",
+          "title": "Does the tasks that repeat",
+          "text": "Quotes, job sheets and entries in your spreadsheets, the same way every time. It asks for your yes before changing anything.",
+          "example": "Make today’s job sheet."
+        },
+        {
+          "icon": "learn",
+          "title": "Learns what you teach it",
+          "text": "Explain it once and it remembers. And if something changes, just tell it.",
+          "example": "The compressor service is now every six months."
+        },
+        {
+          "icon": "order",
+          "title": "Tidies your folders",
+          "text": "It proposes an order and makes a tidy copy. Your usual folders stay as they are.",
+          "example": "Sort out the office folders."
+        },
+        {
+          "icon": "team",
+          "title": "For your whole team",
+          "text": "Up to 10 people, each on their own computer. Sensitive areas, only for the people you choose.",
+          "example": "Add Laura, from the office."
+        }
+      ],
+      "more": "See all features"
+    },
+    "privacy": {
+      "title": "Your information is yours.",
+      "subtitle": "Your brain lives on your computers, and nothing happens without you seeing it.",
+      "items": [
+        {
+          "icon": "local",
+          "title": "On your computers",
+          "text": "Pymatic Labs never receives your brain or your passwords."
+        },
+        {
+          "icon": "permission",
+          "title": "Nothing changes without your yes",
+          "text": "Before acting, it shows you what it will do and waits for your permission."
+        },
+        {
+          "icon": "originals",
+          "title": "Your originals, untouched",
+          "text": "It only reads them. To tidy up, it works on a separate copy."
+        },
+        {
+          "icon": "health",
+          "title": "Sensitive files stay closed",
+          "text": "Health records, never. Payslips or IDs, only if you allow it."
+        },
+        {
+          "icon": "vault",
+          "title": "Passwords in a vault",
+          "text": "On your computer. The assistant never sees them."
+        },
+        {
+          "icon": "backup",
+          "title": "Weekly backups",
+          "text": "Checked, on a drive or folder of yours."
+        }
+      ],
+      "claude": "To answer you, Claude looks up only what it needs. During setup we show you how to turn off its training and its memory.",
+      "link": "Read our privacy promise"
+    },
+    "pricing": {
       "title": "Pay once. It is yours.",
-      "text": "A license for good. Launch price for the first 10 customers.",
-      "from": "from",
-      "noVat": "excl. VAT",
+      "subtitle": "A license for good, in your company’s name. No compulsory fees: if you ever drop the monthly plan, it keeps working.",
+      "launch": "Launch price for the first 10 customers",
+      "texts": {
+        "hazlo-tu": "You set it up yourself, at your own pace, with the extension and the guides.",
+        "acompanado": "We leave it set up on your computers, in two video calls with Eric or Sergio."
+      },
+      "team": "With a team, up to 10 people: {price}",
+      "note": "Prices excl. VAT. 14-day guarantee if the product fails.",
+      "cta": "See pricing and what is included"
+    },
+    "faq": {
+      "title": "What people ask us most",
+      "items": [
+        {
+          "q": "Do I need to know about computers?",
+          "a": "No. There are no menus or buttons to learn: you talk to it and it answers. And if you would rather not set it up yourself, we set it up for you."
+        },
+        {
+          "q": "What do I need to use it?",
+          "a": "A Windows or Mac computer, an internet connection and a paid Claude account, the AI assistant you talk to. If you handle personal data, Claude Team or Enterprise."
+        },
+        {
+          "q": "Do my documents leave my computer?",
+          "a": "Your brain and your documents stay on your computers, and Pymatic Labs never receives them. To answer you, Claude looks up only what it needs; during setup we show you how to turn off its training and its memory."
+        },
+        {
+          "q": "What if it gets something wrong?",
+          "a": "It tells you which document each answer comes from, so you can check. If something has changed, tell it and it offers to correct it. And if it does not know, it says so: it never makes things up."
+        },
+        {
+          "q": "Do I have to pay every month?",
+          "a": "No. You pay once and the license is for good. The monthly plan is optional (improvements and support) and, if you drop it, the brain keeps working."
+        },
+        {
+          "q": "Can it mess up my folders?",
+          "a": "No. It only reads your company folder. When it tidies up, it makes a separate copy and your folders stay as they are."
+        }
+      ]
+    },
+    "closing": {
+      "title": "Shall we talk?",
+      "text": "We are Eric and Sergio, from Pymatic Labs, in Castellón, Spain. The Digital Brain started as our own company’s brain, and we use it every day. Tell us what you do and we will tell you whether it fits.",
       "cta": "See pricing",
-      "doubtsTitle": "Any questions?",
-      "doubtsText": "We will tell you which option fits.",
-      "doubtsCta": "Talk to sales"
-    },
-    "index": "Home",
-    "tour": "Tour",
-    "demo": "Sample brain",
-    "journey": {
-      "brain": "Brain"
-    },
-    "hud": [
-      "2,431 documents · 0 in the cloud",
-      "All on your computer · 0 bytes on our servers",
-      "1,208 changes saved · 0 lost",
-      "10 people · 2 locked areas",
-      "PDF · Word · Excel · email · scans",
-      "Tidy copy · originals untouched",
-      "4 tasks done · 4 approvals asked"
-    ]
+      "contact": "Write to us",
+      "call": "Book a video call"
+    }
   },
   "features": {
     "eyebrow": "Features",

@@ -1,20 +1,6 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
-/* Pantallas bajas de ordenador (con el escalado de Windows al 125-175 % quedan de 500 a 760 px de alto
-   tras las barras del navegador): la home aprieta los huecos para que cada parada quepa entera. Va antes
-   que short, para que short mande en las aun mas bajas. */
-@custom-variant low (@media (min-width: 640px) and (max-height: 760px));
-/* Pantallas muy bajas (el movil en horizontal): la home compacta su texto. */
-@custom-variant short (@media (max-height: 500px));
-/* Igual de bajas, pero de ordenador (de lg en adelante, o de md con raton: un portatil al 150-175 %): ahi
-   si caben la ruta y lo que incluye cada parada. Va despues de short, para mandar sobre el. En bloque: la
-   forma corta parte la consulta por las comas y se pierde la segunda mitad. */
-@custom-variant deskshort {
-  @media (max-height: 500px) and (min-width: 1024px), (max-height: 500px) and (min-width: 768px) and (hover: hover) and (pointer: fine) {
-    @slot;
-  }
-}
 
 /* Marca Pymatic Labs (knowledge/01_Empresa/identidad-y-marca.md): azul #0463FE, negro y fondo blanco. */
 @theme {
@@ -105,11 +91,11 @@ html.dark {
   color-scheme: dark;
 }
 
-/* Fondo de todas las paginas: el mismo hilo que dibuja el cerebro de la home, muy suave, en dos remansos
-   de luz (arriba a la derecha y abajo a la izquierda) que dejan limpio el centro, donde va el texto. Va
-   fijo a la pantalla y el contenido pasa por encima. La tesela es una curva de Hilbert de orden 4 en
-   celdas de 28 px (como el hilo del cerebro, ver thread.ts) que va de abajo a la izquierda a abajo a la
-   derecha, con medio paso hasta cada borde: las teselas de una fila forman un solo hilo. Lleva un nodo en
+/* Fondo de todas las paginas: el mismo hilo que dibuja el sello del Cerebro Digital, muy suave, en dos
+   remansos de luz (arriba a la derecha y abajo a la izquierda) que dejan limpio el centro, donde va el
+   texto. Va fijo a la pantalla y el contenido pasa por encima. La tesela es una curva de Hilbert de orden 4
+   en celdas de 28 px (como el hilo del sello, ver cerebro-icon.tsx) que va de abajo a la izquierda a abajo
+   a la derecha, con medio paso hasta cada borde: las teselas de una fila forman un solo hilo. Lleva un nodo en
    algunas vueltas. Se genero una vez y va como mascara (negro con alfa): el color lo pone cada tema. Sin
    JS ni imagenes. Los remansos miden segun el lado largo de la pantalla, pero no pasan de una parte del
    alto: en las pantallas bajas y anchas (un portatil con el escalado de Windows) no llegan al centro.
@@ -256,126 +242,11 @@ body::before {
   }
 }
 
-/* Titulares que el hilo dibuja con sus celdas: el texto sigue ahi (se lee, se copia, lo ve
-   Google), pero transparente mientras la escena 3D esta en marcha (data-dots, se quita si pierde el
-   contexto) y ya tiene ese titular dibujado (data-drawn). Si no, se ve normal. */
-.dotted {
-  transition: color 0.8s ease;
-}
-html[data-dots] .dotted[data-drawn] {
-  color: transparent;
-}
-
-/* Titulares de la home a la medida de la pantalla: por ancho, como siempre, y en las pantallas bajas
-   tambien por alto (svh), para que el titulo de la portada no pise el indice de escenas y cada parada
-   quepa entera entre la ruta de arriba y la lectura en vivo de abajo. El hilo dibuja cada titular
-   midiendo el h2 real, asi que el dibujo sigue la misma medida. */
-@layer components {
-  .hero-title {
-    font-size: 3.6rem;
-  }
-  .zone-title {
-    font-size: 3rem;
-  }
-  @media (min-width: 640px) {
-    .hero-title {
-      font-size: 6rem;
-    }
-    /* Por alto: con el titular en tres lineas, el resto de la parada y los huecos de arriba y abajo, cabe. */
-    .zone-title {
-      font-size: clamp(2.25rem, calc(34svh - 8rem), 4.5rem);
-    }
-  }
-  @media (min-width: 1024px) {
-    /* El titulo de la portada mide unas 6,9 veces su tamano de ancho y deja libre el indice de la
-       derecha (a este ancho, solo con el nombre de la escena en la que se esta). */
-    .hero-title {
-      font-size: min(7.5rem, calc((100vw - 18rem) / 6.9));
-    }
-    /* Aqui con un poco menos (la columna estrecha de las pantallas bajas, ver scrolly.tsx, deja el
-       titular en tres lineas mas a menudo). Desde unos 640 px de alto ya es el tamano entero. */
-    .zone-title {
-      font-size: clamp(2.25rem, calc(34svh - 8.25rem), 6.2rem);
-    }
-  }
-  @media (min-width: 1280px) {
-    /* Aqui el indice ensena el nombre de todas las escenas. */
-    .hero-title {
-      font-size: min(9rem, calc((100vw - 29rem) / 6.9));
-    }
-  }
-  @media (max-height: 500px) {
-    .hero-title {
-      font-size: 3.75rem;
-    }
-  }
-  /* El movil en horizontal: el titular en dos lineas, para que quepan el resto de la parada y su enlace. */
-  @media (max-width: 639px) and (max-height: 500px) {
-    .zone-title {
-      font-size: 2.25rem;
-    }
-  }
-  @media (min-width: 1024px) and (max-height: 500px) {
-    .hero-title {
-      font-size: 4.5rem;
-    }
-  }
-}
-
-/* Fondo del viaje de la home en el modo claro, detras del lienzo (alli transparente): un cielo de dia,
-   mas azul arriba y casi blanco abajo, con una luz blanca en el centro, detras del texto. En oscuro lo
-   pinta el propio lienzo. */
-.home-sky {
-  background:
-    radial-gradient(ellipse 48% 52% at 50% 50%, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0) 100%),
-    linear-gradient(180deg, #e1ebfd 0%, #ecf2fe 40%, #f6f9ff 75%, #fbfcff 100%);
-  /* El hilo del fondo de las paginas, aqui en remansos mas pequenos y mas tenue: se queda en las
-     esquinas, lejos del simbolo, para no competir con el. */
-  --thread-pools:
-    radial-gradient(circle at 100% 0, #000, rgb(0 0 0 / 0.4) min(12vmax, 22vh), transparent min(32vmax, 60vh)),
-    radial-gradient(circle at 0 100%, #000, rgb(0 0 0 / 0.4) min(12vmax, 22vh), transparent min(32vmax, 60vh));
-}
-/* Sin la luz de las esquinas (el cielo ya la tiene). Se ve con el simbolo entero; mientras se lee una
-   zona (data-zone, lo pone la escena), el cerebro llena las esquinas y el hilo del fondo se va. */
-.home-sky::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-color: rgb(4 99 254 / 0.3);
-  mask-image: var(--thread-tile), var(--thread-pools);
-  mask-size: var(--thread-tile-size), 100% 100%, 100% 100%;
-  mask-repeat: repeat, no-repeat, no-repeat;
-  mask-composite: intersect, add;
-  transition: opacity 1s ease;
-}
-.home-journey:has(> nav[data-zone='1']) .home-sky::before {
-  opacity: 0;
-}
-.dark .home-sky {
-  background: none;
-}
-.dark .home-sky::before {
-  content: none;
-}
-
-/* En las pantallas bajas de ordenador, mientras se lee una zona, el indice de escenas se queda en numeros
-   (como en lg): asi la zona y sus nombres tienen sitio a la derecha (ver indexEdge en core-scene.tsx). */
-@media (min-width: 1280px) and (max-height: 760px) {
-  .home-journey > nav[data-zone='1'] button:not(:hover, :focus-visible) > span:first-child {
-    opacity: 0;
-  }
-}
-
-/* En claro, el azul de los textos (en toda la web, sobre el hilo del fondo y sobre el cielo de la home),
-   un punto mas hondo: 6,4:1 sobre blanco y 5,2:1 encima de lo mas marcado del hilo. El lema de la
-   portada, grande y sobre la luz blanca del centro, se queda en el azul de marca. */
+/* En claro, el azul de los textos (en toda la web, sobre el hilo del fondo), un punto mas hondo: 6,4:1
+   sobre blanco y 5,2:1 encima de lo mas marcado del hilo. */
 html:not(.dark) .text-brand,
 html:not(.dark) .prose-content a {
   color: var(--color-brand-dark);
-}
-html:not(.dark) .home-journey .home-hero .text-brand {
-  color: var(--color-brand);
 }
 
 /* La barra de arriba, para quien ya entro en la zona en este navegador (la pista de lib/zone-profile.ts):
@@ -391,21 +262,3 @@ html[data-socio='1'] .nav-login {
   visibility: hidden;
 }
 
-/* Textos de los instrumentos y etiquetas sobre el hilo: un halo del color del fondo los separa de las lineas. */
-.halo {
-  text-shadow: 0 0 6px var(--color-paper), 0 0 2px var(--color-paper);
-}
-
-/* Nombres de carpetas y documentos que la escena coloca sobre el hilo: con fondo para leerse encima. */
-.chip {
-  font-size: 13px;
-  line-height: 1;
-  padding: 0.3rem 0.45rem;
-  border-radius: 0.25rem;
-  background: color-mix(in srgb, var(--color-paper) 78%, transparent);
-}
-/* En claro, una etiqueta blanca con un filo azul apenas marcado. */
-html:not(.dark) .chip {
-  background: rgb(255 255 255 / 0.88);
-  box-shadow: 0 0 0 1px rgb(4 99 254 / 0.1), 0 1px 3px rgb(10 36 112 / 0.08);
-}

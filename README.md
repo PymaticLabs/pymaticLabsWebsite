@@ -76,7 +76,8 @@ app/
   api/jobs/, api/admin/ # Cola, conciliación, versiones, licencias a mano y comprobación de producción (con secreto)
   api/zone/             # Zona de socio
 components/
-  home/                 # Home: scrolly.tsx (recorrido con scroll) y core-scene.tsx (el núcleo 3D)
+  home/                 # Home: portada con conversación de ejemplo, antes y después, funciones, pasos, privacidad, precios y cierre
+  cerebro-icon.tsx      # El sello del Cerebro Digital (el mismo trazo que public/icon.svg)
   pricing/              # Tarjeta de modalidad
   zone/                 # Piezas de la zona de socio
   ui/                   # Primitivas shadcn/ui

@@ -1,7 +1,13 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import Scrolly from '@/components/home/scrolly'
+import Hero from '@/components/home/hero'
+import Compare from '@/components/home/compare'
+import Abilities from '@/components/home/abilities'
+import Steps from '@/components/home/steps'
+import Privacy from '@/components/home/privacy'
+import PricingTeaser from '@/components/home/pricing-teaser'
 import Closing from '@/components/home/closing'
+import FaqList from '@/components/faq-list'
 import { generatePageMetadata } from '@/lib/metadata'
 import { getOrganizationSchema, getProductSchema, getWebSiteSchema } from '@/lib/schemas'
 
@@ -19,6 +25,8 @@ export async function generateMetadata({
   })
 }
 
+// La home vende el cerebro a quien no es tecnico, de arriba abajo: que es y verlo funcionar, lo que cambia,
+// lo que hace, como se empieza, la privacidad, el precio, las dudas y quienes estan detras.
 export default async function HomePage({
   params,
 }: {
@@ -27,6 +35,7 @@ export default async function HomePage({
   const { locale } = await params
   setRequestLocale(locale)
   const tMeta = await getTranslations({ locale, namespace: 'meta' })
+  const t = await getTranslations({ locale, namespace: 'home.faq' })
   const schemas = [
     getOrganizationSchema(),
     getWebSiteSchema(),
@@ -42,7 +51,13 @@ export default async function HomePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <Scrolly />
+      <Hero />
+      <Compare />
+      <Abilities />
+      <Steps />
+      <Privacy />
+      <PricingTeaser />
+      <FaqList title={t('title')} items={t.raw('items')} className="bg-band py-16 sm:py-24" />
       <Closing />
     </>
   )

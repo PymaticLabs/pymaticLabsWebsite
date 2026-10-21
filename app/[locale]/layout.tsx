@@ -5,6 +5,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { notFound } from 'next/navigation'
 import { Analytics } from '@vercel/analytics/next'
 import { locales } from '@/lib/i18n'
+import { ogImage } from '@/lib/metadata'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 import { zoneAvailable } from '@/lib/delivery/config'
@@ -13,7 +14,7 @@ import { noFlashScript } from '@/lib/theme'
 import { profileHintScript } from '@/lib/zone-profile'
 import '@/app/globals.css'
 
-const CLIENT_NAMESPACES = ['nav', 'home', 'contact'] as const
+const CLIENT_NAMESPACES = ['nav', 'contact'] as const
 
 // Letra pensada para leerse bien (tambien con poca vista): letras abiertas y que no se confunden
 // (I, l y 1; O y 0). Quien lleva una empresa la lee sin esfuerzo, y sigue siendo limpia y tecnica.
@@ -22,7 +23,7 @@ const sans = Atkinson_Hyperlegible_Next({
   variable: '--font-atkinson',
 })
 
-// Su version de ancho fijo, para las etiquetas de la home, con aire de instrumento.
+// Su version de ancho fijo, para codigos y huellas de la zona de socio.
 const mono = Atkinson_Hyperlegible_Mono({
   subsets: ['latin'],
   variable: '--font-atkinson-mono',
@@ -54,14 +55,18 @@ export async function generateMetadata({
       type: 'website',
       locale: locale === 'es' ? 'es_ES' : 'en_US',
       siteName: 'Pymatic Labs',
-      images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+      images: [{ url: ogImage(locale), width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
     },
+    // El sello del Cerebro Digital (ver components/cerebro-icon.tsx), con una copia en PNG para quien no lee SVG.
     icons: {
-      icon: '/logo.png',
-      apple: '/logo.png',
+      icon: [
+        { url: '/icon.svg', type: 'image/svg+xml' },
+        { url: '/icon-48.png', sizes: '48x48', type: 'image/png' },
+      ],
+      apple: '/apple-icon.png',
     },
   }
 }
