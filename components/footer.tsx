@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { Mail, MapPin } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
+import { zoneAvailable } from '@/lib/delivery/config'
 
 export default function Footer() {
   const t = useTranslations('footer')
@@ -12,6 +13,8 @@ export default function Footer() {
     { href: localePath(locale, '/precios'), label: t('links.precios') },
     { href: localePath(locale, '/seguridad'), label: t('links.seguridad') },
     { href: localePath(locale, '/contacto'), label: t('links.contacto') },
+    // La zona de clientes, solo cuando esta montada (ver zoneAvailable).
+    ...(zoneAvailable() ? [{ href: localePath(locale, '/zona'), label: t('links.zona') }] : []),
   ]
 
   const legalLinks = [

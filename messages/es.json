@@ -412,12 +412,12 @@
       },
       "acompanado": {
         "name": "Acompañado",
-        "tagline": "Empiezas con tus tareas ya montadas.",
+        "tagline": "Te lo dejamos montado en tus equipos.",
         "people": "1 persona"
       },
       "acompanado-equipo": {
         "name": "Acompañado con equipo",
-        "tagline": "Empiezas con tus tareas ya montadas, en equipo.",
+        "tagline": "Te lo dejamos montado, con tu equipo dado de alta.",
         "people": "Hasta 10 personas"
       }
     },
@@ -433,13 +433,14 @@
     "includedTitle": "En las cuatro",
     "included": [
       "Licencia para siempre",
-      "2 sesiones de montaje de 1 h",
-      "Garantía de montaje de 14 días",
+      "La extensión y las guías para montarlo",
+      "Garantía de 14 días si falla el producto",
       "Seguridad al día, gratis"
     ],
     "extras": {
       "hazlo-tu": [
-        "1 persona"
+        "1 persona",
+        "Lo montas tú, con las guías"
       ],
       "hazlo-tu-equipo": [
         "Hasta 10 personas",
@@ -448,32 +449,32 @@
       ],
       "acompanado": [
         "1 persona",
-        "De 3 a 5 tareas tuyas montadas",
-        "Tus documentos cargados",
+        "Te lo montamos: 2 sesiones de 1 h",
+        "Ideas de automatizaciones para tu empresa",
         "1 mes de Esencial incluido"
       ],
       "acompanado-equipo": [
         "Hasta 10 personas",
-        "De 3 a 5 tareas tuyas montadas",
+        "Te lo montamos: 2 sesiones de 1 h",
         "Equipo y áreas con llave listos",
         "3 meses de Pro incluidos"
       ]
     },
     "payWith": {
-      "card": "Pago con tarjeta",
-      "invoice": "Con factura previa"
+      "card": "Pago con tarjeta"
     },
     "buy": "Comprar",
-    "requestInvoice": "Pedir factura",
+    "chooseSession": "Elegir sesión y comprar",
     "comingSoon": "Próximamente",
     "comingSoonNote": "La compra en línea abre en breve. Mientras, escríbenos y te avisamos.",
     "notifyMe": "Avísame",
     "sessions": {
       "title": "Montaje y garantía",
       "items": [
-        "Dos videollamadas de 1 hora, de 18:00 a 22:00 (hora peninsular).",
-        "Si no queda montado, te devolvemos el dinero. Lo pides por escrito en los 14 días siguientes a la compra.",
-        "Es una garantía de montaje, no de satisfacción. Si faltas a una sesión, se pierde."
+        "En el Acompañado lo montamos nosotros: dos videollamadas de 1 hora, con Eric o con Sergio, de 18:00 a 22:00 o los sábados de 10:00 a 14:00 (hora peninsular). La primera la eliges al comprar.",
+        "Si el cerebro no se puede montar por un fallo del producto, te devolvemos el dinero. Lo pides por escrito en los 14 días siguientes a la compra.",
+        "No es una garantía de satisfacción. Si faltas a una sesión, se pierde.",
+        "¿Lo montas tú y quieres ayuda? Pasas al Acompañado pagando la diferencia."
       ]
     },
     "monthly": {
@@ -596,7 +597,7 @@
       },
       {
         "q": "¿El Acompañado son horas?",
-        "a": "No, es un resultado: terminas con 3 a 5 tareas tuyas montadas y tus documentos cargados."
+        "a": "No, es un resultado: te dejamos el cerebro montado en tus equipos, con ideas de automatizaciones para tu empresa. Los procedimientos a medida se presupuestan aparte."
       },
       {
         "q": "¿Puedo empezar solo y ampliar a equipo?",
@@ -645,13 +646,41 @@
     "title": "Pago recibido. ¡Gracias!",
     "subtitle": "En unos minutos te llega un correo con todo lo necesario para montar tu Cerebro Digital.",
     "steps": [
-      "El enlace a la descarga, compartida con tu correo.",
+      "El enlace a tu zona de clientes, donde están tu licencia, las descargas para Mac y Windows y tus facturas.",
       "Tu licencia, adjunta. Guárdala: el montaje te la pedirá.",
-      "El enlace para reservar tus dos sesiones de montaje.",
+      "Las condiciones que aceptaste y, en el Acompañado, la cita de tu primera sesión.",
       "La factura, en un correo aparte."
     ],
     "help": "¿No te llega? Mira en la carpeta de correo no deseado o escríbenos a info@pymaticlabs.com.",
     "cta": "Ver cómo funciona"
+  },
+  "purchase": {
+    "metaTitle": "Comprar el Cerebro Digital",
+    "metaDescription": "Pago con Stripe para empresas y profesionales. La licencia y la zona de clientes llegan al momento.",
+    "title": "Comprar {product}",
+    "subtitle": "Pagas en Stripe, con tu NIF o NIF-IVA. Al momento te llegan por correo la licencia y el acceso a tu zona de clientes; la factura, aparte.",
+    "price": "Precio de lista: {list}. Los 10 primeros clientes pagan {launch}: se aplica solo en el pago mientras queden plazas. Sin IVA.",
+    "chooseTitle": "Elige tu primera sesión de montaje",
+    "chooseText": "Una hora por videollamada, con Eric o con Sergio. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora peninsular. La segunda la reservas desde tu zona de clientes.",
+    "thirdWeek": "Las dos próximas semanas están completas: estos son los huecos de la tercera.",
+    "noSlots": "Ahora mismo no quedan huecos libres. Escríbenos y te buscamos uno.",
+    "slotsError": "No hemos podido cargar los huecos libres. Prueba en un momento o escríbenos.",
+    "with": "con {host}",
+    "pay": "Ir al pago",
+    "back": "Volver a los precios",
+    "closed": "La compra en línea abre en breve. Mientras, escríbenos y te avisamos.",
+    "b2b": "Solo para empresas y profesionales. Se aceptan las condiciones de uso y venta en el pago.",
+    "errors": {
+      "closed": "La compra en línea aún no está abierta.",
+      "slot_taken": "Ese hueco se acaba de ocupar. Elige otro.",
+      "session_required": "Elige un hueco para tu primera sesión.",
+      "unavailable": "No hemos podido abrir el pago. Prueba de nuevo en un momento.",
+      "product": "Ese producto no existe.",
+      "company_required": "Entra en tu zona de clientes para contratarlo.",
+      "already_subscribed": "Ya tienes el mensual: lo cambias desde tu zona de clientes.",
+      "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.",
+      "busy": "Ahora mismo hay muchos pagos abiertos con sesión. Prueba en unos minutos o escríbenos a info@pymaticlabs.com."
+    }
   },
   "contact": {
     "title": "Hablemos",
@@ -692,7 +721,8 @@
       "comoFunciona": "Funciones",
       "precios": "Precios",
       "seguridad": "Seguridad",
-      "contacto": "Contacto"
+      "contacto": "Contacto",
+      "zona": "Zona de clientes"
     },
     "legalLinks": {
       "aviso": "Aviso legal",
@@ -715,7 +745,7 @@
     "descriptions": {
       "aviso-legal": "Datos de PYMATICLABS, S.L., titular de pymaticlabs.com, y condiciones de uso del sitio web.",
       "politica-privacidad": "Qué datos personales tratamos cuando visitas pymaticlabs.com o nos escribes desde ella.",
-      "politica-cookies": "pymaticlabs.com solo usa una cookie, la del tema, y solo si la pides. Aquí te lo explicamos.",
+      "politica-cookies": "pymaticlabs.com solo usa cookies técnicas: la del tema, si la pides, y la de la sesión de la zona de clientes, si entras en ella.",
       "condiciones": "Condiciones de uso y venta del Cerebro Digital, para empresas y profesionales.",
       "privacidad-producto": "Qué datos personales trata Pymatic Labs al vender el Cerebro Digital y dar soporte, y cuáles no."
     },
@@ -723,5 +753,311 @@
     "draftBadge": "Borrador",
     "draftNote": "Borrador pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
     "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."
+  },
+  "zone": {
+    "meta": {
+      "title": "Zona de clientes",
+      "description": "Tu licencia, las descargas, las facturas y el equipo del Cerebro Digital.",
+      "loginTitle": "Entrar en la zona de clientes"
+    },
+    "eyebrow": "Zona de clientes",
+    "roles": {
+      "owner": "titular de la compra",
+      "member": "persona del equipo"
+    },
+    "frame": {
+      "navLabel": "Secciones de tu zona",
+      "switchCompany": "Empresa:",
+      "help": "¿Algo no cuadra? Escríbenos a <email>info@pymaticlabs.com</email> y lo miramos.",
+      "logout": "Cerrar sesión",
+      "loggingOut": "Cerrando…",
+      "logoutError": "No hemos podido cerrar la sesión. Prueba otra vez."
+    },
+    "closed": {
+      "title": "Tu acceso a la zona está cerrado",
+      "text": "Pasa cuando se devuelve el pago o hay un contracargo, porque la licencia deja de valer (cláusula 5 de las condiciones), o cuando la persona que compró te da de baja del equipo.",
+      "help": "Si crees que es un error, escríbenos a <email>info@pymaticlabs.com</email>."
+    },
+    "nav": {
+      "inicio": "Inicio",
+      "licencia": "Licencia",
+      "descargas": "Descargas",
+      "sesiones": "Sesiones",
+      "equipo": "Equipo",
+      "mensual": "Mensual",
+      "facturas": "Facturas"
+    },
+    "ownerOnly": "Esta parte solo la ve la persona que compró. Si necesitas algo de aquí, pídeselo a ella.",
+    "login": {
+      "title": "Entra en tu zona de clientes",
+      "unavailable": "La zona de clientes abre con la venta del Cerebro Digital. Si ya eres cliente y necesitas algo, escríbenos a info@pymaticlabs.com.",
+      "intro": "Con el correo de la compra o con el que te dio de alta tu empresa. Te mandamos un código de un solo uso: no hay contraseñas.",
+      "emailLabel": "Tu correo",
+      "send": "Enviarme el código",
+      "sending": "Enviando…",
+      "sentTitle": "Mira tu correo",
+      "resentTitle": "Te hemos enviado otro código",
+      "sent": "Si {email} tiene acceso a la zona, te llega ahora un código. Puede tardar un minuto: mira también en el correo no deseado.",
+      "codeLabel": "El código que te ha llegado",
+      "codeHint": "Son 8 cifras. Vale 10 minutos y una sola vez.",
+      "verify": "Entrar",
+      "verifying": "Comprobando…",
+      "resend": "Pedir otro código",
+      "resendIn": "Otro código en {seconds} s",
+      "changeEmail": "Usar otro correo",
+      "errors": {
+        "email": "Escribe tu correo completo, por ejemplo nombre@tuempresa.es.",
+        "code": "Escribe el código del correo: solo las cifras.",
+        "invalid": "Ese código no vale o ha caducado. Usa el último que te llegó, o pide otro.",
+        "rateLimited": "Demasiados intentos seguidos. Espera unos minutos y pide un código nuevo.",
+        "network": "No hemos podido conectar. Revisa tu conexión y prueba otra vez."
+      },
+      "notCustomer": "¿Aún no eres cliente?",
+      "notCustomerLink": "Mira los precios",
+      "noEmail": "¿No te llega el código? Comprueba que es el correo de la compra o escríbenos a info@pymaticlabs.com.",
+      "fake": "Modo de prueba: el código está en la carpeta .delivery-fake/buzon del proyecto."
+    },
+    "home": {
+      "title": "Tu Cerebro Digital",
+      "intro": "Todo lo de tu compra en un sitio: la licencia, las descargas de la última versión y, según lo que tengas, tus sesiones, tu equipo, el mensual y las facturas.",
+      "monthlyOk": "Mensual contratado. En unos minutos lo verás aquí, y la factura te llega por correo con cada cobro.",
+      "license": {
+        "title": "Tu licencia",
+        "more": "Ver la licencia"
+      },
+      "downloads": {
+        "title": "Descargas",
+        "go": "Ir a las descargas"
+      },
+      "sessions": {
+        "title": "Sesiones de montaje",
+        "next": "{number}.ª sesión: {when}, con {host}",
+        "noneUpcoming": "No tienes ninguna sesión por delante.",
+        "bookFirst": "Te falta reservar tu primera sesión.",
+        "bookSecond": "Te falta reservar la segunda sesión.",
+        "book": "Reservar la sesión",
+        "go": "Ver las sesiones"
+      },
+      "monthly": {
+        "title": "Mantenimiento y soporte",
+        "subscribed": "Tienes el Mensual {plan}.",
+        "included": "Incluido en tu compra hasta el {date}.",
+        "none": "Ahora no tienes mantenimiento ni soporte.",
+        "security": "Las correcciones de seguridad te llegan gratis, con mensual o sin él.",
+        "go": "Ver el mensual"
+      },
+      "team": {
+        "title": "Tu equipo",
+        "text": "Cada persona entra con su correo y baja la extensión.",
+        "go": "Gestionar el equipo"
+      },
+      "invoices": {
+        "title": "Facturas",
+        "count": "{count, plural, =0 {Aún no hay facturas emitidas} one {# factura} other {# facturas}}",
+        "go": "Ver las facturas"
+      },
+      "introMember": "Lo que necesitas para usar el Cerebro Digital de tu empresa: la licencia, las descargas de la última versión y, si las hay, las sesiones de montaje."
+    },
+    "license": {
+      "title": "Tu licencia",
+      "intro": "El fichero de licencia prueba que el Cerebro Digital es de tu empresa, y el montaje te lo pide. Guárdalo; si lo pierdes, lo bajas aquí otra vez.",
+      "current": "La licencia que vale ahora",
+      "team": "hasta {seats} personas",
+      "solo": "una persona",
+      "supportUntil": "Mantenimiento y soporte hasta el {date}.",
+      "noSupport": "Sin mantenimiento ni soporte incluidos.",
+      "noSupportShort": "sin mantenimiento ni soporte",
+      "download": "Descargar la licencia",
+      "downloadShort": "Descargar",
+      "preparing": "Tu licencia se está preparando. En unos minutos estará aquí y en tu correo.",
+      "fields": {
+        "id": "Número",
+        "holder": "A nombre de",
+        "kind": "Modalidad",
+        "people": "Personas",
+        "issued": "Emitida el",
+        "support": "Mantenimiento y soporte hasta"
+      },
+      "howTitle": "Lo que conviene saber",
+      "how": {
+        "keep": "Guarda el fichero con tus copias de seguridad. Si se modifica, deja de valer.",
+        "support": "La fecha de mantenimiento y soporte no limita el uso: el Cerebro Digital sigue funcionando después. Lo nuevo de cada versión se enciende si esa fecha cubre la de la versión.",
+        "security": "Las correcciones de seguridad te llegan gratis aunque esa fecha haya pasado.",
+        "team": "Con equipo, la licencia vale para todas las personas que des de alta, hasta el límite de tu compra."
+      },
+      "others": "Licencias anteriores",
+      "othersText": "Cada cobro del mensual trae una licencia nueva con la fecha nueva. Las anteriores siguen aquí; las anuladas ya no valen.",
+      "issuedOn": "Emitida el {date}",
+      "revoked": "Anulada"
+    },
+    "downloads": {
+      "title": "Descargas",
+      "intro": "La extensión del Cerebro Digital para Claude Desktop, en su última versión. Todos los clientes bajan la misma, con las correcciones de seguridad al día.",
+      "none": "Aún no hay ninguna versión publicada. Te avisamos por correo en cuanto la haya.",
+      "version": "Versión {version}",
+      "published": "Publicada el {date}",
+      "groups": {
+        "mac": {
+          "title": "Mac",
+          "text": "Para Claude Desktop en macOS.",
+          "short": "Mac"
+        },
+        "windows": {
+          "title": "Windows",
+          "text": "Para Claude Desktop en Windows.",
+          "short": "Windows"
+        },
+        "registry": {
+          "title": "Instalador del registro (equipo)",
+          "text": "Para dejar la extensión instalada de una vez en los Windows de tu equipo. Si no sabes usarlo, pásaselo a tu persona de soporte.",
+          "short": "Windows del equipo"
+        },
+        "extra": {
+          "title": "Para tu persona técnica",
+          "text": "La lista de componentes (SBOM) y las huellas para comprobar los ficheros.",
+          "short": ""
+        }
+      },
+      "button": "Descargar para {what}, {lang}",
+      "buttonNoLang": "Descargar para {what}",
+      "langs": {
+        "es": "en castellano",
+        "en": "en inglés"
+      },
+      "checksum": "Ver la huella SHA-256 (para comprobar el fichero)",
+      "expiry": "Cada botón crea un enlace privado al pulsarlo, que caduca a los {minutes} minutos. Si la descarga no empieza, vuelve a pulsarlo."
+    },
+    "invoices": {
+      "title": "Facturas",
+      "intro": "Las facturas de tus compras y de cada cobro del mensual, y las condiciones que aceptaste en cada compra. Cada factura te llega también por correo al emitirse.",
+      "pending": "{count, plural, one {Hay # factura en preparación: te llega por correo en cuanto se emita y aparece aquí.} other {Hay # facturas en preparación: te llegan por correo en cuanto se emitan y aparecen aquí.}}",
+      "listTitle": "Facturas emitidas",
+      "empty": "Aún no hay facturas emitidas.",
+      "kinds": {
+        "invoice": "Factura",
+        "credit_note": "Factura rectificativa"
+      },
+      "download": "Descargar el PDF",
+      "preparing": "En preparación",
+      "purchasesTitle": "Tus compras y sus condiciones",
+      "purchasesText": "Las condiciones de uso y venta que aceptaste al pagar, tal cual, con la fecha y quién las aceptó.",
+      "status": {
+        "paid": "pagada",
+        "needs_review": "en revisión",
+        "refunded": "devuelta",
+        "partially_refunded": "devuelta en parte",
+        "disputed": "con un contracargo abierto",
+        "dispute_lost": "contracargo"
+      },
+      "terms": "Condiciones del {version}",
+      "taxNote": "El IVA lo calcula Stripe en el pago, según tu país y tu NIF-IVA. Si tus datos fiscales no son correctos, escríbenos a info@pymaticlabs.com."
+    },
+    "monthly": {
+      "title": "Mensual",
+      "intro": "El mensual es el mantenimiento y soporte: versiones nuevas con sus mejoras, contenido al día y soporte. Lo cancelas cuando quieras y el Cerebro Digital sigue funcionando.",
+      "errors": {
+        "closed": "La contratación en línea aún no está abierta.",
+        "company_required": "Vuelve a entrar en la zona para contratarlo.",
+        "already_subscribed": "Ya tienes el mensual: lo cambias desde el portal de Stripe.",
+        "unavailable": "No hemos podido abrir el pago. Prueba otra vez en un momento.",
+        "product": "Ese plan no existe.",
+        "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar."
+      },
+      "statusTitle": "Tu mantenimiento y soporte",
+      "subscribed": "Tienes el Mensual {plan}.",
+      "statuses": {
+        "active": "Activo: se cobra cada mes por adelantado y se renueva solo hasta que lo canceles.",
+        "trialing": "Aún no se cobra: el primer cobro llega cuando acaban los meses incluidos en tu compra.",
+        "past_due": "Hay un cobro pendiente. Revisa la tarjeta en el portal de Stripe.",
+        "unpaid": "Hay cobros sin pagar. Revisa la tarjeta: si siguen sin pagarse, se suspende tras avisarte con 15 días.",
+        "paused": "En pausa."
+      },
+      "licenseUntil": "Tu licencia actual cubre hasta el {date}. Cada cobro trae una licencia nueva con la fecha nueva, aquí en la zona.",
+      "included": "Tu compra incluye mantenimiento y soporte hasta el {date}.",
+      "includedNext": "Para seguir después, contrata el mensual: no se cobra nada hasta el {date}.",
+      "includedNextPlan": "Para seguir después, contrata el mensual: con el plan {plan} o uno menor no se cobra nada hasta el {date}; con uno mayor, se cobra desde que lo contratas.",
+      "none": "Ahora no tienes mantenimiento ni soporte.",
+      "noneText": "Tu licencia sigue valiendo y lo instalado sigue funcionando. Con el mensual vuelves a tener las versiones nuevas con lo nuevo encendido, y soporte.",
+      "portal": "Cambiar la tarjeta, el plan o cancelar",
+      "portalNote": "Se abre el portal de clientes de Stripe, que es quien cobra. Al acabar, vuelves aquí.",
+      "securityTitle": "La seguridad no depende del mensual",
+      "security": "Las correcciones de seguridad llegan gratis a todos los clientes durante el periodo de soporte de su versión, tengan o no el mensual.",
+      "plansTitle": "Planes del mensual",
+      "plansText": "Al pulsar vas al pago de Stripe, con tu empresa ya puesta.",
+      "plansClosed": "La contratación en línea abre en breve. Mientras, escríbenos a info@pymaticlabs.com.",
+      "planName": "Mensual {plan}",
+      "perMonth": "al mes, sin IVA",
+      "subscribe": "Contratar {plan}"
+    },
+    "team": {
+      "title": "Tu equipo",
+      "intro": "Con tu licencia con equipo entran hasta {seats} personas, contándote a ti. Cada una entra con su correo y un código, como tú, y baja la extensión. No ven las facturas ni el equipo.",
+      "count": "{count} de {seats} personas dadas de alta",
+      "memberNote": "El equipo lo gestiona la persona que compró. Si alguien más necesita entrar, pídeselo a ella.",
+      "solo": "Tu licencia es para una persona. Para que la usen más, se pasa a la licencia con equipo: escríbenos a info@pymaticlabs.com.",
+      "how": "Al dar de alta a alguien, le llega un correo con el enlace a la zona. Al darle de baja, deja de poder entrar al momento.",
+      "errors": {
+        "email": "Escribe un correo completo, por ejemplo nombre@tuempresa.es.",
+        "session": "Tu sesión ha caducado. Vuelve a entrar en la zona.",
+        "full": "Ya están las {seats} personas de tu licencia. Da de baja a alguien para dar de alta a otra.",
+        "forbidden": "Solo la persona que compró puede cambiar el equipo.",
+        "tooMany": "Hoy ya se han dado muchas altas. Prueba mañana o escríbenos a info@pymaticlabs.com.",
+        "network": "No hemos podido guardarlo. Prueba otra vez."
+      },
+      "added": "Hemos dado de alta a {email} y le hemos enviado el acceso por correo.",
+      "already": "{email} ya estaba en el equipo.",
+      "removed": "Hemos dado de baja a {email}: ya no puede entrar en la zona.",
+      "owner": "Titular (quien compró)",
+      "member": "Equipo",
+      "since": "desde el {date}",
+      "confirm": "¿Dar de baja?",
+      "confirmYes": "Sí, dar de baja",
+      "confirmNo": "No",
+      "removeLabel": "Dar de baja a {email}",
+      "remove": "Dar de baja",
+      "addTitle": "Dar de alta a una persona",
+      "addText": "Escribe su correo de trabajo. Le llega un correo para entrar.",
+      "fullText": "Ya están las {seats} personas de tu licencia. Para dar de alta a otra, da de baja a alguien antes. Para más de {seats}, escríbenos.",
+      "emailLabel": "Correo de la persona",
+      "adding": "Dando de alta…",
+      "add": "Dar de alta"
+    },
+    "sessions": {
+      "title": "Sesiones de montaje",
+      "intro": "Dos sesiones de una hora por videollamada, con Eric o con Sergio, para dejar tu Cerebro Digital montado. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora peninsular.",
+      "notGuided": "Las sesiones de montaje son del Acompañado. Para tenerlas, pasa al Acompañado pagando la diferencia: escríbenos a info@pymaticlabs.com.",
+      "bookedTitle": "Tus sesiones",
+      "noneBooked": "Aún no tienes ninguna sesión reservada.",
+      "number": "{number}.ª sesión",
+      "withHost": "Con {host}",
+      "past": "ya pasó",
+      "upcoming": "reservada",
+      "join": "Entrar en la videollamada",
+      "failed": "El hueco que elegiste se ocupó mientras pagabas. Elige otro abajo.",
+      "cancelled": "Cancelada.",
+      "change": "Para cambiar una sesión de día, escríbenos a info@pymaticlabs.com con 24 horas de antelación; si no te presentas, la sesión se pierde. ¿La prefieres en persona? Solo en fin de semana y con prima: escríbenos.",
+      "thirdWeek": "Las dos próximas semanas están completas: estos son los huecos de la tercera.",
+      "slotsError": "No hemos podido cargar los huecos libres. Prueba en un momento o escríbenos.",
+      "noSlots": "Ahora mismo no quedan huecos libres. Escríbenos y te buscamos uno.",
+      "memberNote": "Las sesiones las reserva la persona que compró.",
+      "with": "con {host}",
+      "chooseTitle": "{number, select, 1 {Elige tu primera sesión} other {Elige tu segunda sesión}}",
+      "errors": {
+        "choose": "Elige un hueco de la lista.",
+        "taken": "Ese hueco se acaba de ocupar. Elige otro.",
+        "session": "Tu sesión ha caducado. Vuelve a entrar en la zona.",
+        "forbidden": "Solo la persona que compró puede reservar las sesiones.",
+        "network": "No hemos podido reservarla. Prueba otra vez."
+      },
+      "booked": "Reservada: {when}. Te llega la confirmación por correo.",
+      "booking": "Reservando…",
+      "book": "Reservar esta sesión",
+      "hostLegend": "¿Con quién?",
+      "hostAny": "Con cualquiera",
+      "moreDays": "Ver más días",
+      "slotsLegend": "Día y hora",
+      "noSlotsHost": "Con esa persona no quedan huecos en estas semanas. Prueba con la otra o escríbenos.",
+      "bookedNotice": "Sesión reservada. Te llega la confirmación por correo, con el enlace de la videollamada."
+    }
   }
 }

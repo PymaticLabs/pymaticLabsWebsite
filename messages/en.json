@@ -412,12 +412,12 @@
       },
       "acompanado": {
         "name": "Guided",
-        "tagline": "Start with your tasks already set up.",
+        "tagline": "We leave it set up on your computers.",
         "people": "1 person"
       },
       "acompanado-equipo": {
         "name": "Guided, team",
-        "tagline": "Start with your tasks already set up, as a team.",
+        "tagline": "We leave it set up, with your team added.",
         "people": "Up to 10 people"
       }
     },
@@ -433,13 +433,14 @@
     "includedTitle": "In all four",
     "included": [
       "License for good",
-      "2 one-hour setup sessions",
-      "14-day setup guarantee",
+      "The extension and the guides to set it up",
+      "14-day guarantee if the product fails",
       "Free security fixes"
     ],
     "extras": {
       "hazlo-tu": [
-        "1 person"
+        "1 person",
+        "You set it up, with the guides"
       ],
       "hazlo-tu-equipo": [
         "Up to 10 people",
@@ -448,32 +449,32 @@
       ],
       "acompanado": [
         "1 person",
-        "3 to 5 of your tasks set up",
-        "Your documents loaded",
+        "We set it up: 2 one-hour sessions",
+        "Automation ideas for your company",
         "1 month of Essential included"
       ],
       "acompanado-equipo": [
         "Up to 10 people",
-        "3 to 5 of your tasks set up",
+        "We set it up: 2 one-hour sessions",
         "Team and locked areas ready",
         "3 months of Pro included"
       ]
     },
     "payWith": {
-      "card": "Pay by card",
-      "invoice": "Invoice first"
+      "card": "Pay by card"
     },
     "buy": "Buy",
-    "requestInvoice": "Request an invoice",
+    "chooseSession": "Choose a session and buy",
     "comingSoon": "Coming soon",
     "comingSoonNote": "Online purchase opens soon. Meanwhile, write to us and we will let you know.",
     "notifyMe": "Let me know",
     "sessions": {
       "title": "Setup and guarantee",
       "items": [
-        "Two 1-hour video calls, 18:00 to 22:00 Spanish peninsular time.",
-        "If it is not set up, we refund you. Ask in writing within 14 days of purchase.",
-        "It is a setup guarantee, not a satisfaction guarantee. A missed session is lost."
+        "With Guided we set it up for you: two 1-hour video calls, with Eric or Sergio, 18:00 to 22:00 or Saturdays 10:00 to 14:00 (Spanish peninsular time). You pick the first one when you buy.",
+        "If the brain cannot be set up because of a product fault, we refund you. Ask in writing within 14 days of purchase.",
+        "It is not a satisfaction guarantee. A missed session is lost.",
+        "Setting it up yourself and want help? Move to Guided by paying the difference."
       ]
     },
     "monthly": {
@@ -596,7 +597,7 @@
       },
       {
         "q": "Is Guided a number of hours?",
-        "a": "No, it is an outcome: you end up with 3 to 5 of your tasks set up and your documents loaded."
+        "a": "No, it is an outcome: we leave the brain set up on your computers, with automation ideas for your company. Custom procedures are quoted separately."
       },
       {
         "q": "Can I start alone and upgrade to a team?",
@@ -645,13 +646,41 @@
     "title": "Payment received. Thank you!",
     "subtitle": "In a few minutes you will get an email with everything you need to set up your Digital Brain.",
     "steps": [
-      "The link to the download, shared with your email address.",
+      "The link to your customer area, with your license, the downloads for Mac and Windows and your invoices.",
       "Your license, attached. Keep it: setup will ask you for it.",
-      "The link to book your two setup sessions.",
+      "The terms you accepted and, with Guided, your first session appointment.",
       "The invoice, in a separate email."
     ],
     "help": "Not arriving? Check your spam folder or write to info@pymaticlabs.com.",
     "cta": "See how it works"
+  },
+  "purchase": {
+    "metaTitle": "Buy the Digital Brain",
+    "metaDescription": "Payment with Stripe for businesses and professionals. The license and the customer area arrive right away.",
+    "title": "Buy {product}",
+    "subtitle": "You pay on Stripe, with your tax ID or EU VAT number. Your license and access to your customer area arrive by email right away; the invoice, separately.",
+    "price": "List price: {list}. The first 10 customers pay {launch}: it is applied at payment while places last. VAT not included.",
+    "chooseTitle": "Choose your first setup session",
+    "chooseText": "One hour by video call, with Eric or with Sergio. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Spanish peninsular time. You book the second one from your customer area.",
+    "thirdWeek": "The next two weeks are full: these are the slots of the third one.",
+    "noSlots": "There are no free slots right now. Write to us and we will find one for you.",
+    "slotsError": "We could not load the free slots. Try again in a moment or write to us.",
+    "with": "with {host}",
+    "pay": "Go to payment",
+    "back": "Back to pricing",
+    "closed": "Online purchase opens soon. Meanwhile, write to us and we will let you know.",
+    "b2b": "Businesses and professionals only. You accept the terms of use and sale when paying.",
+    "errors": {
+      "closed": "Online purchase is not open yet.",
+      "slot_taken": "That slot has just been taken. Choose another one.",
+      "session_required": "Choose a slot for your first session.",
+      "unavailable": "We could not open the payment. Try again in a moment.",
+      "product": "That product does not exist.",
+      "company_required": "Sign in to your customer area to subscribe.",
+      "already_subscribed": "You already have the monthly plan: change it from your customer area.",
+      "rate_limited": "Too many attempts in a row. Wait a few minutes and try again.",
+      "busy": "There are many payments with a session open right now. Try again in a few minutes or write to info@pymaticlabs.com."
+    }
   },
   "contact": {
     "title": "Let's talk",
@@ -692,7 +721,8 @@
       "comoFunciona": "Features",
       "precios": "Pricing",
       "seguridad": "Security",
-      "contacto": "Contact"
+      "contacto": "Contact",
+      "zona": "Customer area"
     },
     "legalLinks": {
       "aviso": "Legal notice",
@@ -715,7 +745,7 @@
     "descriptions": {
       "aviso-legal": "Details of PYMATICLABS, S.L., owner of pymaticlabs.com, and terms of use of the website.",
       "politica-privacidad": "Which personal data we process when you visit pymaticlabs.com or write to us from it.",
-      "politica-cookies": "pymaticlabs.com only uses one cookie, for the theme, and only if you ask for it. Here is why.",
+      "politica-cookies": "pymaticlabs.com only uses technical cookies: the theme one, if you ask for it, and the customer area session one, if you sign in.",
       "condiciones": "Terms of use and sale of the Digital Brain, for businesses and professionals.",
       "privacidad-producto": "Which personal data Pymatic Labs processes when selling the Digital Brain and providing support, and which it does not."
     },
@@ -723,5 +753,311 @@
     "draftBadge": "Draft",
     "draftNote": "Draft pending legal review. It may change before its final version.",
     "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."
+  },
+  "zone": {
+    "meta": {
+      "title": "Customer area",
+      "description": "Your license, downloads, invoices and team for the Digital Brain.",
+      "loginTitle": "Sign in to the customer area"
+    },
+    "eyebrow": "Customer area",
+    "roles": {
+      "owner": "purchase holder",
+      "member": "team member"
+    },
+    "frame": {
+      "navLabel": "Sections of your area",
+      "switchCompany": "Company:",
+      "help": "Something not right? Write to us at <email>info@pymaticlabs.com</email> and we will look into it.",
+      "logout": "Sign out",
+      "loggingOut": "Signing out…",
+      "logoutError": "We could not sign you out. Please try again."
+    },
+    "closed": {
+      "title": "Your access to the area is closed",
+      "text": "This happens when the payment is refunded or charged back, because the license stops being valid (clause 5 of the terms), or when the person who bought removes you from the team.",
+      "help": "If you think this is a mistake, write to us at <email>info@pymaticlabs.com</email>."
+    },
+    "nav": {
+      "inicio": "Home",
+      "licencia": "License",
+      "descargas": "Downloads",
+      "sesiones": "Sessions",
+      "equipo": "Team",
+      "mensual": "Monthly",
+      "facturas": "Invoices"
+    },
+    "ownerOnly": "Only the person who bought can see this part. If you need something from here, ask them.",
+    "login": {
+      "title": "Sign in to your customer area",
+      "unavailable": "The customer area opens when the Digital Brain goes on sale. If you are already a customer and need anything, write to info@pymaticlabs.com.",
+      "intro": "With the email you bought with, or the one your company added you with. We send you a one-time code: there are no passwords.",
+      "emailLabel": "Your email",
+      "send": "Send me the code",
+      "sending": "Sending…",
+      "sentTitle": "Check your email",
+      "resentTitle": "We have sent you another code",
+      "sent": "If {email} has access to the area, a code is on its way. It can take a minute: check your spam folder too.",
+      "codeLabel": "The code you received",
+      "codeHint": "It has 8 digits. It is valid for 10 minutes and only once.",
+      "verify": "Sign in",
+      "verifying": "Checking…",
+      "resend": "Ask for another code",
+      "resendIn": "Another code in {seconds} s",
+      "changeEmail": "Use a different email",
+      "errors": {
+        "email": "Type your full email, for example name@yourcompany.com.",
+        "code": "Type the code from the email: digits only.",
+        "invalid": "That code is not valid or has expired. Use the latest one you received, or ask for another.",
+        "rateLimited": "Too many attempts in a row. Wait a few minutes and ask for a new code.",
+        "network": "We could not connect. Check your connection and try again."
+      },
+      "notCustomer": "Not a customer yet?",
+      "notCustomerLink": "See the pricing",
+      "noEmail": "No code arriving? Check that it is the email you bought with, or write to us at info@pymaticlabs.com.",
+      "fake": "Test mode: the code is in the project folder .delivery-fake/buzon."
+    },
+    "home": {
+      "title": "Your Digital Brain",
+      "intro": "Everything about your purchase in one place: the license, the downloads of the latest version and, depending on what you have, your sessions, your team, the monthly plan and the invoices.",
+      "monthlyOk": "Monthly plan subscribed. You will see it here in a few minutes, and the invoice for each charge arrives by email.",
+      "license": {
+        "title": "Your license",
+        "more": "See the license"
+      },
+      "downloads": {
+        "title": "Downloads",
+        "go": "Go to the downloads"
+      },
+      "sessions": {
+        "title": "Setup sessions",
+        "next": "Session {number}: {when}, with {host}",
+        "noneUpcoming": "You have no sessions coming up.",
+        "bookFirst": "You still need to book your first session.",
+        "bookSecond": "You still need to book the second session.",
+        "book": "Book the session",
+        "go": "See the sessions"
+      },
+      "monthly": {
+        "title": "Maintenance and support",
+        "subscribed": "You have Monthly {plan}.",
+        "included": "Included in your purchase until {date}.",
+        "none": "You have no maintenance or support right now.",
+        "security": "Security fixes reach you for free, with or without the monthly plan.",
+        "go": "See the monthly plan"
+      },
+      "team": {
+        "title": "Your team",
+        "text": "Each person signs in with their email and downloads the extension.",
+        "go": "Manage the team"
+      },
+      "invoices": {
+        "title": "Invoices",
+        "count": "{count, plural, =0 {No invoices issued yet} one {# invoice} other {# invoices}}",
+        "go": "See the invoices"
+      },
+      "introMember": "What you need to use your company’s Digital Brain: the license, the downloads of the latest version and, if there are any, the setup sessions."
+    },
+    "license": {
+      "title": "Your license",
+      "intro": "The license file proves the Digital Brain belongs to your company, and the setup asks for it. Keep it; if you lose it, download it here again.",
+      "current": "The license that is valid now",
+      "team": "up to {seats} people",
+      "solo": "one person",
+      "supportUntil": "Maintenance and support until {date}.",
+      "noSupport": "No maintenance or support included.",
+      "noSupportShort": "no maintenance or support",
+      "download": "Download the license",
+      "downloadShort": "Download",
+      "preparing": "Your license is being prepared. In a few minutes it will be here and in your email.",
+      "fields": {
+        "id": "Number",
+        "holder": "Issued to",
+        "kind": "Option",
+        "people": "People",
+        "issued": "Issued on",
+        "support": "Maintenance and support until"
+      },
+      "howTitle": "Good to know",
+      "how": {
+        "keep": "Keep the file with your backups. If it is modified, it stops being valid.",
+        "support": "The maintenance and support date does not limit use: the Digital Brain keeps working after it. What is new in each version switches on if that date covers the version date.",
+        "security": "Security fixes reach you for free even after that date.",
+        "team": "With a team, the license is valid for everyone you add, up to the limit of your purchase."
+      },
+      "others": "Earlier licenses",
+      "othersText": "Each monthly charge brings a new license with the new date. The earlier ones stay here; revoked ones are no longer valid.",
+      "issuedOn": "Issued on {date}",
+      "revoked": "Revoked"
+    },
+    "downloads": {
+      "title": "Downloads",
+      "intro": "The Digital Brain extension for Claude Desktop, in its latest version. Every customer downloads the same one, with the security fixes up to date.",
+      "none": "No version has been published yet. We will email you as soon as there is one.",
+      "version": "Version {version}",
+      "published": "Published on {date}",
+      "groups": {
+        "mac": {
+          "title": "Mac",
+          "text": "For Claude Desktop on macOS.",
+          "short": "Mac"
+        },
+        "windows": {
+          "title": "Windows",
+          "text": "For Claude Desktop on Windows.",
+          "short": "Windows"
+        },
+        "registry": {
+          "title": "Registry installer (team)",
+          "text": "To install the extension in one go on your team’s Windows computers. If you do not know how to use it, hand it to your support person.",
+          "short": "your team’s Windows"
+        },
+        "extra": {
+          "title": "For your technical person",
+          "text": "The list of components (SBOM) and the fingerprints to check the files.",
+          "short": ""
+        }
+      },
+      "button": "Download for {what}, {lang}",
+      "buttonNoLang": "Download for {what}",
+      "langs": {
+        "es": "in Spanish",
+        "en": "in English"
+      },
+      "checksum": "See the SHA-256 fingerprint (to check the file)",
+      "expiry": "Each button creates a private link when you press it, which expires after {minutes} minutes. If the download does not start, press it again."
+    },
+    "invoices": {
+      "title": "Invoices",
+      "intro": "The invoices for your purchases and for each monthly charge, and the terms you accepted with each purchase. Each invoice also reaches you by email when it is issued.",
+      "pending": "{count, plural, one {# invoice is being prepared: it reaches you by email as soon as it is issued and shows up here.} other {# invoices are being prepared: they reach you by email as soon as they are issued and show up here.}}",
+      "listTitle": "Issued invoices",
+      "empty": "No invoices issued yet.",
+      "kinds": {
+        "invoice": "Invoice",
+        "credit_note": "Credit note"
+      },
+      "download": "Download the PDF",
+      "preparing": "Being prepared",
+      "purchasesTitle": "Your purchases and their terms",
+      "purchasesText": "The terms of use and sale you accepted when paying, exactly as they were, with the date and who accepted them.",
+      "status": {
+        "paid": "paid",
+        "needs_review": "under review",
+        "refunded": "refunded",
+        "partially_refunded": "partly refunded",
+        "disputed": "with an open chargeback",
+        "dispute_lost": "charged back"
+      },
+      "terms": "Terms of {version}",
+      "taxNote": "VAT is calculated by Stripe at payment, based on your country and your VAT number. If your tax details are not correct, write to us at info@pymaticlabs.com."
+    },
+    "monthly": {
+      "title": "Monthly",
+      "intro": "The monthly plan is maintenance and support: new versions with their improvements, up-to-date content and support. You cancel whenever you want and the Digital Brain keeps working.",
+      "errors": {
+        "closed": "Online subscription is not open yet.",
+        "company_required": "Sign in to the area again to subscribe.",
+        "already_subscribed": "You already have the monthly plan: you change it from the Stripe portal.",
+        "unavailable": "We could not open the payment. Please try again in a moment.",
+        "product": "That plan does not exist.",
+        "rate_limited": "Too many attempts in a row. Wait a few minutes and try again."
+      },
+      "statusTitle": "Your maintenance and support",
+      "subscribed": "You have Monthly {plan}.",
+      "statuses": {
+        "active": "Active: charged monthly in advance and renewed automatically until you cancel.",
+        "trialing": "Not charged yet: the first charge comes when the months included in your purchase end.",
+        "past_due": "A charge is pending. Check your card in the Stripe portal.",
+        "unpaid": "Some charges are unpaid. Check your card: if they stay unpaid, it is suspended after 15 days’ notice.",
+        "paused": "Paused."
+      },
+      "licenseUntil": "Your current license covers until {date}. Each charge brings a new license with the new date, here in the area.",
+      "included": "Your purchase includes maintenance and support until {date}.",
+      "includedNext": "To continue afterwards, subscribe to the monthly plan: nothing is charged until {date}.",
+      "includedNextPlan": "To continue afterwards, subscribe to the monthly plan: with the {plan} plan or a smaller one nothing is charged until {date}; with a bigger one, it is charged from the day you subscribe.",
+      "none": "You have no maintenance or support right now.",
+      "noneText": "Your license is still valid and what you installed keeps working. With the monthly plan you get new versions with what is new switched on again, and support.",
+      "portal": "Change card or plan, or cancel",
+      "portalNote": "This opens the Stripe customer portal, which handles the payments. When you are done, you come back here.",
+      "securityTitle": "Security does not depend on the monthly plan",
+      "security": "Security fixes reach every customer for free during their version’s support period, with or without the monthly plan.",
+      "plansTitle": "Monthly plans",
+      "plansText": "Pressing a button takes you to the Stripe payment, with your company already filled in.",
+      "plansClosed": "Online subscription opens soon. In the meantime, write to us at info@pymaticlabs.com.",
+      "planName": "Monthly {plan}",
+      "perMonth": "per month, excl. VAT",
+      "subscribe": "Subscribe to {plan}"
+    },
+    "team": {
+      "title": "Your team",
+      "intro": "With your team license, up to {seats} people can sign in, including you. Each one signs in with their email and a code, like you, and downloads the extension. They do not see the invoices or the team.",
+      "count": "{count} of {seats} people added",
+      "memberNote": "The person who bought manages the team. If someone else needs to sign in, ask them.",
+      "solo": "Your license is for one person. For more people to use it, you move to the team license: write to us at info@pymaticlabs.com.",
+      "how": "When you add someone, they get an email with the link to the area. When you remove them, they can no longer sign in, straight away.",
+      "errors": {
+        "email": "Type a full email, for example name@yourcompany.com.",
+        "session": "Your session has expired. Sign in to the area again.",
+        "full": "Your license’s {seats} people are already added. Remove someone to add another person.",
+        "forbidden": "Only the person who bought can change the team.",
+        "tooMany": "Many people have been added today. Try again tomorrow or write to info@pymaticlabs.com.",
+        "network": "We could not save it. Please try again."
+      },
+      "added": "We have added {email} and emailed them their access.",
+      "already": "{email} was already on the team.",
+      "removed": "We have removed {email}: they can no longer sign in to the area.",
+      "owner": "Holder (who bought)",
+      "member": "Team",
+      "since": "since {date}",
+      "confirm": "Remove?",
+      "confirmYes": "Yes, remove",
+      "confirmNo": "No",
+      "removeLabel": "Remove {email}",
+      "remove": "Remove",
+      "addTitle": "Add a person",
+      "addText": "Type their work email. They get an email to sign in.",
+      "fullText": "Your license’s {seats} people are already added. To add another, remove someone first. For more than {seats}, write to us.",
+      "emailLabel": "The person’s email",
+      "adding": "Adding…",
+      "add": "Add"
+    },
+    "sessions": {
+      "title": "Setup sessions",
+      "intro": "Two one-hour sessions by video call, with Eric or with Sergio, to get your Digital Brain set up. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Spanish peninsular time.",
+      "notGuided": "Setup sessions come with the Guided option. To get them, move to Guided by paying the difference: write to us at info@pymaticlabs.com.",
+      "bookedTitle": "Your sessions",
+      "noneBooked": "You have no sessions booked yet.",
+      "number": "Session {number}",
+      "withHost": "With {host}",
+      "past": "already took place",
+      "upcoming": "booked",
+      "join": "Join the video call",
+      "failed": "The slot you chose was taken while you were paying. Choose another one below.",
+      "cancelled": "Cancelled.",
+      "change": "To move a session to another day, write to us at info@pymaticlabs.com 24 hours in advance; if you do not show up, the session is lost. Prefer it in person? Only at weekends and with a surcharge: write to us.",
+      "thirdWeek": "The next two weeks are full: these are the slots of the third one.",
+      "slotsError": "We could not load the free slots. Try again in a moment or write to us.",
+      "noSlots": "There are no free slots right now. Write to us and we will find one.",
+      "memberNote": "The person who bought books the sessions.",
+      "with": "with {host}",
+      "chooseTitle": "{number, select, 1 {Choose your first session} other {Choose your second session}}",
+      "errors": {
+        "choose": "Choose a slot from the list.",
+        "taken": "That slot has just been taken. Choose another one.",
+        "session": "Your session has expired. Sign in to the area again.",
+        "forbidden": "Only the person who bought can book the sessions.",
+        "network": "We could not book it. Please try again."
+      },
+      "booked": "Booked: {when}. The confirmation reaches you by email.",
+      "booking": "Booking…",
+      "book": "Book this session",
+      "hostLegend": "With whom?",
+      "hostAny": "With either",
+      "moreDays": "See more days",
+      "slotsLegend": "Day and time",
+      "noSlotsHost": "That person has no free slots in these weeks. Try the other one or write to us.",
+      "bookedNotice": "Session booked. The confirmation reaches you by email, with the video call link."
+    }
   }
 }

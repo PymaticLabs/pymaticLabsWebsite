@@ -38,3 +38,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# entrega en modo falso (buzon y almacen locales)
+/.delivery-fake/

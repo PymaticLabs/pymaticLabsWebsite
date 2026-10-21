@@ -2,11 +2,9 @@ import fs from 'fs'
 import path from 'path'
 import { marked } from 'marked'
 import { defaultLocale } from '@/lib/i18n'
+import { PENDING_NOTE as PENDING } from '@/lib/legal-versions'
 
 const contentDir = path.join(process.cwd(), 'content')
-
-/** Una nota interna de borrador: una cita de una linea que empieza por Pendiente o Pending. */
-const PENDING = /^> *(Pendiente|Pending):.*(\r?\n)?/gm
 
 /**
  * Lee un texto de content/<carpeta>/<idioma>/<nombre>.md y lo devuelve en HTML.

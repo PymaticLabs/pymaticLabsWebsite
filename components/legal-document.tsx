@@ -1,25 +1,11 @@
 import { getTranslations } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { renderContent } from '@/lib/markdown'
+import { LEGAL_VERSIONS as VERSIONS, type LegalDocumentId } from '@/lib/legal-versions'
 
-export type LegalDocumentId =
-  | 'aviso-legal'
-  | 'politica-privacidad'
-  | 'politica-cookies'
-  | 'condiciones'
-  | 'privacidad-producto'
-
-/**
- * Fecha de la version publicada de cada texto (las politicas prometen publicar cada version con su
- * fecha). Se cambia aqui cada vez que se cambia el texto.
- */
-const VERSIONS: Record<LegalDocumentId, string> = {
-  'aviso-legal': '2026-10-09',
-  'politica-privacidad': '2026-10-20',
-  'politica-cookies': '2026-10-18',
-  condiciones: '2026-10-09',
-  'privacidad-producto': '2026-10-20',
-}
+// Las fechas de cada version viven en lib/legal-versions.ts (la de las condiciones va tambien en
+// cada compra).
+export type { LegalDocumentId }
 
 // Todos los textos legales son borradores hasta que los revise un abogado (traspaso, seccion 6).
 export default async function LegalDocument({ id, locale }: { id: LegalDocumentId; locale: string }) {

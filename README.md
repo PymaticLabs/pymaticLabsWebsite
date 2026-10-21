@@ -33,32 +33,17 @@ pnpm dev
 | `RESEND_API_KEY` | Producción | Enviar los correos del formulario de contacto |
 | `CONTACT_EMAIL` | Opcional | Buzón del formulario (por defecto info@pymaticlabs.com) |
 | `NEXT_PUBLIC_SITE_URL` | Opcional | URL pública (por defecto https://pymaticlabs.com) |
-| `CHECKOUT_OPEN` | Cobro | `true` enseña los botones de compra. Apagado hasta que el abogado revise las condiciones. Se lee al construir: cambiarlo pide redesplegar. |
-| `STRIPE_PAYMENT_LINKS` | Cobro | JSON `{"hazlo-tu": {"url": "https://buy.stripe.com/...", "id": "plink_..."}, "hazlo-tu-equipo": {...}}` |
-| `STRIPE_SECRET_KEY` | Entrega | Clave secreta de Stripe (`sk_test_...` en pruebas) |
-| `STRIPE_WEBHOOK_SECRET` | Entrega | Secreto del endpoint `/api/stripe/webhook` (`whsec_...`) |
-| `LICENSE_SIGNING_KEY` | Entrega | Privada de licencias: base64 de la semilla de 32 bytes, la que crea `firmar_licencia.py --crear-clave`. Secreto. |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Entrega | Secuencia de ids de licencia y entregas hechas |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | Entrega | Cuenta de servicio con acceso a la carpeta de la versión (JSON o base64) |
-| `DRIVE_RELEASE_FOLDER_ID` | Entrega | Carpeta de Drive de la versión vigente |
-| `BOOKING_URL` | Opcional | Reserva de las sesiones de montaje (por defecto https://cal.com/pymaticlabs) |
+| `CHECKOUT_OPEN` | Cobro | `true` enseña los botones de compra. Apagado hasta que el abogado revise las condiciones. La página de precios lo lee al construir: cambiarlo pide redesplegar. |
+
+Las de la entrega automática (Stripe, Supabase, Google Cloud KMS, Holded, Brevo, Cal.com, la cola y el modo falso) están en `.env.example`, cada una con su comentario.
 
 ## Cobro y entrega
 
-Hazlo tú: enlace de pago de Stripe → `/api/stripe/webhook` firma la licencia (`lib/license.ts`, igual byte a byte que `firmar_licencia.py`), comparte la carpeta de Drive con el correo del cliente y le manda la licencia por Resend. A info@ llega un aviso para emitir la factura en Holded. Acompañado: factura de Holded primero (el botón lleva al contacto).
+Pago en Stripe Checkout con sesiones creadas por el servidor (`/api/checkout`) y entrega automática con el aviso firmado de Stripe (`/api/stripe/webhook`): factura en Holded, licencia firmada con la clave de la web en Google Cloud KMS (`lib/license.ts`, igual byte a byte que `firmar_licencia.py`), cuenta en la zona de clientes (Supabase), bienvenida con la licencia y las condiciones aceptadas, y aviso a PymaticLabs; todo en una cola con reintentos. También el mensual, las devoluciones y contracargos, las versiones nuevas y la conciliación diaria de licencias y pagos.
 
-Configurar cada enlace de pago en Stripe:
+**Zona de clientes** (`/zona`): se entra con el correo y un código de un solo uso (Supabase Auth, sin contraseñas) y dentro están la licencia, las descargas con enlaces que caducan, las facturas, el mensual (con el portal de Stripe), el equipo y las sesiones del Acompañado. En modo falso, `/api/dev/zona-demo` enseña una zona de muestra sin ninguna cuenta.
 
-- Casilla de condiciones obligatoria (*Require customers to accept your terms of service*).
-- Recoger el nombre de la empresa y el número fiscal (*Tax ID collection*). Si no, campos propios con clave `empresa` y `nif`.
-- Tras el pago, redirigir a `https://pymaticlabs.com/gracias` (`/en/gracias` en inglés).
-- Endpoint del webhook: `https://pymaticlabs.com/api/stripe/webhook` con los eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded` y `charge.dispute.created`.
-
-Antes de abrir:
-
-1. Llevar la secuencia de ids del Mac de Eric a Redis: `SET licencias:secuencia:2026 <último número usado>`.
-2. Compra de 1 € en modo de prueba de Stripe y comprobar en un cerebro que la licencia recibida verifica (`licencia.py`).
-3. Abrir con `CHECKOUT_OPEN=true` cuando el abogado haya revisado las condiciones.
+Cómo funciona, qué hay que crear en cada servicio, todas las variables, cómo probarlo y lo que necesita el esqueleto: [docs/entrega-automatica.md](docs/entrega-automatica.md).
 
 ## Tests
 
@@ -66,7 +51,7 @@ Antes de abrir:
 pnpm test
 ```
 
-`lib/license.test.mts` comprueba la firma contra una licencia real emitida por `firmar_licencia.py`.
+`lib/license.test.mts` comprueba la firma contra una licencia real emitida por `firmar_licencia.py`. `lib/delivery.test.mts` y `lib/delivery-adapters.test.mts` prueban la entrega entera con las piezas falsas, sin cuentas ni red, `lib/zone.test.mts` la zona de clientes (lo que ve cada persona, la seguridad por filas y la sesión de Supabase) y `lib/delivery-review.test.mts` lo de la revisión de seguridad y fiscal (compras con el NIF de otro cliente, devoluciones y contracargos con el mensual, el IVA de Stripe Tax, límites). `pnpm build && pnpm test:e2e` la prueba de punta a punta contra `next start` en modo falso.
 
 ## Estructura
 
@@ -78,17 +63,28 @@ app/
     precios/            # Modalidades, mensual, Pack España y A medida
     seguridad/          # Promesa de privacidad y política de vulnerabilidades
     contacto/
+    zona/               # Zona de clientes: entrar, licencia, descargas, sesiones, equipo, mensual y facturas
     aviso-legal/, politica-privacidad/, politica-cookies/
   api/contact/          # Formulario de contacto (Resend)
+    comprar/[producto]/ # Página de compra (en el Acompañado, elegir la primera sesión)
+  api/checkout/         # Crea el pago en Stripe Checkout
   api/stripe/webhook/   # Entrega tras el pago
+  api/jobs/, api/admin/ # Cola, conciliación, versiones (con secreto)
+  api/zone/             # Zona de clientes
 components/
   home/                 # Home: scrolly.tsx (recorrido con scroll) y core-scene.tsx (el núcleo 3D)
   pricing/              # Tarjeta de modalidad
+  zone/                 # Piezas de la zona de clientes
   ui/                   # Primitivas shadcn/ui
 content/legal/{es,en}/  # Textos largos en Markdown
 lib/
   offer.ts              # Precios y modalidades
   markdown.ts           # Renderiza content/
+  checkout.ts           # Sesiones de Stripe Checkout
+  delivery/             # Entrega automática: pasos, cola, zona y un adaptador por proveedor
+supabase/migrations/    # Base de datos, seguridad por filas, almacén y pg_cron
+scripts/                # Prueba de punta a punta, Stripe, versiones y la publica de la clave
+docs/                   # Entrega automática
 messages/{es,en}.json   # Textos de la web
 public/.well-known/security.txt
 ```

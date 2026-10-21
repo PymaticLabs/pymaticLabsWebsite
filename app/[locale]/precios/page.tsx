@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
-import { isCheckoutOpen, paymentLinks } from '@/lib/checkout'
+import { isCheckoutOpen } from '@/lib/checkout'
 import {
   CUSTOM_FROM_PRICE,
   PACK_ESPANA_PRICE,
@@ -207,27 +207,33 @@ function BuyAction({
   t: Awaited<ReturnType<typeof getTranslations<'pricing'>>>
 }) {
   const contactHref = `${localePath(locale, '/contacto')}?interes=${modality.id}`
-  const paymentLink = paymentLinks()[modality.id]
 
-  // Hazlo tu: enlace de pago de Stripe. Acompañado: factura de Holded primero.
-  if (isCheckoutOpen() && (modality.guided || paymentLink)) {
+  // Pago con Stripe Checkout, creado por el servidor (/api/checkout). En el Acompañado, antes se
+  // elige la primera sesión y con quién (/comprar/<modalidad>).
+  if (isCheckoutOpen()) {
     return (
       <div className="space-y-2">
-        <p className="text-xs text-muted">{modality.guided ? t('payWith.invoice') : t('payWith.card')}</p>
-        <Button className="w-full" asChild>
-          {modality.guided || !paymentLink ? (
-            <Link href={contactHref}>{t('requestInvoice')}</Link>
-          ) : (
-            <a href={paymentLink.url}>{t('buy')}</a>
-          )}
-        </Button>
+        <p className="text-xs text-muted">{t('payWith.card')}</p>
+        {modality.guided ? (
+          <Button className="w-full" asChild>
+            <Link href={localePath(locale, `/comprar/${modality.id}`)}>{t('chooseSession')}</Link>
+          </Button>
+        ) : (
+          <form action="/api/checkout" method="post">
+            <input type="hidden" name="product" value={modality.id} />
+            <input type="hidden" name="locale" value={locale} />
+            <Button className="w-full" type="submit">
+              {t('buy')}
+            </Button>
+          </form>
+        )}
       </div>
     )
   }
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted">{modality.guided ? t('payWith.invoice') : t('payWith.card')}</p>
+      <p className="text-xs text-muted">{t('payWith.card')}</p>
       <Button className="w-full" variant="outline" disabled>
         {t('comingSoon')}
       </Button>

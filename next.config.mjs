@@ -18,6 +18,10 @@ const retired = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // La entrega lee las condiciones al correr (la copia que se manda en la bienvenida).
+  outputFileTracingIncludes: {
+    '/api/**': ['./content/legal/**/*.md'],
+  },
   async redirects() {
     return retired.flatMap(([source, destination]) => [
       { source, destination, permanent: true },

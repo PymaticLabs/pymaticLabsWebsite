@@ -1,4 +1,4 @@
-This policy explains which personal data Pymatic Labs processes when you visit pymaticlabs.com or write to us from it. What happens to your data when you buy and use the Digital Brain is explained in the [Digital Brain privacy policy](/en/privacidad-producto).
+This policy explains which personal data Pymatic Labs processes when you visit pymaticlabs.com or write to us from it. What happens to your data when you buy the Digital Brain, receive it and use the customer area is explained in the [Digital Brain privacy policy](/en/privacidad-producto).
 
 ## 1. Controller
 
@@ -11,6 +11,8 @@ PYMATICLABS, SOCIEDAD LIMITADA ("Pymatic Labs"), tax ID (NIF) B88781745, Calle A
 | **Contact form:** name, email, company, phone if you give it, what you are interested in and your message. | To reply to you and, if you ask, prepare a proposal. | Pre-contractual steps at your request (Article 6(1)(b) GDPR). |
 | **Emails you send us** at info@pymaticlabs.com. | To reply to you and manage the relationship. | Pre-contractual steps or legitimate interest in answering your query (Article 6(1)(b) and (f)). |
 | **Server technical logs:** IP address, browser, page requested and time. | To serve the website, keep it secure and detect abuse. | Legitimate interest in the site's security (Article 6(1)(f)). |
+| **Signing in to the customer area:** the email you type, the one-time code we send you, the session (a technical cookie, see the [cookie policy](/en/politica-cookies)), the access logs (date, time, IP address and browser) and, to stop anyone guessing codes or asking for too many, an encrypted fingerprint of your email and of your IP address (never the data itself), deleted the next day. | To let you sign in without passwords and protect the accounts. If the email has no access, nothing is sent and no account is created. | Performance of the contract with customers and legitimate interest in the security of the area (Article 6(1)(b) and (f)). |
+| **Purchase page:** for Guided, the slot and the person you choose for the first session, which we hold in Cal.com while you pay; and an encrypted fingerprint of your IP address (never the IP itself), deleted the next day, to share out the launch-price places and so that nobody opens payments or holds slots endlessly. You pay on Stripe's page. | To book your session and share out the launch-price places and the slots so that nobody hoards them. | Pre-contractual steps at your request and legitimate interest (Article 6(1)(b) and (f)). |
 | **Visit measurement** with Vercel Web Analytics: page viewed, referring page, country, device type, operating system and browser. | To know which pages are visited and improve the site. | Legitimate interest (Article 6(1)(f)). It uses no cookies and stores no identifiers in your browser, and the data is aggregated without identifying anyone. |
 
 We do not make automated decisions with legal effects or build profiles. We do not use your data to train artificial intelligence models.
@@ -24,12 +26,17 @@ Providers that process it on behalf of Pymatic Labs, under a data processing agr
 - **Vercel**, which hosts the website, keeps the technical logs and measures visits.
 - **Resend**, which delivers the form messages to our mailbox.
 - **Google** (Workspace), where our email is.
+- **Supabase**, in its European Union region (Frankfurt), which provides access to the customer area and stores its data.
+- **Brevo**, in the European Union, which delivers the codes to sign in to the area.
+- **Cal.com**, which provides the free slots for the setup sessions on the purchase page.
+
+When you pay you move to **Stripe**'s page, which processes the payment data under its own privacy policy.
 
 If you book a call, you do so in Cal.com's calendar, with its own privacy policy. We do not sell data or share it with anyone else, unless the law requires it.
 
 ## 4. International transfers
 
-Vercel, Resend and Google may process data in the United States. They only do so with the safeguards of Chapter V GDPR: the EU-US Data Privacy Framework adequacy decision for certified companies, or the European Commission's standard contractual clauses.
+Supabase and Brevo process the data in the European Union. Vercel, Resend, Google and Cal.com may process it in the United States. They only do so with the safeguards of Chapter V GDPR: the EU-US Data Privacy Framework adequacy decision for certified companies, or the European Commission's standard contractual clauses.
 
 > Pending: confirm each provider's specific safeguard.
 
@@ -38,6 +45,7 @@ Vercel, Resend and Google may process data in the United States. They only do so
 - **Contact messages with no later purchase:** as long as needed to deal with your query and at most 12 months from the last contact.
 - **If you become a customer:** they are then governed by the Digital Brain privacy policy.
 - **Technical logs and visit measurement:** the period Vercel applies, which is short and not used to identify you.
+- **Customer area:** codes, minutes, until used or expired; the session, until you sign out or after 7 days without using it; access logs, Supabase's short period. Everything else in the area, as the Digital Brain privacy policy says.
 
 When it is no longer needed, data is blocked while liabilities may arise and then deleted.
 
@@ -49,7 +57,7 @@ You can request access, rectification, erasure, objection, restriction of proces
 
 ## 7. Security
 
-We apply technical and organizational measures appropriate to the risk: the website always runs over HTTPS and access to data is limited to those who need it.
+We apply technical and organizational measures appropriate to the risk: the website always runs over HTTPS, access to data is limited to those who need it and the customer area has no passwords: you sign in with a one-time code.
 
 ## 8. Changes
 

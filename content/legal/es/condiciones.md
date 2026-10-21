@@ -10,13 +10,15 @@ Solo contratan empresas y profesionales, para su actividad: al comprar, el Clien
 
 Se contrata en la página de compra: el Cliente elige el producto, lee estas condiciones, las acepta marcando la casilla y paga. Antes de pagar puede corregir sus datos en el resumen del pedido. Después recibe por correo la confirmación y estas condiciones en un formato que puede guardar; PymaticLabs archiva el contrato y lo facilita si se le pide. Se contrata en castellano o en inglés; si las versiones difieren, prevalece la castellana.
 
-> Pendiente: cómo llegan las condiciones por correo tras el pago.
+Las condiciones aceptadas llegan en el correo de bienvenida y quedan en la [zona de clientes](/zona).
 
 ## 3. Qué incluye cada producto
 
-**Hazlo tú.** La licencia (cláusula 6), la documentación, la versión vigente al comprar y dos sesiones de montaje, para montar y hacer crecer el cerebro por cuenta propia. Sin equipo no trae meses de Suscripción: aparte de las sesiones, no incluye mantenimiento ni soporte (cláusula 11). Se entrega tal cual (cláusula 12).
+**Hazlo tú.** La licencia (cláusula 6), la documentación y la versión vigente al comprar, para montar y hacer crecer el cerebro por cuenta propia, sin sesiones de montaje. Sin equipo no trae meses de Suscripción: no incluye mantenimiento ni soporte (cláusula 11). Se entrega tal cual (cláusula 12). Para tener ayuda, el Cliente pasa al Acompañado pagando la diferencia de precio de la página de compra.
 
-**Sesiones de montaje.** De una hora cada una, por videollamada, de 18:00 a 22:00 (hora peninsular española), reservadas en el calendario en línea de PymaticLabs. En ellas PymaticLabs guía el montaje en un equipo del Cliente que cumpla los requisitos publicados. No incluyen procedimientos a medida, migrar datos ni preparar equipos que no los cumplan. Se cambian de día avisando con 24 horas; si el Cliente no se presenta, la sesión se pierde. Se usan en los 90 días siguientes a la compra.
+**Acompañado.** Lo del Hazlo tú y, además, el montaje del Cerebro Digital por PymaticLabs en los equipos del Cliente, en dos sesiones de montaje, con ideas de automatizaciones para su actividad. No incluye crear procedimientos del Cliente.
+
+**Sesiones de montaje.** Solo en el Acompañado. De una hora cada una, por videollamada, de 18:00 a 22:00 y los sábados de 10:00 a 14:00 (hora peninsular española), con la persona de PymaticLabs que el Cliente elija entre las que tengan hueco en el calendario en línea; la primera se reserva al comprar; en persona, solo en fin de semana y con la prima de la página de compra. En ellas PymaticLabs hace el montaje en un equipo del Cliente que cumpla los requisitos publicados. No incluyen procedimientos a medida, migrar datos ni preparar equipos que no los cumplan. Se cambian de día avisando con 24 horas; si el Cliente no se presenta, la sesión se pierde. Se usan en los 90 días siguientes a la compra.
 
 > Pendiente: confirmar los 90 días.
 
@@ -30,11 +32,11 @@ El precio es el de la página de compra al comprar. Cobra Stripe, con sus condic
 
 La Suscripción se cobra por meses adelantados y se renueva sola hasta que se cancela. Impagada, se suspende tras avisar con 15 días; la versión instalada sigue funcionando.
 
-> Pendiente: cómo se aplica el IVA en la página de compra.
+El impuesto lo calcula Stripe Tax en el mismo pago, según el país y el NIF-IVA del Cliente.
 
 ## 5. Garantía de montaje y cancelación
 
-**Garantía de montaje.** Si el Cerebro Digital no queda funcionando en un equipo del Cliente que cumple los requisitos, tras las dos sesiones de montaje y por causa del producto, PymaticLabs devuelve íntegro el pago único si el Cliente lo pide por escrito en los 14 días siguientes a la compra (o hasta 7 días después de la segunda sesión, si PymaticLabs no pudo darlas antes). No es una garantía de satisfacción: no procede si el montaje funciona, si el Cliente no reserva o falta a las sesiones, ni por causas ajenas al producto (sus equipos, su red, sus permisos o la cuenta del Asistente). Entre empresas no hay derecho legal de desistimiento: es la única vía de devolución.
+**Garantía de montaje.** En el Acompañado: si el Cerebro Digital no queda funcionando en un equipo del Cliente que cumple los requisitos, tras las dos sesiones de montaje y por causa del producto, PymaticLabs devuelve íntegro el pago único si el Cliente lo pide por escrito en los 14 días siguientes a la compra (o hasta 7 días después de la segunda sesión, si PymaticLabs no pudo darlas antes); no procede si el Cliente no reserva o falta a las sesiones. En el Hazlo tú: si el Cerebro Digital no se puede montar en un equipo del Cliente que cumple los requisitos por un fallo del producto, PymaticLabs devuelve íntegro el pago único si el Cliente lo pide por escrito en los 14 días siguientes a la compra, con el aviso que da el montaje al fallar. Ninguna es una garantía de satisfacción: no procede si el montaje funciona ni por causas ajenas al producto (sus equipos, su red, sus permisos o la cuenta del Asistente). Entre empresas no hay derecho legal de desistimiento: es la única vía de devolución.
 
 **Efectos de la devolución.** Termina la licencia y su fichero deja de valer. En 7 días, el Cliente borra la extensión y el esqueleto, con sus documentos estándar, de todos sus equipos y lo confirma por escrito. Pierde el acceso a las descargas, a las versiones nuevas, al soporte y a los meses de Suscripción que incluyera la compra. El Cerebro del Cliente es suyo y se lo queda. Un contracargo del pago único tiene los mismos efectos.
 
@@ -46,7 +48,7 @@ PymaticLabs concede al Cliente una licencia perpetua, no exclusiva e intransferi
 
 **Titular y personas.** Es de la empresa o el profesional que compra, con su NIF. Para una persona, la usa una sola persona; con equipo, el personal y los colaboradores del Cliente, hasta las personas que diga la página de compra. Usarla con más es usarla fuera de la licencia.
 
-> Pendiente: las consecuencias de usarla con más personas de las compradas.
+> Pendiente: si usarla con más personas es incumplimiento grave (cláusula 14) o solo obliga a pasar a equipo, y a qué precio.
 
 **Fichero de licencia.** El fichero firmado por PymaticLabs prueba la licencia y hace falta para montar el Cerebro Digital. Dice el Cliente y su NIF, si es para una persona o con equipo, la fecha de compra y el fin del mantenimiento y soporte (cláusula 11), que no limita el uso. Alterado, no vale; perdido, PymaticLabs reenvía el mismo.
 
@@ -83,11 +85,11 @@ El soporte, para quien lo tenga, es por correo ([info@pymaticlabs.com](mailto:in
 
 **Mantenimiento y soporte.** Los da la Suscripción, o sus meses incluidos en la compra, según el plan: mejoras y versiones nuevas, contenido y soporte. Sin ellos, el Cliente conserva la licencia y el uso de lo instalado y pierde el mantenimiento y el soporte. Decide cuándo instalar cada versión.
 
-> Pendiente: cómo se actualiza el fin del mantenimiento y soporte del fichero de licencia con la Suscripción.
+**Versiones sin Suscripción.** Hay una sola línea de versiones y el Cliente puede instalar siempre la última, que trae las correcciones de seguridad. Lo nuevo de cada versión (procedimientos, packs, conectores y funciones) solo se activa si el fin del mantenimiento y soporte de su fichero de licencia cubre la fecha de esa versión. Cada cobro de la Suscripción da un fichero de licencia nuevo con la fecha nueva, en la zona de clientes.
 
 **Seguridad.** Las correcciones de seguridad no dependen de la Suscripción: llegan gratis a todo Cliente durante el periodo de soporte de seguridad de su versión, que no es el fin del mantenimiento y soporte del fichero, y, si solo se corrige la última, el Cliente puede pasar a ella gratis (artículo 13.10 del Reglamento (UE) 2024/2847 de ciberresiliencia, CRA). Las vulnerabilidades se gestionan según la [política de vulnerabilidades del Cerebro Digital](/seguridad#vulnerabilidades).
 
-> Pendiente: la duración del periodo de soporte de seguridad.
+> Pendiente: la duración del periodo de soporte de seguridad (propuesta: cinco años por versión).
 
 ## 12. Garantías
 
@@ -117,7 +119,7 @@ Nadie responde de incumplimientos por causas fuera de su control razonable. El C
 
 Rige la ley española, sin la Convención de Viena de 1980 sobre compraventa internacional de mercaderías. Las partes se someten a los juzgados y tribunales de Castellón de la Plana.
 
-> Pendiente: arbitraje con clientes de fuera de la Unión Europea.
+> Pendiente: arbitraje con clientes de fuera de la Unión Europea. Entre empresas de la Unión la sumisión vale, también aceptada con una casilla (artículo 25 del Reglamento (UE) 1215/2012; TJUE, C-322/14).
 
 ## Anexo. Contrato de encargado del tratamiento en el soporte
 

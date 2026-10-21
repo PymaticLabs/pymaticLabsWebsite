@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --test lib/*.test.mts"
+    "test": "node --test lib/*.test.mts",
+    "test:e2e": "node scripts/e2e-entrega.mts --start"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -17,6 +18,8 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
