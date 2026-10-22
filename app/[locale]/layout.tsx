@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Atkinson_Hyperlegible_Mono, Atkinson_Hyperlegible_Next } from 'next/font/google'
+import { Atkinson_Hyperlegible_Mono, Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -16,14 +16,18 @@ import '@/app/globals.css'
 
 const CLIENT_NAMESPACES = ['nav', 'contact'] as const
 
-// Letra pensada para leerse bien (tambien con poca vista): letras abiertas y que no se confunden
-// (I, l y 1; O y 0). Quien lleva una empresa la lee sin esfuerzo, y sigue siendo limpia y tecnica.
-const sans = Atkinson_Hyperlegible_Next({
-  subsets: ['latin'],
-  variable: '--font-atkinson',
+/** Marca en <html> que hay JS: sin ella (o con "reducir movimiento") nada de la home espera a aparecer. */
+const JS_MARK = "document.documentElement.classList.add('js');"
+
+// Inter: limpia y moderna (la mas cercana a la de Apple) y hecha para leerse bien en pantalla. Con su
+// tamano optico, los titulares grandes salen con el corte de titular y el texto, con el de lectura.
+const sans = Inter({
+  subsets: ['latin', 'latin-ext'],
+  axes: ['opsz'],
+  variable: '--font-inter',
 })
 
-// Su version de ancho fijo, para codigos y huellas de la zona de socio.
+// Atkinson de ancho fijo, para codigos y huellas de la zona de socio: ahi si importa no confundir O y 0.
 const mono = Atkinson_Hyperlegible_Mono({
   subsets: ['latin'],
   variable: '--font-atkinson-mono',
@@ -94,8 +98,9 @@ export default async function LocaleLayout({
     // El tema se lee en el navegador (cookie o sistema) para que las paginas sigan siendo estaticas.
     <html lang={locale} className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
-        {/* El tema y, con la zona montada, la pista de quien ya entro (sin saltos al pintar). */}
-        <script dangerouslySetInnerHTML={{ __html: zone ? noFlashScript + profileHintScript : noFlashScript }} />
+        {/* El tema, la marca de que hay JS (las apariciones de la home, ver globals.css) y, con la zona
+            montada, la pista de quien ya entro: todo antes de pintar, sin saltos. */}
+        <script dangerouslySetInnerHTML={{ __html: (zone ? noFlashScript + profileHintScript : noFlashScript) + JS_MARK }} />
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>

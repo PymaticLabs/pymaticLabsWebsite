@@ -1,8 +1,8 @@
 {
   "meta": {
     "siteTitle": "Pymatic Labs · Digital Brain",
-    "homeTitle": "Digital Brain · The colleague who knows everything about your business",
-    "homeDescription": "Ask in your own words and it answers from your documents, telling you where it found it. It does your repetitive tasks for you. It lives on your computer, and it is yours.",
+    "homeTitle": "Digital Brain · Ask your business",
+    "homeDescription": "It reads your company’s documents and answers from them, telling you where it found it. It does your weekly tasks for you. It lives on your computer, and it is yours.",
     "howTitle": "Digital Brain features",
     "howDescription": "Everything the Digital Brain does and what you need to use it, at a glance.",
     "pricingTitle": "Digital Brain pricing",
@@ -43,122 +43,120 @@
   },
   "home": {
     "hero": {
-      "badge": "AI for small businesses and the self-employed",
-      "title": "The colleague who knows everything about your business.",
-      "text": "Ask in your own words: it answers from your documents and tells you where it found it. It also does your weekly tasks for you. It lives on your computer, and it is yours.",
+      "eyebrow": "Digital Brain",
+      "title": "Ask",
+      "titleAccent": "your business.",
+      "text": "It reads your company’s documents and answers like a colleague who knows it all. It also does your weekly tasks for you.",
       "ctaPrimary": "See pricing",
       "ctaSecondary": "Talk to us",
-      "trustPrice": "One-off payment, from {price}",
-      "trustLicense": "License for good",
-      "trustSystems": "Windows and Mac"
+      "price": "One-off payment from {price}. Yours for good. For Windows and Mac."
     },
-    "demo": {
+    "chat": {
       "caption": "Sample conversation with the Digital Brain, with made-up data",
       "name": "Digital Brain",
       "company": "Ruiz Carpentry",
       "local": "On your computer",
       "example": "Example",
+      "today": "Today",
+      "placeholder": "Ask it anything…",
+      "replay": "Watch again",
       "q1": "How much did we charge the Gómez family for last year’s kitchen?",
       "a1": "€6,420 excl. VAT, on invoice 2025-112 from 14 November. It was an L-shaped kitchen with a quartz worktop.",
-      "source1": "Source: Invoices 2025.xlsx · row 112",
-      "q2": "Now they want a built-in wardrobe. Prepare the quote for them.",
-      "a2": "Done, with your logo and this year’s prices:",
-      "file": "Quote 0412.pdf",
-      "fileMeta": "€2,180 excl. VAT",
-      "save": "Shall I save it in Clients › Gómez?",
-      "yes": "Yes, save it",
-      "no": "No"
+      "source1": "Source: Invoices 2025.xlsx · row 112"
     },
-    "compare": {
-      "title": "Sound familiar?",
-      "subtitle": "What happens today in many businesses, and what changes with the Digital Brain.",
-      "before": "Today",
-      "after": "With the Digital Brain",
-      "rows": [
-        [
-          "Everyone asks you: where a document is, what was charged, how something was done.",
-          "They ask the brain, and you get on with your work."
+    "manifesto": {
+      "problem": "What your business knows is spread across folders, emails and the heads of two or three people. Every day someone asks where a document is, what was charged or how something was done.",
+      "promise": "The Digital Brain puts it in order on your computer and hands it to you the moment you ask."
+    },
+    "story": {
+      "eyebrow": "Tasks",
+      "title": "It does not just answer. It works.",
+      "steps": [
+        {
+          "title": "Ask it as you would a colleague.",
+          "text": "No menus or buttons: in your own words, as you would say it at the office."
+        },
+        {
+          "title": "It does it with your data and your logo.",
+          "text": "Your prices, your clients and your template. The same way every time."
+        },
+        {
+          "title": "And before saving anything, it asks for your yes.",
+          "text": "Nothing changes behind your back: it shows you what it will do and waits for your permission."
+        },
+        {
+          "title": "Teach it once, and it knows.",
+          "text": "It proposes the task step by step and, once you approve it, your whole team has it."
+        }
+      ],
+      "chat": {
+        "q1": "Prepare the quote for the Gómez family’s built-in wardrobe.",
+        "a1": "Done, with this year’s prices:",
+        "file": "Quote 0412.pdf",
+        "fileMeta": "€2,180 excl. VAT · with your logo",
+        "ask": "Shall I save it in Clients › Gómez?",
+        "yes": "Yes, save it",
+        "no": "No",
+        "saved": "Saved in Clients › Gómez",
+        "q2": "I want you to know how to prepare the weekly job sheet.",
+        "a2": "Sure. I propose the task in 5 steps; if you are happy with it, I save it and from today the whole team has it.",
+        "task": "Weekly job sheet",
+        "taskMeta": "5 steps · for the whole team"
+      }
+    },
+    "bento": {
+      "eyebrow": "Your documents",
+      "title": "It reads everything you already have.",
+      "text": "PDF, Word, Excel, emails, drawings and scans. Nothing to sort, rename or upload. And your originals are never touched.",
+      "read": {
+        "title": "Give it your folder and it reads all of it.",
+        "kinds": [
+          "PDF",
+          "Word",
+          "Excel",
+          "Emails",
+          "Drawings",
+          "Scans"
         ],
-        [
-          "Finding a document takes a while, and sometimes it never turns up.",
-          "It tells you which folder it is in, right away."
+        "progress": "Reading 12,000 of about 30,000 files"
+      },
+      "find": {
+        "title": "Finds any document.",
+        "text": "Even if you cannot remember its name.",
+        "query": "the lease for the premises",
+        "path": "Admin › Contracts",
+        "file": "Premises lease 2024.pdf"
+      },
+      "order": {
+        "title": "Tidies your folders.",
+        "text": "In a separate copy. Your usual folders stay as they are.",
+        "before": [
+          "New folder (7)",
+          "final_v2_GOOD.docx",
+          "Untitled.xlsx"
         ],
-        [
-          "Every week you repeat the same quotes, job sheets and spreadsheet entries.",
-          "It does them, the same way every time and with your logo. You just say yes."
-        ],
-        [
-          "When someone leaves or is on holiday, what they knew goes with them.",
-          "What your business knows is written down, at hand for the whole team."
+        "after": [
+          "01_Clients",
+          "02_Tax",
+          "03_Payroll"
         ]
-      ]
-    },
-    "steps": {
-      "title": "As simple as this",
-      "subtitle": "No menus or buttons to learn: you talk to it and it answers.",
-      "items": [
-        {
-          "title": "Install it",
-          "text": "Double-click and answer three questions: your company’s name, yours and where to keep it. Rather not touch a thing? We set it up for you."
-        },
-        {
-          "title": "Give it your folder",
-          "text": "Pick your company folder and it reads it: PDF, Word, Excel, emails and scans. Nothing to sort or upload, and your originals are never touched."
-        },
-        {
-          "title": "Ask and delegate",
-          "text": "In your own words, as you would a colleague. If it does not know a task, explain it once and it remembers."
-        }
-      ],
-      "needs": "You need a Windows or Mac computer and a paid Claude account, the AI assistant you talk to.",
-      "needsLink": "See specifications"
-    },
-    "abilities": {
-      "title": "What it does for you",
-      "saying": "You say:",
-      "items": [
-        {
-          "icon": "answers",
-          "title": "Answers from your documents",
-          "text": "And tells you which one each answer comes from. If it does not know, it says so: it never makes things up.",
-          "example": "How often is the compressor serviced?"
-        },
-        {
-          "icon": "find",
-          "title": "Finds any document",
-          "text": "Tells you which folder each file is in, even if you cannot remember its name.",
-          "example": "Where is the lease for the premises?"
-        },
-        {
-          "icon": "tasks",
-          "title": "Does the tasks that repeat",
-          "text": "Quotes, job sheets and entries in your spreadsheets, the same way every time. It asks for your yes before changing anything.",
-          "example": "Make today’s job sheet."
-        },
-        {
-          "icon": "learn",
-          "title": "Learns what you teach it",
-          "text": "Explain it once and it remembers. And if something changes, just tell it.",
-          "example": "The compressor service is now every six months."
-        },
-        {
-          "icon": "order",
-          "title": "Tidies your folders",
-          "text": "It proposes an order and makes a tidy copy. Your usual folders stay as they are.",
-          "example": "Sort out the office folders."
-        },
-        {
-          "icon": "team",
-          "title": "For your whole team",
-          "text": "Up to 10 people, each on their own computer. Sensitive areas, only for the people you choose.",
-          "example": "Add Laura, from the office."
-        }
-      ],
-      "more": "See all features"
+      },
+      "team": {
+        "title": "For your whole team.",
+        "text": "Up to 10 people, each on their own computer. Sensitive areas, only for the people you choose.",
+        "locked": "Payroll · only Ana and Jordi"
+      },
+      "mobile": {
+        "title": "From your phone, too.",
+        "text": "With the brain’s computer switched on.",
+        "q": "What time does the warehouse open on Saturday?",
+        "a": "From 9:00 to 13:00."
+      }
     },
     "privacy": {
-      "title": "Your information is yours.",
-      "subtitle": "Your brain lives on your computers, and nothing happens without you seeing it.",
+      "title": "Your information",
+      "titleAccent": "is yours.",
+      "subtitle": "Your brain lives on your computers, not on ours. And nothing happens without you seeing it.",
       "items": [
         {
           "icon": "local",
@@ -168,46 +166,74 @@
         {
           "icon": "permission",
           "title": "Nothing changes without your yes",
-          "text": "Before acting, it shows you what it will do and waits for your permission."
+          "text": "Before acting, it shows you what it will do."
         },
         {
           "icon": "originals",
           "title": "Your originals, untouched",
-          "text": "It only reads them. To tidy up, it works on a separate copy."
+          "text": "It only reads them. To tidy up, it works on a copy."
         },
         {
           "icon": "health",
           "title": "Sensitive files stay closed",
           "text": "Health records, never. Payslips or IDs, only if you allow it."
-        },
-        {
-          "icon": "vault",
-          "title": "Passwords in a vault",
-          "text": "On your computer. The assistant never sees them."
-        },
-        {
-          "icon": "backup",
-          "title": "Weekly backups",
-          "text": "Checked, on a drive or folder of yours."
         }
       ],
       "claude": "To answer you, Claude looks up only what it needs. During setup we show you how to turn off its training and its memory.",
       "link": "Read our privacy promise"
     },
+    "steps": {
+      "title": "As simple as this.",
+      "subtitle": "No menus or buttons to learn: you talk to it and it answers.",
+      "items": [
+        {
+          "title": "Install it",
+          "text": "Double-click and answer three questions: your company’s name, yours and where to keep it. Rather not touch a thing? We set it up for you."
+        },
+        {
+          "title": "Give it your folder",
+          "text": "Pick your company folder and it reads it. Nothing to sort or upload."
+        },
+        {
+          "title": "Ask it",
+          "text": "In your own words, as you would a colleague. And if it does not know a task, teach it once."
+        }
+      ],
+      "needs": "You need a Windows or Mac computer and a paid Claude account, the AI assistant you talk to.",
+      "needsLink": "See specifications"
+    },
     "pricing": {
-      "title": "Pay once. It is yours.",
-      "subtitle": "A license for good, in your company’s name. No compulsory fees: if you ever drop the monthly plan, it keeps working.",
+      "title": "Pay once.",
+      "titleAccent": "It is yours.",
+      "subtitle": "A license for good, in your company’s name.",
       "launch": "Launch price for the first 10 customers",
       "texts": {
         "hazlo-tu": "You set it up yourself, at your own pace, with the extension and the guides.",
         "acompanado": "We leave it set up on your computers, in two video calls with Eric or Sergio."
       },
       "team": "With a team, up to 10 people: {price}",
-      "note": "Prices excl. VAT. 14-day guarantee if the product fails.",
-      "cta": "See pricing and what is included"
+      "cta": "See pricing",
+      "more": "What is included",
+      "stats": [
+        {
+          "value": "For good",
+          "text": "The license, in your company’s name."
+        },
+        {
+          "value": "14 days",
+          "text": "Of guarantee if the product fails."
+        },
+        {
+          "value": "No fees",
+          "text": "The monthly plan is optional. Drop it and it keeps working."
+        }
+      ],
+      "note": "Prices excl. VAT."
     },
     "faq": {
-      "title": "What people ask us most",
+      "title": "Questions.",
+      "other": "Anything else?",
+      "otherLink": "Write to us",
       "items": [
         {
           "q": "Do I need to know about computers?",

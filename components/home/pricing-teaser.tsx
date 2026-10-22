@@ -1,68 +1,76 @@
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { Users } from 'lucide-react'
-import SectionHeader from '@/components/section-header'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatPrice, modalities } from '@/lib/offer'
 import { localePath } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
 
-// Precios en corto: las cuatro modalidades caben en dos caminos (lo montas tu o te lo montamos), cada uno
-// para una persona y, debajo, con equipo. El detalle y la compra, en /precios.
+// Precios en corto, como se comparan dos modelos: las cuatro modalidades caben en dos caminos (lo montas tu
+// o te lo montamos), cada uno para una persona y, debajo, con equipo. Y tres datos grandes. El detalle y la
+// compra, en /precios.
 export default function PricingTeaser() {
   const t = useTranslations('home.pricing')
   const tOffer = useTranslations('offer')
   const locale = useLocale()
   const paths = modalities.filter((m) => !m.team)
+  const stats = t.raw('stats') as { value: string; text: string }[]
 
   return (
-    <section className="py-16 sm:py-24">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <SectionHeader title={t('title')} subtitle={t('subtitle')} className="mb-6" />
-        <div className="mb-10 text-center">
-          <Badge variant="accent" className="px-3.5 py-1 text-sm">
-            {t('launch')}
-          </Badge>
+    <section id="precio" className="bg-paper-2 py-24 sm:py-36">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div data-reveal className="mx-auto max-w-3xl text-center">
+          <h2 className="text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">
+            {t('title')} <span className="text-gradient">{t('titleAccent')}</span>
+          </h2>
+          <p className="mt-5 text-xl leading-relaxed text-muted sm:text-2xl">{t('subtitle')}</p>
+          <p className="mt-7 inline-flex rounded-full bg-brand-soft px-4 py-1.5 text-sm font-semibold text-brand">{t('launch')}</p>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          {paths.map((modality) => {
+
+        <div className="mx-auto mt-14 grid max-w-4xl gap-5 md:grid-cols-2">
+          {paths.map((modality, i) => {
             const team = modalities.find((m) => m.team && m.guided === modality.guided)
             return (
               <div
                 key={modality.id}
-                className={cn(
-                  'flex flex-col rounded-3xl border bg-surface p-6 sm:p-8',
-                  modality.guided ? 'border-brand shadow-lg shadow-brand/10 ring-1 ring-brand' : 'border-line'
-                )}
+                data-reveal
+                style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}
+                className="flex flex-col items-center rounded-[28px] bg-surface px-7 py-10 text-center dark:bg-white/[0.04] dark:ring-1 dark:ring-white/10 sm:px-10 sm:py-12"
               >
-                <h3 className="text-2xl font-bold text-ink">{tOffer(`modalities.${modality.id}.name`)}</h3>
-                {/* Dos lineas siempre, para que los precios de las dos queden a la misma altura */}
-                <p className="mt-2 text-base leading-relaxed text-body md:min-h-[3.25rem]">{t(`texts.${modality.id}`)}</p>
-                <p className="mt-6 flex items-baseline gap-2">
-                  <span className="text-5xl font-bold tracking-tight text-ink">{formatPrice(modality.launchPrice, locale)}</span>
-                  <span className="text-sm text-muted">{tOffer('noVat')}</span>
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {tOffer('list')}: <s>{formatPrice(modality.listPrice, locale)}</s> · {tOffer('oneOff')} ·{' '}
-                  {tOffer(`modalities.${modality.id}.people`)}
+                <h3 className="text-3xl font-bold tracking-[-0.03em] text-ink">{tOffer(`modalities.${modality.id}.name`)}</h3>
+                {/* Siempre el alto de tres lineas, para que los precios de las dos queden a la misma altura */}
+                <p className="mt-3 max-w-sm text-lg leading-snug text-muted md:min-h-[4.75rem]">{t(`texts.${modality.id}`)}</p>
+                <p className="mt-8 text-6xl font-bold tracking-[-0.045em] text-ink">{formatPrice(modality.launchPrice, locale)}</p>
+                {/* Cada dato entero en su linea: en el movil no se parte por la mitad */}
+                <p className="mt-2 text-sm text-muted">
+                  <span className="whitespace-nowrap">
+                    {tOffer('list')}: <s>{formatPrice(modality.listPrice, locale)}</s>
+                  </span>{' '}
+                  · <span className="whitespace-nowrap">{tOffer('oneOff')}</span> ·{' '}
+                  <span className="whitespace-nowrap">{tOffer(`modalities.${modality.id}.people`)}</span>
                 </p>
                 {team && (
-                  <p className="mt-auto flex items-center gap-2 pt-6 text-base text-ink">
-                    <Users className="h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
+                  <p className="mt-6 text-base text-ink">
+                    <Users className="mr-2 inline h-5 w-5 align-[-4px] text-brand" aria-hidden="true" />
                     {t('team', { price: formatPrice(team.launchPrice, locale) })}
                   </p>
                 )}
+                <Button size="lg" className="mt-8 h-12 px-8 text-[17px]" asChild>
+                  <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
+                </Button>
               </div>
             )
           })}
         </div>
-        <div className="mt-10 flex flex-col items-center gap-5 text-center">
-          <Button size="lg" asChild>
-            <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
-          </Button>
-          <p className="text-sm text-muted">{t('note')}</p>
-        </div>
+
+        <dl className="mx-auto mt-16 grid max-w-4xl gap-10 text-center sm:mt-20 sm:grid-cols-3">
+          {stats.map((stat, i) => (
+            <div key={stat.value} data-reveal style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}>
+              <dt className="text-4xl font-bold tracking-[-0.035em] text-ink">{stat.value}</dt>
+              <dd className="mx-auto mt-2 max-w-[16rem] text-base leading-relaxed text-muted">{stat.text}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-12 text-center text-sm text-muted">{t('note')}</p>
       </div>
     </section>
   )

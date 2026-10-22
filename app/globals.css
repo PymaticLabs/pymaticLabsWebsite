@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Pantallas bajas de ordenador (con el escalado de Windows al 125-175 % quedan de 500 a 760 px de alto
+   tras las barras del navegador): la portada de la home aprieta el titular para que los botones se vean. */
+@custom-variant low (@media (min-width: 640px) and (max-height: 760px));
 
 /* Marca Pymatic Labs (knowledge/01_Empresa/identidad-y-marca.md): azul #0463FE, negro y fondo blanco. */
 @theme {
@@ -21,7 +24,7 @@
   --color-surface: #FFFFFF; /* tarjetas y paneles sobre el fondo */
   --color-inverse: #000000; /* bloques oscuros con texto blanco (pie, cierre) */
 
-  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-atkinson-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   /* Los textos pequenos, un punto mas grandes que los de Tailwind (12 y 14 px): se leen sin esfuerzo. */
   --text-xs: 0.8125rem;
@@ -142,15 +145,150 @@ body::before {
   mask-composite: add, add, intersect, add, add;
 }
 
-@keyframes fadeUp {
+/* ---- Home: movimiento con sentido, una vez y sin bucles. Sin JS o con "reducir movimiento", todo se ve
+   quieto y entero desde el principio. ---- */
+
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(26px);
   }
-  to {
-    opacity: 1;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes enter-x {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
     transform: none;
   }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+/* El si del permiso llama la atencion dos veces y se para. */
+@keyframes nudge {
+  50% {
+    box-shadow: 0 0 0 7px rgb(4 99 254 / 0.22);
+  }
+}
+@keyframes scroll-zoom {
+  from {
+    transform: scale(0.92);
+  }
+}
+
+/* Apariciones al entrar en pantalla: [data-reveal] lo marca components/home/reveals.tsx con data-shown.
+   Dentro, los .enter (los dibujos de las baldosas, los pasos) entran despues, cada uno con su --d. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    transition:
+      opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0s),
+      transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0s);
+  }
+  html.js [data-reveal]:not([data-shown]) {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  html.js [data-reveal='zoom']:not([data-shown]) {
+    transform: scale(0.9);
+  }
+  html.js [data-reveal]:not([data-shown]) .enter {
+    opacity: 0;
+  }
+  html.js [data-reveal][data-shown] .enter {
+    animation: enter-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--delay, 0s) + var(--d, 0s)) both;
+  }
+  html.js [data-reveal][data-shown] .enter-x {
+    animation-name: enter-x;
+  }
+  html.js [data-reveal]:not([data-shown]) .grow-x {
+    transform: scaleX(0);
+  }
+  html.js [data-reveal][data-shown] .grow-x {
+    transform-origin: left;
+    animation: grow-x 1.6s cubic-bezier(0.45, 0, 0.2, 1) calc(var(--delay, 0s) + var(--d, 0s)) both;
+  }
+
+  /* Trazos que se dibujan (con pathLength="1"): el hilo de la portada al cargar, el sello al aparecer. */
+  .draw-on-load {
+    stroke-dasharray: 1;
+    animation: draw 3.6s cubic-bezier(0.45, 0, 0.2, 1) 0.2s both;
+  }
+  html.js [data-reveal]:not([data-shown]) .draw-path {
+    stroke-dashoffset: 1;
+  }
+  html.js [data-reveal][data-shown] .draw-path {
+    animation: draw 2.8s cubic-bezier(0.45, 0, 0.2, 1) var(--delay, 0s) both;
+  }
+
+  /* La conversacion de la portada, tapada hasta que empieza (ver hero-chat.tsx). */
+  html.js [data-chat]:not([data-ready]) [data-chat-body] {
+    visibility: hidden;
+  }
+
+  /* El producto crece un poco al subirlo a la vista, donde el navegador sabe ligar animaciones al scroll. */
+  @supports (animation-timeline: view()) {
+    .scroll-zoom {
+      animation: scroll-zoom linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+}
+.draw-path,
+.draw-on-load {
+  stroke-dasharray: 1;
+}
+
+/* El parrafo que se enciende al bajar (manifesto.tsx): cada palabra, por su sitio (--i de --n), segun lo
+   que se ha bajado (--p, de 0 a 1). Sin JS, --p vale 1 y todo se ve encendido. */
+.manifesto {
+  --p: 1;
+}
+.manifesto > span {
+  opacity: clamp(0.14, calc(var(--p) * (var(--n) + 6) - var(--i)), 1);
+  transition: opacity 0.2s linear;
+}
+
+/* Titulares con el degradado de la marca: sobre blanco, todos los tonos por encima de 3:1. */
+.text-gradient {
+  background-image: linear-gradient(100deg, #0350d0 0%, #0463fe 45%, #0b8bd9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .text-gradient,
+.bg-inverse .text-gradient {
+  background-image: linear-gradient(100deg, #6aa4ff 0%, #93c5fd 50%, #7dd3fc 100%);
 }
 
 /* Textos largos renderizados desde Markdown (content/legal). */

@@ -76,7 +76,7 @@ app/
   api/jobs/, api/admin/ # Cola, conciliación, versiones, licencias a mano y comprobación de producción (con secreto)
   api/zone/             # Zona de socio
 components/
-  home/                 # Home: portada con conversación de ejemplo, antes y después, funciones, pasos, privacidad, precios y cierre
+  home/                 # Home: chat que se escribe solo, párrafo que se enciende al bajar, tareas con el chat fijo, baldosas, privacidad, pasos, precios, dudas y cierre
   cerebro-icon.tsx      # El sello del Cerebro Digital (el mismo trazo que public/icon.svg)
   pricing/              # Tarjeta de modalidad
   zone/                 # Piezas de la zona de socio
