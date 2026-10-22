@@ -406,8 +406,11 @@ async function onSubscription(d: Delivery, subscription: Stripe.Subscription, ty
   const at = unixToIso(eventCreated)
   const deleted = type === 'customer.subscription.deleted'
   if (company.subscriptionEventAt) {
-    if (at < company.subscriptionEventAt) return 'subscription-stale'
-    if (at === company.subscriptionEventAt && company.subscriptionStatus === 'canceled' && !deleted && company.subscriptionId === subscription.id) return 'subscription-stale'
+    // Por el instante, no por el texto: Supabase la devuelve como ...T10:00:00+00:00 y aqui sale ...T10:00:00.000Z.
+    const ms = eventCreated * 1000
+    const last = Date.parse(company.subscriptionEventAt)
+    if (ms < last) return 'subscription-stale'
+    if (ms === last && company.subscriptionStatus === 'canceled' && !deleted && company.subscriptionId === subscription.id) return 'subscription-stale'
   }
   // Un aviso de una suscripcion vieja, con otra ya viva, tampoco.
   if (company.subscriptionId && company.subscriptionId !== subscription.id && ALIVE.includes(company.subscriptionStatus ?? '') && type !== 'customer.subscription.created') {

@@ -6,17 +6,18 @@
 // Crea:
 // - un producto por modalidad con su precio de lista en EUR (y los mismos numeros en USD),
 //   sin IVA (Stripe Tax lo suma), con lookup_key cerebro-<modalidad>;
-// - el mensual: un producto con sus tres precios al mes (cerebro-plan-esencial, -pro, -premium);
+// - el mensual: un producto por plan, con su precio al mes (cerebro-plan-esencial, -pro, -premium);
 // - el cupon de lanzamiento de cada modalidad (cerebro-lanzamiento-<modalidad>): la diferencia
 //   entre lista y lanzamiento, un solo uso por compra y 10 usos como tope (las 10 plazas en total
 //   las cuenta la web, que reserva una al abrir cada pago);
 // - el portal de cliente: cambiar de plan del mensual, tarjeta, facturas de Stripe y cancelar al
 //   final del periodo; la direccion y el correo, si, pero no el NIF ni la razon social (son los de
 //   la licencia y de Holded: cambiarlos alli cambiaria el IVA de los cobros siguientes);
-// - con --webhook, el endpoint con los avisos que usa la entrega (imprime su secreto una vez).
+// - con --webhook, el endpoint con los avisos que usa la entrega (imprime su secreto una vez);
+// - Stripe Tax con la sede de PymaticLabs y el registro del IVA de Espana, si faltan.
 //
 // A mano en el panel: la URL de las condiciones (Settings > Public details, la pide la casilla de
-// Checkout), Stripe Tax activado con el registro de IVA de Espana (OSS si toca), y los datos fiscales.
+// Checkout) y, en la cuenta real, el plan de Stripe Tax (Tax Basic).
 
 import Stripe from 'stripe'
 import { LAUNCH_CUSTOMERS, modalities, plans } from '../lib/offer.ts'
@@ -77,20 +78,49 @@ async function coupon(id: string, productId: string, cents: number, name: string
   }
 }
 
+// Stripe Tax: la sede (el origen del IVA), el codigo por defecto y el registro del IVA de Espana.
+// Sin ellos el pago con automatic_tax falla. Solo pone lo que falte: en la cuenta real ya estan.
+const HEAD_OFFICE = { line1: 'Calle Alfred Giner Sorolla 3', line2: '2º 5ª', postal_code: '12006', city: 'Castellón de la Plana', state: 'CS', country: 'ES' }
+
+async function tax() {
+  const settings = await stripe.tax.settings.retrieve()
+  const update: Stripe.Tax.SettingsUpdateParams = {}
+  if (!settings.head_office?.address?.country) update.head_office = { address: HEAD_OFFICE }
+  if (!settings.defaults?.tax_code) update.defaults = { tax_code: TAX_CODE, tax_behavior: 'exclusive' }
+  if (Object.keys(update).length) await stripe.tax.settings.update(update)
+  const active = await stripe.tax.registrations.list({ status: 'active', limit: 100 })
+  if (!active.data.some((r) => r.country === 'ES')) {
+    // Pequeno comercio, como en la cuenta real: menos de 10.000 EUR al ano a consumidores de otros paises de la UE.
+    await stripe.tax.registrations.create({ country: 'ES', country_options: { es: { type: 'standard', standard: { place_of_supply_scheme: 'small_seller' } } }, active_from: 'now' })
+  }
+  const after = await stripe.tax.settings.retrieve()
+  console.log(`  Stripe Tax: ${after.status === 'active' ? 'activo' : `${after.status} (falta: ${after.status_details?.pending?.missing_fields?.join(', ') ?? '?'})`}, IVA de Espana registrado`)
+}
+
 async function main() {
   console.log(`Stripe (${key!.startsWith('sk_test_') ? 'prueba' : 'PRODUCCION'})`)
+  await tax()
   for (const m of modalities) {
     const p = await product(m.id, productName(m.id, 'es'))
     const pr = await price(p.id, m.id, m.listPrice * 100, false)
     const c = await coupon(launchCouponId(m.id), p.id, (m.listPrice - m.launchPrice) * 100, 'Precio de lanzamiento')
     console.log(`  ${m.id}: ${p.id} · ${pr.id} (${lookupKey(m.id)}) · cupon ${c.id}`)
   }
-  const monthly = await product('mensual', 'Cerebro Digital · Mensual')
-  const planPrices: string[] = []
+  // Un producto por plan: el portal no deja cambiar entre precios del mismo producto con el mismo
+  // intervalo. La web reconoce el plan por el lookup_key del precio, no por el producto.
+  const planProducts: { product: string; prices: string[] }[] = []
   for (const plan of plans) {
-    const pr = await price(monthly.id, `plan-${plan.id}`, plan.monthly * 100, true)
-    planPrices.push(pr.id)
-    console.log(`  plan-${plan.id}: ${pr.id} (${lookupKey(`plan-${plan.id}`)})`)
+    const id = `plan-${plan.id}` as const
+    const p = await product(id, `Cerebro Digital · ${productName(id, 'es')}`)
+    const pr = await price(p.id, id, plan.monthly * 100, true)
+    planProducts.push({ product: p.id, prices: [pr.id] })
+    console.log(`  ${id}: ${p.id} · ${pr.id} (${lookupKey(id)})`)
+  }
+  // El de antes, con los tres precios en un solo producto: archivado (sus precios ya no se usan).
+  const old = (await stripe.products.search({ query: `metadata['cerebro']:'mensual'` })).data[0]
+  if (old?.active) {
+    await stripe.products.update(old.id, { active: false })
+    console.log(`  ${old.id} (mensual con los tres planes): archivado`)
   }
 
   const portals = await stripe.billingPortal.configurations.list({ limit: 100 })
@@ -100,7 +130,7 @@ async function main() {
     invoice_history: { enabled: true },
     payment_method_update: { enabled: true },
     subscription_cancel: { enabled: true, mode: 'at_period_end' },
-    subscription_update: { enabled: true, default_allowed_updates: ['price'], proration_behavior: 'create_prorations', products: [{ product: monthly.id, prices: planPrices }] },
+    subscription_update: { enabled: true, default_allowed_updates: ['price'], proration_behavior: 'create_prorations', products: planProducts },
   }
   if (ours) await stripe.billingPortal.configurations.update(ours.id, { features })
   else await stripe.billingPortal.configurations.create({ features, metadata: { cerebro: 'portal' }, default_return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://pymaticlabs.com'}/zona` })

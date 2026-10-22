@@ -61,6 +61,12 @@ function fail(what: string, error: PostgrestError): never {
   throw new RetryableError(`Supabase ${what}: ${error.message}`)
 }
 
+// Los ids que llegan de una URL o de un cuerpo: uno que no es uuid (o, en la cola, numero) no existe.
+// Sin esto Postgres responde 22P02, que sale como RetryableError (un 500) en vez de un 404.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const isUuid = (id: string) => UUID.test(id)
+const isJobId = (id: string) => /^[0-9]{1,15}$/.test(id)
+
 export class SupabaseRepository implements Repository {
   private db: SupabaseClient
 
@@ -122,6 +128,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async getCompany(id: string) {
+    if (!isUuid(id)) return null
     return this.one<Company>('companies', this.db.from('companies').select('*').eq('id', id).maybeSingle())
   }
 
@@ -158,6 +165,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async getPurchase(id: string) {
+    if (!isUuid(id)) return null
     return this.one<Purchase>('purchases', this.db.from('purchases').select('*').eq('id', id).maybeSingle())
   }
 
@@ -286,6 +294,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async getInvoice(id: string) {
+    if (!isUuid(id)) return null
     return this.one<InvoiceRecord>('invoices', this.db.from('invoices').select('*').eq('id', id).maybeSingle())
   }
 
@@ -405,6 +414,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async getVersionFile(id: string) {
+    if (!isUuid(id)) return null
     return this.one<VersionFile>('version_files', this.db.from('version_files').select('*').eq('id', id).maybeSingle())
   }
 
@@ -429,6 +439,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async completeJob(id: string, result: Record<string, unknown> | null, now: Date) {
+    if (!isJobId(id)) return
     const at = now.toISOString()
     const { error } = await this.db
       .from('jobs')
@@ -438,6 +449,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async failJob(id: string, message: string, next: { runAt: string } | { dead: true }, now: Date) {
+    if (!isJobId(id)) return
     const patch: Row = { last_error: message.slice(0, 2000), locked_until: null, updated_at: now.toISOString() }
     if ('dead' in next) patch.status = 'dead'
     else Object.assign(patch, { status: 'pending', next_run_at: next.runAt })
@@ -446,6 +458,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async markJobAlerted(id: string, now: Date) {
+    if (!isJobId(id)) return
     const { error } = await this.db.from('jobs').update({ alerted_at: now.toISOString() }).eq('id', Number(id))
     if (error) fail('jobs', error)
   }
@@ -463,6 +476,7 @@ export class SupabaseRepository implements Repository {
   }
 
   async retryJob(id: string, now: Date) {
+    if (!isJobId(id)) return false
     const rows = await this.many<Job>(
       'jobs',
       this.db

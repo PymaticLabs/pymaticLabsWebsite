@@ -384,6 +384,21 @@ test('[35] los avisos de la suscripcion desordenados no la resucitan; incomplete
   await assert.rejects(createCheckout(w.d, { product: 'plan-pro', locale: 'es', company }), (e: unknown) => e instanceof CheckoutError && e.code === 'already_subscribed')
 })
 
+test('[35] un updated del mismo segundo que la baja tampoco la resucita, con la fecha como la devuelve Supabase (+00:00)', async () => {
+  const w = world()
+  const m = await withMonthly(w)
+  const sub = (status: string) => ({ id: m.subscriptionId, object: 'subscription', customer: m.customer, status, metadata: { product: 'plan-pro', company_id: m.companyId } })
+  const second = Math.floor(w.now().getTime() / 1000) + 1000
+  assert.equal((await handleStripeEvent(w.d, fakeEvent('customer.subscription.deleted', sub('canceled'), undefined, second))).outcome, 'subscription-updated')
+  // Lo que lee el repositorio de Supabase de una timestamptz: sin milisegundos y con +00:00, no Z.
+  const stored = new Date(second * 1000).toISOString().replace('.000Z', '+00:00')
+  await w.d.repo.updateCompany(m.companyId, { subscriptionEventAt: stored })
+  assert.equal((await handleStripeEvent(w.d, fakeEvent('customer.subscription.updated', sub('active'), undefined, second))).outcome, 'subscription-stale')
+  assert.equal((await handleStripeEvent(w.d, fakeEvent('customer.subscription.updated', sub('active'), undefined, second - 1))).outcome, 'subscription-stale')
+  const company = (await w.d.repo.getCompany(m.companyId))!
+  assert.deepEqual([company.subscriptionStatus, company.subscriptionEventAt], ['canceled', stored])
+})
+
 test('[32] el mensual no se cobra hasta que acaban los meses incluidos solo con ese plan o uno menor', async () => {
   const w = world()
   const session = paidSession('hazlo-tu-equipo') // 3 meses de Pro

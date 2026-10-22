@@ -43,6 +43,7 @@ create index license_requests_company on public.license_requests (company_id);
 -- Interna: solo el servidor (service_role). La zona la ensena como "en camino" desde el servidor.
 alter table public.license_requests enable row level security;
 revoke all on public.license_requests from anon, authenticated;
+grant select, insert, update, delete on public.license_requests to service_role;
 
 -- Lo que la comprobacion de produccion (scripts/comprobar-produccion.mts, /api/admin/health) no ve
 -- por la API: las tareas de pg_cron, que esten los dos secretos de Vault (sin leerlos), los buckets

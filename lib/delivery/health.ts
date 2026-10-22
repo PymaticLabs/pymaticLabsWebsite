@@ -211,7 +211,7 @@ const MIGRATIONS: { file: string; tables: string[] }[] = [
   },
   { file: '20261021130000_licencias_a_mano.sql', tables: ['license_requests'] },
 ]
-const CRON_JOBS = ['entrega-cola', 'entrega-conciliacion', 'entrega-huellas-ip', 'entrega-limites']
+const CRON_JOBS = ['entrega-cola', 'entrega-conciliacion', 'entrega-huellas-ip', 'entrega-limites', 'entrega-historial-cron']
 
 async function checkSupabase(env: Env, config: DeliveryConfig, add: Add) {
   const url = env.SUPABASE_URL!.replace(/\/+$/, '')
@@ -293,7 +293,8 @@ async function checkStripe(env: Env, config: DeliveryConfig, expectLive: boolean
 
   const webhookUrl = `${(env.NEXT_PUBLIC_SITE_URL || config.siteUrl).replace(/\/+$/, '')}/api/stripe/webhook`
   const endpoints = await stripe.webhookEndpoints.list({ limit: 100 })
-  const endpoint = endpoints.data.find((e) => e.url === webhookUrl)
+  // En Preview la direccion lleva ?x-vercel-protection-bypass=...: cuenta la ruta, no el secreto.
+  const endpoint = endpoints.data.find((e) => e.url.split('?')[0] === webhookUrl)
   if (!endpoint) add('Webhook', 'falta', `no hay endpoint para ${webhookUrl}`, `node --env-file=<produccion> scripts/stripe-setup.mts --live --webhook ${webhookUrl}`)
   else {
     const events = endpoint.enabled_events as string[]
@@ -407,7 +408,10 @@ async function checkKms(env: Env, config: DeliveryConfig, add: Add) {
 async function checkSite(env: Env, config: DeliveryConfig, add: Add) {
   const site = (env.NEXT_PUBLIC_SITE_URL || config.siteUrl).replace(/\/+$/, '')
   const get = async (path: string) => {
-    const res = await fetch(`${site}${path}`, { cache: 'no-store', redirect: 'follow', signal: AbortSignal.timeout(20_000) })
+    // Una Preview protegida: Vercel le da el secreto de bypass como variable de sistema.
+    const bypass = env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim()
+    const headers: Record<string, string> = bypass ? { 'x-vercel-protection-bypass': bypass } : {}
+    const res = await fetch(`${site}${path}`, { cache: 'no-store', redirect: 'follow', headers, signal: AbortSignal.timeout(20_000) })
     return { status: res.status, text: await res.text() }
   }
   const me = await get('/api/zone/me?perfil=1')

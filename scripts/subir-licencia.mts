@@ -21,6 +21,12 @@ function arg(name: string): string | null {
   const i = process.argv.indexOf(name)
   return i > 0 ? (process.argv[i + 1] ?? null) : null
 }
+
+// Una Preview con la proteccion de Vercel: el secreto de Protection Bypass for Automation, en .env.local.
+function bypassHeader(): Record<string, string> {
+  const secret = process.env.VERCEL_BYPASS_SECRET?.trim()
+  return secret ? { 'x-vercel-protection-bypass': secret } : {}
+}
 const has = (name: string) => process.argv.includes(name)
 
 interface RequestView {
@@ -47,7 +53,7 @@ async function main() {
   const admin = process.env.ADMIN_SECRET
   if (!site || !admin) throw new Error('faltan ADMIN_SECRET y la direccion de la web (--web https://pymaticlabs.com)')
   const api = async (path: string, init: RequestInit = {}) => {
-    const res = await fetch(`${site}${path}`, { ...init, headers: { Authorization: `Bearer ${admin}`, ...(init.headers as Record<string, string>) } })
+    const res = await fetch(`${site}${path}`, { ...init, headers: { Authorization: `Bearer ${admin}`, ...bypassHeader(), ...(init.headers as Record<string, string>) } })
     return { status: res.status, body: (await res.json().catch(() => ({}))) as Record<string, any> }
   }
 

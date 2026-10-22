@@ -1,6 +1,6 @@
 -- Entrega automatica tras el pago del Cerebro Digital (PML-KB-0261).
 --
--- Supabase en la region de la UE (Frankfurt). Escribe solo el servidor de la web, con la clave
+-- Supabase en la region de la UE (Irlanda). Escribe solo el servidor de la web, con la clave
 -- service_role; la zona de clientes lee con la sesion del cliente y seguridad por filas (RLS):
 -- cada persona ve solo lo de su empresa, y lo de facturacion solo quien compro.
 --
@@ -480,6 +480,17 @@ alter table public.rate_limits enable row level security;
 revoke insert, update, delete, truncate on all tables in schema public from anon, authenticated;
 -- Lo interno no se lee ni con sesion.
 revoke all on public.stripe_events, public.jobs, public.license_sequences, public.launch_slots, public.rate_limits from anon, authenticated;
+
+-- Los permisos, explicitos: no dependen de «Automatically expose new tables», que en los proyectos
+-- nuevos de Supabase viene apagado. El servidor (service_role) lo hace todo. Con la sesion del
+-- cliente solo se lee companies.id (la segunda comprobacion por filas de la zona); lo demas lo sirve
+-- el servidor, asi que ni anon ni authenticated leen nada mas, aunque tengan la clave publicable.
+-- Las politicas de lectura de abajo se quedan: son las que valdrian si algun dia se abre una tabla.
+grant select, insert, update, delete on all tables in schema public to service_role;
+revoke all on all tables in schema public from anon, authenticated;
+grant select (id) on public.companies to authenticated;
+alter default privileges in schema public grant select, insert, update, delete on tables to service_role;
+alter default privileges in schema public revoke all on tables from anon, authenticated;
 
 create policy companies_read on public.companies
   for select to authenticated using (id in (select public.my_company_ids()));

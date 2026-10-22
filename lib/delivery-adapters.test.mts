@@ -6,6 +6,7 @@ import { HoldedInvoicer } from './delivery/adapters/holded-invoicer.ts'
 import { BrevoMailer, brevoAttachments } from './delivery/adapters/brevo-mailer.ts'
 import { CalcomCalendar } from './delivery/adapters/calcom-calendar.ts'
 import { SupabaseStorage } from './delivery/adapters/supabase-storage.ts'
+import { SupabaseRepository } from './delivery/adapters/supabase-repository.ts'
 import { FakeCalendar } from './delivery/adapters/fakes.ts'
 import { issueLicense } from './delivery/license-issue.ts'
 import { devToolsEnabled, readConfig } from './delivery/config.ts'
@@ -276,6 +277,36 @@ test('Supabase Storage: subir, enlace firmado que caduca y leer lo que no esta',
   assert.equal(url, 'https://abc.supabase.co/storage/v1/object/sign/releases/versiones/1.2.0/a%20b.mcpb?token=abc&download=a+b.mcpb')
   assert.equal(JSON.parse(calls[1].body!).expiresIn, 300)
   assert.equal(await storage.get('customer-files', 'no/esta.pdf'), null)
+})
+
+test('Supabase: un id de una URL que no es uuid (ni numero, en la cola) no existe, sin preguntar a Postgres (daria 22P02 y un 500)', async () => {
+  const ID = '3f2b1c9e-8a4d-4e6f-9b0a-1c2d3e4f5a6b'
+  const calls = mockFetch((call) => {
+    if (call.url.includes(`id=eq.${ID}`)) return { json: [{ id: ID, status: 'paid' }] }
+    if (call.url.includes('id=eq.7')) return { json: [] }
+    return { status: 400, json: { code: '22P02', message: 'invalid input syntax for type uuid', details: null, hint: null } }
+  })
+  const repo = new SupabaseRepository({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'srk' })
+  const now = new Date('2026-11-02T10:00:00Z')
+  assert.equal(await repo.getPurchase('no-es-un-uuid'), null)
+  assert.equal(await repo.getPurchase(`${ID}x`), null)
+  assert.equal(await repo.getInvoice('123'), null)
+  assert.equal(await repo.getVersionFile('../otra'), null)
+  assert.equal(await repo.getCompany('c1'), null)
+  assert.equal(await repo.retryJob('abc', now), false)
+  assert.equal(await repo.retryJob('1.5', now), false)
+  assert.equal(await repo.retryJob('', now), false)
+  await repo.completeJob('x', null, now)
+  await repo.failJob('x', 'fallo', { dead: true }, now)
+  await repo.markJobAlerted('x', now)
+  assert.equal(calls.length, 0)
+  // Los bien formados si van a la base de datos.
+  assert.deepEqual(await repo.getPurchase(ID), { id: ID, status: 'paid' })
+  assert.equal(await repo.retryJob('7', now), false)
+  assert.deepEqual(
+    calls.map((c) => `${c.method} ${new URL(c.url).pathname}`),
+    ['GET /rest/v1/purchases', 'PATCH /rest/v1/jobs']
+  )
 })
 
 test('configuracion: en falso nunca en produccion; los adaptadores salen del modo', () => {

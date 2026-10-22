@@ -19,6 +19,12 @@ function arg(name: string): string | null {
   return i > 0 ? (process.argv[i + 1] ?? null) : null
 }
 
+// Una Preview con la proteccion de Vercel: el secreto de Protection Bypass for Automation, en .env.local.
+function bypassHeader(): Record<string, string> {
+  const secret = process.env.VERCEL_BYPASS_SECRET?.trim()
+  return secret ? { 'x-vercel-protection-bypass': secret } : {}
+}
+
 async function main() {
   const test = process.argv.includes('--pruebas')
   const web = arg('--web')?.replace(/\/+$/, '')
@@ -26,7 +32,7 @@ async function main() {
   if (web) {
     const admin = process.env.ADMIN_SECRET
     if (!admin) throw new Error('falta ADMIN_SECRET (el de esa web) en el entorno')
-    const res = await fetch(`${web}/api/admin/health${test ? '?pruebas=1' : ''}`, { headers: { Authorization: `Bearer ${admin}` } })
+    const res = await fetch(`${web}/api/admin/health${test ? '?pruebas=1' : ''}`, { headers: { Authorization: `Bearer ${admin}`, ...bypassHeader() } })
     if (res.status === 401) throw new Error(`${web} dice 401: ADMIN_SECRET no es el de esa web`)
     if (!res.ok) throw new Error(`${web}/api/admin/health contesta ${res.status}`)
     report = (await res.json()) as HealthReport

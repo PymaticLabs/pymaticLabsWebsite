@@ -60,7 +60,7 @@ function services(overrides: Partial<World> = {}) {
     const path = url.pathname
     if (url.host === 'proyecto.supabase.co') {
       if (path === '/rest/v1/rpc/entrega_estado') {
-        return json({ cron: ['entrega-cola', 'entrega-conciliacion', 'entrega-huellas-ip', 'entrega-limites'].map((nombre) => ({ nombre, activa: true })), vault: w.vault, extensiones: ['pg_cron', 'pg_net'] })
+        return json({ cron: ['entrega-cola', 'entrega-conciliacion', 'entrega-huellas-ip', 'entrega-limites', 'entrega-historial-cron'].map((nombre) => ({ nombre, activa: true })), vault: w.vault, extensiones: ['pg_cron', 'pg_net'] })
       }
       if (path.startsWith('/rest/v1/')) {
         const table = path.slice('/rest/v1/'.length)

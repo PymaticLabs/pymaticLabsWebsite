@@ -20,12 +20,12 @@ El camino mínimo, en orden. Los tiempos cuentan con las cuentas ya creadas. Dar
 
 | # | Qué | Tiempo | Dónde |
 |---|---|---|---|
-| 1 | **Supabase de producción**: proyecto en Frankfurt (plan Pro), las cuatro migraciones, los dos secretos de Vault y el acceso con código | 45 min | 3.1 |
+| 1 | **Supabase de producción**: proyecto en Irlanda, como el de pruebas (plan Pro), las cuatro migraciones, los dos secretos de Vault y el acceso con código | 45 min | 3.1 |
 | 2 | **Brevo**: dominio autenticado, remitente verificado, la clave de la API y la SMTP (va en Supabase) | 30 min + DNS | 3.2 |
 | 3 | **Stripe en vivo**: Stripe Tax con el registro de España, los datos públicos y `stripe-setup.mts --live --webhook https://pymaticlabs.com/api/stripe/webhook` | 45 min | 3.4 |
 | 4 | **Holded**: la clave de la API y los ids de los impuestos, con `HOLDED_INVOICE_MODE=draft` | 20 min | 3.5 |
 | 5 | **Cal.com**: el equipo, los dos eventos con su horario y la clave | 30 min | 3.6 |
-| 6 | **Vercel**: las variables de Production (abajo), la región fra1 y volver a desplegar | 20 min | 3.7 |
+| 6 | **Vercel**: las variables de Production (abajo), la región dub1 y volver a desplegar | 20 min | 3.7 |
 | 7 | **La comprobación**, hasta que no diga FALTA | 10 min | abajo |
 | 8 | **Una compra de prueba** de punta a punta, en Preview | 45 min | abajo |
 | 9 | **Abrir**: `CHECKOUT_OPEN=true` en Production y volver a desplegar | 5 min | — |
@@ -152,7 +152,7 @@ En este orden: Supabase y Brevo primero (Supabase manda los códigos por el SMTP
 
 ### 3.1 Supabase (base de datos, acceso a la zona y almacén)
 
-1. **Proyecto.** En [supabase.com](https://supabase.com), *New project*, región **Central EU (Frankfurt)**. Uno para pruebas y, más adelante, otro para producción. Para producción, el plan **Pro**: el gratuito pausa el proyecto tras una semana sin uso (se pararían la cola y la zona) y no tiene copias de seguridad diarias.
+1. **Proyecto.** En [supabase.com](https://supabase.com), *New project*, región **West EU (Ireland)**, la del de pruebas (`Cerebro`, ref `drckfsbbopevlnaayxqq`). Uno para pruebas y, más adelante, otro para producción, **en la misma región**: con el plan Hobby de Vercel las funciones están en una sola región para todo. Para producción, el plan **Pro**: el gratuito pausa el proyecto tras una semana sin uso (se pararían la cola y la zona) y no tiene copias de seguridad diarias.
 2. **Claves.** *Project Settings > API Keys*: la URL del proyecto (`SUPABASE_URL`), la clave publicable `sb_publishable_...` (`SUPABASE_ANON_KEY`) y una clave secreta `sb_secret_...` (`SUPABASE_SERVICE_ROLE_KEY`). Valen también las antiguas `anon` y `service_role`, pero con la secreta nueva los límites de los códigos cuentan por la IP de cada persona (paso 7). La secreta, solo en el servidor: nunca en una variable `NEXT_PUBLIC_`.
 3. **Las tablas.** Aplicar las cuatro migraciones de `supabase/migrations/`, en orden. Con la CLI:
    ```bash
@@ -161,10 +161,25 @@ En este orden: Supabase y Brevo primero (Supabase manda los códigos por el SMTP
    npx supabase db push
    ```
    o pegándolas una a una en *SQL Editor*. Crean las tablas, las funciones atómicas, la seguridad por filas (RLS), los dos buckets privados (`releases` y `customer-files`), las extensiones `pg_cron` y `pg_net`, las tareas programadas (la cola cada minuto, la conciliación diaria y los borrados de huellas de IP y de límites), las licencias pedidas a Eric (`license_requests`) y `entrega_estado()`, que usa la comprobación de producción para ver las tareas, Vault y los buckets. Comprobar en *Database > Extensions* que `pg_cron` y `pg_net` quedan activas (la comprobación de producción también lo mira).
+   Si se pegan en el *SQL Editor*, apuntarlas después como aplicadas, o un `npx supabase db push` posterior intentará repetirlas y parará en la primera tabla (es lo mismo que `npx supabase migration repair --status applied <versiones>`):
+   ```sql
+   create schema if not exists supabase_migrations;
+   create table if not exists supabase_migrations.schema_migrations (version text not null primary key);
+   alter table supabase_migrations.schema_migrations add column if not exists statements text[];
+   alter table supabase_migrations.schema_migrations add column if not exists name text;
+   insert into supabase_migrations.schema_migrations (version, name) values
+     ('20261021120000', 'entrega'), ('20261021120100', 'almacen'), ('20261021120200', 'cron'), ('20261021130000', 'licencias_a_mano')
+   on conflict (version) do nothing;
+   ```
+   Los permisos de las tablas van explícitos en las migraciones: valen igual con «Automatically expose new tables» encendido o apagado (en los proyectos nuevos viene apagado).
 4. **Los secretos del trabajador**, en *SQL Editor* (viven en Vault, nunca en el repo; la URL es la de la web que recibe las llamadas: la de pruebas en el proyecto de pruebas):
    ```sql
    select vault.create_secret('https://<la web de pruebas>', 'entrega_site_url');
    select vault.create_secret('<el mismo valor que JOBS_SECRET>', 'entrega_jobs_secret');
+   ```
+   Si la web de pruebas es una Preview con la protección de Vercel (3.7, paso 4), un tercero con el secreto de *Protection Bypass for Automation*; el trabajador lo manda en la cabecera `x-vercel-protection-bypass`. En producción no hace falta.
+   ```sql
+   select vault.create_secret('<el secreto de bypass de Vercel>', 'entrega_vercel_bypass');
    ```
 5. **La secuencia de licencias.** No hay que sembrarla: la web numera sola **del 5001 al 9999 de cada año**. Del 0001 al 5000 son del Mac de Eric: las que él sube a mano (`origin = 'manual'`) solo pueden ir ahí, y las de la web solo del 5001 (la tabla `licenses` lo comprueba).
 6. **El acceso con código** (*Authentication*):
@@ -251,7 +266,7 @@ La web firma con una **clave propia, distinta de la del Mac de Eric**, que no sa
    ```bash
    node --env-file=.env.local scripts/stripe-setup.mts --webhook https://<la web de pruebas>/api/stripe/webhook
    ```
-   Crea un producto por modalidad con su precio en EUR y en USD (sin IVA, por `lookup_key` `cerebro-<modalidad>`), el mensual con sus tres precios, el cupón de lanzamiento de cada modalidad (`cerebro-lanzamiento-<modalidad>`, 10 usos), el **portal de cliente** (cambiar de plan, tarjeta, dirección, correo, facturas y cancelar al final del periodo; **ni el NIF ni la razón social**, que son los de la licencia y de Holded) y el **endpoint del webhook** con estos avisos: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `invoice.paid`, `charge.refunded`, `charge.dispute.created`, `charge.dispute.updated`, `charge.dispute.funds_withdrawn`, `charge.dispute.closed`, `customer.subscription.created`, `customer.subscription.updated` y `customer.subscription.deleted`. Imprime una sola vez el secreto del webhook: va en `STRIPE_WEBHOOK_SECRET`. Si ya se había creado antes, volver a pasarlo: pone al día los avisos y el portal.
+   Crea un producto por modalidad con su precio en EUR y en USD (sin IVA, por `lookup_key` `cerebro-<modalidad>`), el mensual con un producto y un precio por plan (el portal no deja cambiar entre precios de un mismo producto), Stripe Tax si falta (la sede de Castellón y el registro del IVA de España), el cupón de lanzamiento de cada modalidad (`cerebro-lanzamiento-<modalidad>`, 10 usos), el **portal de cliente** (cambiar de plan, tarjeta, dirección, correo, facturas y cancelar al final del periodo; **ni el NIF ni la razón social**, que son los de la licencia y de Holded) y el **endpoint del webhook** con estos avisos: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `invoice.paid`, `charge.refunded`, `charge.dispute.created`, `charge.dispute.updated`, `charge.dispute.funds_withdrawn`, `charge.dispute.closed`, `customer.subscription.created`, `customer.subscription.updated` y `customer.subscription.deleted`. Imprime una sola vez el secreto del webhook: va en `STRIPE_WEBHOOK_SECRET`. Si ya se había creado antes, volver a pasarlo: pone al día los avisos y el portal.
 6. **Comprobar en el panel:** *Settings > Billing > Customer portal* (la configuración «cerebro» activa, con los enlaces de condiciones y privacidad) y *Developers > Webhooks* (el endpoint, en verde tras la primera compra).
 7. **En local**, en vez del endpoint: [Stripe CLI](https://docs.stripe.com/stripe-cli) con `stripe listen --forward-to localhost:3000/api/stripe/webhook`, que da su propio `whsec_...` para `.env.local`.
 
@@ -281,8 +296,8 @@ La web firma con una **clave propia, distinta de la del Mac de Eric**, que no sa
 
 1. Las variables de la sección 4 en *Settings > Environment Variables*: las de prueba en **Preview** (y en *Development* si se usa `vercel env pull`); las de producción, más adelante, en **Production**. En Production, `CHECKOUT_OPEN=false` y `DELIVERY_MODE=live` (o sin poner). Los secretos de producción (`GOOGLE_SERVICE_ACCOUNT_JSON`, `STRIPE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `HOLDED_API_KEY`, `BREVO_API_KEY`, `JOBS_SECRET`, `ADMIN_SECRET`, `DELIVERY_IP_SALT`), **Sensitive y solo en Production**; Preview lleva los suyos de pruebas, nunca los mismos.
 2. `JOBS_SECRET` y `ADMIN_SECRET`: largos y aleatorios, distintos en pruebas y en producción (por ejemplo, `openssl rand -hex 32`). El `JOBS_SECRET` es el mismo que se guardó en Vault (3.1, paso 4).
-3. **Región de las funciones** (*Settings > Functions > Function Region*): **Frankfurt (fra1)**, junto a Supabase: menos espera en cada paso y los datos se quedan en la UE.
-4. La web de pruebas tiene que tener una dirección fija para Stripe y para Vault (un dominio de pruebas o la de la rama de Preview) y, si tiene la protección de Vercel activada, Stripe y pg_cron no podrán llamarla: excluir `/api/stripe/webhook` y `/api/jobs/*` o usar *Protection Bypass*.
+3. **Región de las funciones** (*Settings > Functions > Function Region*): **Dublín (dub1)**, junto a Supabase (Irlanda): menos espera en cada paso y los datos se quedan en la UE. Si algún día Supabase se va a otra región, la de las funciones va con él.
+4. La web de pruebas tiene que tener una dirección fija para Stripe y para Vault (un dominio de pruebas o la de la rama de Preview) y, si tiene la protección de Vercel activada, Stripe y pg_cron no podrán llamarla: usar *Protection Bypass for Automation* (*Settings > Deployment Protection > Add Secret*): el secreto va en Vault (`entrega_vercel_bypass`, 3.1, paso 4) y en la dirección del webhook de Stripe, `https://<la web de pruebas>/api/stripe/webhook?x-vercel-protection-bypass=<el secreto>`. Con el plan Hobby no se pueden excluir rutas. Para los scripts que llaman a la web de pruebas (`comprobar-produccion.mts --web`, `subir-licencia.mts --web`), el mismo secreto en `.env.local` como `VERCEL_BYPASS_SECRET`; la web lo recibe sola de Vercel (`VERCEL_AUTOMATION_BYPASS_SECRET`) para comprobar sus propias páginas.
 
 ## 4. Todas las variables
 
