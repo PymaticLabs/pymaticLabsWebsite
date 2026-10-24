@@ -341,7 +341,8 @@ export class FakeCalendar implements Calendar {
       const hours = dow >= 1 && dow <= 5 ? [18, 19, 20, 21] : dow === 6 ? [10, 11, 12, 13] : []
       for (const hour of hours) {
         const start = madridTimeToUtc(day, hour)
-        if (start < from || start >= to) continue
+        // Como Cal.com: solo los huecos que caben enteros (la hora) dentro de la ventana pedida.
+        if (start < from || start.getTime() + 60 * 60_000 > to.getTime()) continue
         for (const host of this.hosts) {
           const slot = { host, start: start.toISOString() }
           if (!taken.has(this.slotKey(slot))) slots.push(slot)

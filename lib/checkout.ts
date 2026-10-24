@@ -270,7 +270,8 @@ export async function createCheckout(d: Delivery, req: CheckoutRequest): Promise
       throw new CheckoutError('session_required', `elige la primera sesion con ${SESSION_HOSTS.map((h) => h.name).join(' o ')}`)
     }
     slot = { host: chosen.host, start: start.toISOString() }
-    const free = await d.calendar.availability(new Date(start.getTime() - 60_000).toISOString(), new Date(start.getTime() + 60_000).toISOString())
+    // Cal.com solo da los huecos que caben enteros en la ventana pedida: la de la sesion (una hora) y margen.
+    const free = await d.calendar.availability(new Date(start.getTime() - 60_000).toISOString(), new Date(start.getTime() + 3 * 3600_000).toISOString())
     if (!free.some((s) => s.host === slot!.host && s.start === slot!.start)) throw new CheckoutError('slot_taken', 'ese hueco ya no esta libre')
     // Un hueco apartado dura lo que el pago: nadie aparta mas de unos pocos a la vez, ni todos juntos
     // mas de un tope (asi no se bloquea el calendario de Eric y Sergio a base de pagos abiertos).
