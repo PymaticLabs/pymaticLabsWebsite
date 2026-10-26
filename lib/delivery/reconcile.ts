@@ -9,6 +9,7 @@
 //    pocos en pocos a la vez y con tiempo tasado: si no da tiempo a todas, el aviso lo dice.
 //    Las firmadas a mano por Eric (LICENSE_MODE=manual) cuentan igual: tambien tienen su pago.
 // 3. Facturas en borrador (emision a mano): si ya se emitieron en Holded, se guardan para la zona.
+//    Si ya no estan (404: borradas a mano), se apuntan asi y no se buscan mas.
 // 4. Pasos parados en la cola.
 // 5. Licencias pedidas a mano que siguen sin firmar pasadas LICENSE_PENDING_ALERT_HOURS horas:
 //    aviso cada dia hasta que se suban (el primero lo da license_reminder a esas horas).
@@ -20,7 +21,7 @@ import { overdueLicenseRequests, sendOverdueNotice } from './manual-license.ts'
 import { storeInvoicePdf } from './steps.ts'
 import { errorMessage } from './util.ts'
 import type { Delivery } from './container.ts'
-import type { LicenseRecord } from './types.ts'
+import { INVOICE_DELETED_IN_HOLDED, type LicenseRecord } from './types.ts'
 
 export interface ReconcileReport {
   since: string
@@ -31,6 +32,8 @@ export interface ReconcileReport {
   recovered: { ref: string; outcome: string }[]
   skipped: { ref: string; reason: string }[]
   invoicesStored: string[]
+  /** Borradores que ya no estan en Holded (borrados a mano): se apuntan y dejan de buscarse. */
+  invoicesDeleted: string[]
   deadJobs: number
   /** Pedidas a Eric y sin firmar pasadas las horas de aviso. */
   pendingLicenses: Awaited<ReturnType<typeof overdueLicenseRequests>>
@@ -46,7 +49,7 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
   const now = d.clock()
   const since = new Date(now.getTime() - (options.days ?? d.config.reconcileDays) * 86400_000)
   const sinceUnix = Math.floor(since.getTime() / 1000)
-  const report: ReconcileReport = { since: since.toISOString(), checkedLicenses: 0, unchecked: 0, orphans: [], recovered: [], skipped: [], invoicesStored: [], deadJobs: 0, pendingLicenses: [], errors: [] }
+  const report: ReconcileReport = { since: since.toISOString(), checkedLicenses: 0, unchecked: 0, orphans: [], recovered: [], skipped: [], invoicesStored: [], invoicesDeleted: [], deadJobs: 0, pendingLicenses: [], errors: [] }
 
   // 1. Pagos sin entregar
   for (const raw of await d.payments.listPaidCheckoutSessions(sinceUnix)) {
@@ -143,7 +146,17 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
     if (invoice.provider !== d.invoicer.name) continue
     if (Date.now() - started > budget + 10_000) break
     try {
-      const doc = await d.invoicer.getDocument(invoice.kind, invoice.providerId)
+      // Solo el 404 al buscarlo: uno despues (el PDF de una ya emitida) es un error como otro.
+      const doc = await d.invoicer.getDocument(invoice.kind, invoice.providerId).catch((error) => {
+        if ((error as { status?: number }).status === 404) return null
+        throw error
+      })
+      if (!doc) {
+        // Borrado a mano en Holded (lo normal tras devolver una compra de prueba): ya no se busca.
+        await d.repo.updateInvoice(invoice.id, { providerId: null, holdReason: INVOICE_DELETED_IN_HOLDED })
+        report.invoicesDeleted.push(invoice.ref)
+        continue
+      }
       if (!doc.approved) continue
       const updated = await d.repo.updateInvoice(invoice.id, { status: 'approved', number: doc.number, approvedAt: now.toISOString() })
       await storeInvoicePdf(d, updated, invoice.kind)
@@ -160,10 +173,11 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
   report.pendingLicenses = await overdueLicenseRequests(d)
   await sendOverdueNotice(d, report.pendingLicenses, `reconcile:${now.toISOString().slice(0, 10)}:sin-firmar`)
 
-  if (!report.orphans.length && (report.recovered.length || report.skipped.length || report.deadJobs || report.errors.length || report.unchecked)) {
+  if (!report.orphans.length && (report.recovered.length || report.skipped.length || report.invoicesDeleted.length || report.deadJobs || report.errors.length || report.unchecked)) {
     const mail = internalEmail(`Conciliación: ${report.recovered.length} recuperada(s), ${report.deadJobs} paso(s) parado(s)`, {
       Recuperadas: report.recovered.map((r) => `${r.ref} (${r.outcome})`).join(', ') || null,
       'Sin entregar (ya devueltas o con contracargo)': report.skipped.map((s) => `${s.ref} (${s.reason})`).join(', ') || null,
+      'Borradores borrados en Holded a mano (ya no se buscan)': report.invoicesDeleted.join(', ') || null,
       'Pasos parados': report.deadJobs || null,
       'Sin mirar en Stripe': report.unchecked ? `${report.unchecked} licencia(s): no dio tiempo (se miran en la siguiente; o POST /api/jobs/reconcile otra vez)` : null,
       Errores: report.errors.join(' · ') || null,

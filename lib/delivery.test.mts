@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createFakeDelivery } from './delivery/container.ts'
 import { handleStripeEvent } from './delivery/events.ts'
 import { runJobs, backoffMs } from './delivery/jobs.ts'
+import { HANDLERS } from './delivery/steps.ts'
 import { reconcile } from './delivery/reconcile.ts'
 import { publishVersion, revocationList } from './delivery/versions.ts'
 import { processStripeWebhook } from './delivery/webhook.ts'
@@ -370,6 +371,95 @@ test('devolucion con la factura aun en borrador: aviso para rectificarla a mano'
   assert.equal(w.f.invoicer.documents.size, 1)
 })
 
+/** Un Acompanado con la primera sesion elegida al pagar y la segunda reservada desde la zona. */
+async function guidedWithSessions(w: ReturnType<typeof world>, second: 'next' | 'last' = 'next') {
+  const free = await w.d.calendar.availability(new Date(w.now().getTime() + 24 * HOUR).toISOString(), new Date(w.now().getTime() + 14 * 24 * HOUR).toISOString())
+  const session = paidSession('acompanado', { metadata: { session_host: free[0].host, session_start: free[0].start } })
+  await pay(w, session)
+  await runJobs(w.d)
+  const { purchase } = await licenseOf(w, session)
+  const user = { id: (await w.d.repo.listMembers(purchase.companyId!))[0].userId!, email: purchase.email }
+  assert.equal((await bookSession(w.d, user, purchase.companyId, second === 'next' ? free[2] : free[free.length - 1])).number, 2)
+  assert.equal(w.f.calendar.booked.size, 2)
+  return { session, purchase }
+}
+
+test('devolucion entera del Acompanado: sus sesiones se cancelan en Cal.com y en la zona, y el aviso lo dice; repetirlo no hace nada', async () => {
+  const w = world()
+  const { session, purchase } = await guidedWithSessions(w)
+  await handleStripeEvent(w.d, fakeEvent('charge.refunded', fakeCharge({ paymentIntent: String(session.payment_intent), amount: purchase.amountTotal, refunded: purchase.amountTotal })))
+  const stats = await runJobs(w.d)
+  assert.equal(stats.dead + stats.retried, 0)
+  assert.equal(w.f.calendar.booked.size, 0)
+  assert.deepEqual([...w.f.calendar.cancelled.values()].map((b) => b.reason), ['Compra devuelta', 'Compra devuelta'])
+  for (const n of [1, 2] as const) {
+    const booking = await w.d.repo.getBooking(purchase.id, n)
+    assert.equal(booking?.status, 'cancelled')
+    assert.equal(booking?.note, 'cancelada: devolución')
+  }
+  const notice = w.f.mailer.sent.find((m) => /^Devolución: /.test(m.subject))!
+  assert.match(notice.text, /Sesiones canceladas: 1ª con (Eric|Sergio), .* · 2ª con (Eric|Sergio), /)
+
+  // Otra vez (un reintento): nada que cancelar, sin errores.
+  const job = (await w.d.repo.getJobByKey(`cancel_bookings:${purchase.id}:refund`))!
+  assert.deepEqual(await HANDLERS.cancel_bookings(w.d, job), { cancelled: [] })
+  // Y si se corto tras cancelarla en Cal.com sin apuntarlo: alli ya no esta, se apunta igual.
+  const first = (await w.d.repo.getBooking(purchase.id, 1))!
+  await w.d.repo.updateBooking(first.id, { status: 'booked' })
+  const again = (await HANDLERS.cancel_bookings(w.d, job)) as { cancelled: unknown[] }
+  assert.equal(again.cancelled.length, 1)
+  assert.equal((await w.d.repo.getBooking(purchase.id, 1))?.status, 'cancelled')
+})
+
+test('devolucion parcial del Acompanado: sus sesiones siguen', async () => {
+  const w = world()
+  const { session, purchase } = await guidedWithSessions(w)
+  await handleStripeEvent(w.d, fakeEvent('charge.refunded', fakeCharge({ paymentIntent: String(session.payment_intent), amount: purchase.amountTotal, refunded: 12100 })))
+  await runJobs(w.d)
+  assert.equal((await w.d.repo.getPurchase(purchase.id))?.status, 'partially_refunded')
+  assert.equal(await w.d.repo.getJobByKey(`cancel_bookings:${purchase.id}:refund`), null)
+  assert.equal(w.f.calendar.booked.size, 2)
+  assert.equal(w.f.calendar.cancelled.size, 0)
+  for (const n of [1, 2] as const) assert.equal((await w.d.repo.getBooking(purchase.id, n))?.status, 'booked')
+})
+
+test('devolucion del Acompanado con la primera sesion ya pasada: esa se queda como esta, sin errores; la que falta se cancela', async () => {
+  const w = world()
+  const { session, purchase } = await guidedWithSessions(w, 'last')
+  const first = (await w.d.repo.getBooking(purchase.id, 1))!
+  // Unos dias despues, ya hecha la primera.
+  w.advance(4 * 24 * HOUR)
+  assert.ok(new Date(first.startAt) < w.now())
+  await handleStripeEvent(w.d, fakeEvent('charge.refunded', fakeCharge({ paymentIntent: String(session.payment_intent), amount: purchase.amountTotal, refunded: purchase.amountTotal })))
+  const stats = await runJobs(w.d)
+  assert.equal(stats.dead + stats.retried, 0)
+  assert.deepEqual(await w.d.repo.getBooking(purchase.id, 1), first)
+  assert.equal((await w.d.repo.getBooking(purchase.id, 2))?.status, 'cancelled')
+  assert.equal(w.f.calendar.cancelled.size, 1)
+  assert.equal(w.f.calendar.booked.size, 1)
+  const result = (await w.d.repo.getJobByKey(`cancel_bookings:${purchase.id}:refund`))?.result as { cancelled: { number: number }[] }
+  assert.deepEqual(result.cancelled.map((s) => s.number), [2])
+  // Como Cal.com: una que ya acabo no se cancela, y no es un error.
+  assert.equal(await w.f.calendar.cancel(first.providerUid!, 'Compra devuelta'), 'ended')
+})
+
+test('contracargo del Acompanado: abierto no cancela sus sesiones; perdido, si (y el aviso lo dice)', async () => {
+  const w = world()
+  const { session, purchase } = await guidedWithSessions(w)
+  const pi = String(session.payment_intent)
+  await handleStripeEvent(w.d, fakeEvent('charge.dispute.created', fakeDispute({ paymentIntent: pi, amount: purchase.amountTotal, disputeId: 'dp_sesiones' })))
+  await runJobs(w.d)
+  assert.equal(w.f.calendar.booked.size, 2)
+  await handleStripeEvent(w.d, fakeEvent('charge.dispute.closed', fakeDispute({ paymentIntent: pi, amount: purchase.amountTotal, disputeId: 'dp_sesiones', status: 'lost' })))
+  const stats = await runJobs(w.d)
+  assert.equal(stats.dead + stats.retried, 0)
+  assert.equal(w.f.calendar.booked.size, 0)
+  assert.deepEqual([...w.f.calendar.cancelled.values()].map((b) => b.reason), ['Pago con contracargo', 'Pago con contracargo'])
+  assert.equal((await w.d.repo.getBooking(purchase.id, 2))?.note, 'cancelada: contracargo')
+  const notice = w.f.mailer.sent.find((m) => /^Contracargo cerrado \(lost\)/.test(m.subject))!
+  assert.match(notice.text, /Sesiones canceladas: 1ª con .* · 2ª con /)
+})
+
 test('contracargo: licencia anulada y zona cerrada; si se gana, vuelven; si se pierde, rectificativa', async () => {
   const w = world({ HOLDED_INVOICE_MODE: 'emit' })
   const won = paidSession('hazlo-tu')
@@ -489,6 +579,32 @@ test('conciliacion: una factura en borrador de otra pieza (la de mentira de ante
   await w.d.repo.updateInvoice(draft.id, { provider: 'holded', providerId: 'doc_de_otra_pieza' })
   const report = await reconcile(w.d)
   assert.deepEqual(report.errors, [])
+})
+
+test('conciliacion: un borrador borrado a mano en Holded (404) se apunta asi y no se busca mas, sin contarlo como error', async () => {
+  const w = world()
+  await pay(w, paidSession('hazlo-tu'))
+  await runJobs(w.d)
+  const [draft] = await w.d.repo.listDraftInvoices()
+  assert.ok(draft?.providerId)
+  // Como se borra en Holded (lo normal tras devolver una compra de prueba): 404, como el de verdad.
+  w.f.invoicer.documents.delete(draft.providerId)
+  await assert.rejects(w.f.invoicer.getDocument('invoice', draft.providerId), (e: { status?: number }) => e.status === 404)
+  let report = await reconcile(w.d)
+  assert.deepEqual(report.errors, [])
+  assert.deepEqual(report.invoicesDeleted, [draft.ref])
+  const after = (await w.d.repo.getInvoice(draft.id))!
+  assert.equal(after.providerId, null)
+  assert.equal(after.holdReason, 'Borrado en Holded a mano')
+  assert.ok(w.f.mailer.sent.some((m) => /^Conciliación/.test(m.subject) && /Borradores borrados en Holded a mano/.test(m.text)))
+
+  // Al dia siguiente ya no se pregunta a Holded por el.
+  const calls = w.f.invoicer.calls
+  w.advance(24 * HOUR)
+  report = await reconcile(w.d)
+  assert.deepEqual(report.errors, [])
+  assert.deepEqual(report.invoicesDeleted, [])
+  assert.equal(w.f.invoicer.calls, calls)
 })
 
 test('conciliacion: un pago devuelto con la licencia sin anular es una licencia sin pago', async () => {

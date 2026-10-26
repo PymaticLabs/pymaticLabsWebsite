@@ -13,6 +13,7 @@ import path from 'node:path'
 import { privateKeyFromSeed, rawPublicKey } from '../../license.ts'
 import { EU_COUNTRIES, addDays, hmacHex, madridDate, madridTimeToUtc, newId, safeEqual, weekday } from '../util.ts'
 import {
+  PermanentError,
   RateLimitedError,
   RetryableError,
   SlotUnavailableError,
@@ -156,7 +157,8 @@ export class FakeInvoicer implements Invoicer {
 
   private doc(id: string) {
     const doc = this.documents.get(id)
-    if (!doc) throw new Error(`no existe el documento ${id}`)
+    // Como Holded (http.ts): un 404 permanente, con su status (borrado a mano, por ejemplo).
+    if (!doc) throw Object.assign(new PermanentError(`fake 404: no existe el documento ${id}`), { status: 404 })
     return doc
   }
 
@@ -313,11 +315,14 @@ export class LocalStorage implements Storage {
 export class FakeCalendar implements Calendar {
   readonly name = 'fake'
   booked = new Map<string, BookingResult & { host: string; email: string }>()
+  /** Las canceladas, por su uid, con el motivo que se dio. */
+  cancelled = new Map<string, BookingResult & { host: string; email: string; reason: string }>()
   reservations = new Map<string, Slot>()
   busyDays: number
   hosts: string[]
   failures = new Failures()
   private clock: () => Date
+  private seq = 0
 
   constructor(options: { busyDays?: number; hosts?: string[]; clock?: () => Date } = {}) {
     this.busyDays = options.busyDays ?? 0
@@ -371,16 +376,30 @@ export class FakeCalendar implements Calendar {
     const key = this.slotKey(input.slot)
     if (this.booked.has(key) || [...this.reservations.values()].some((s) => this.slotKey(s) === key)) throw new SlotUnavailableError()
     const start = new Date(input.slot.start)
+    // Con contador, no por las que hay: tras cancelar una, el uid siguiente no repite.
+    const n = ++this.seq
     const result = {
-      uid: `bk_${this.booked.size + 1}`,
+      uid: `bk_${n}`,
       start: start.toISOString(),
       end: new Date(start.getTime() + 3600_000).toISOString(),
-      meetingUrl: `https://cal.example.test/video/${this.booked.size + 1}`,
+      meetingUrl: `https://cal.example.test/video/${n}`,
       host: input.slot.host,
       email: input.attendee.email,
     }
     this.booked.set(key, result)
     return { uid: result.uid, start: result.start, end: result.end, meetingUrl: result.meetingUrl }
+  }
+
+  /** Como Cal.com: una que ya acabo no se cancela (ended); una cancelada antes o que no existe, gone. */
+  async cancel(uid: string, reason: string) {
+    this.failures.check('cancel')
+    const entry = [...this.booked.entries()].find(([, b]) => b.uid === uid)
+    if (!entry) return 'gone' as const
+    const [key, booking] = entry
+    if (booking.end && new Date(booking.end) <= this.clock()) return 'ended' as const
+    this.booked.delete(key)
+    this.cancelled.set(uid, { ...booking, reason })
+    return 'cancelled' as const
   }
 }
 

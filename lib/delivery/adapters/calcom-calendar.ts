@@ -1,12 +1,13 @@
 // Sesiones del Acompanado en Cal.com (API v2): un tipo de evento de 1 hora por persona (Eric y
 // Sergio), cada uno con su horario (de lunes a viernes de 18:00 a 22:00 y los sabados de 10:00 a
 // 14:00, hora peninsular). La web lee los huecos libres, aparta el elegido mientras se paga y lo
-// reserva al cobrar.
+// reserva al cobrar. Si la compra se devuelve, cancela las que aun no han llegado.
 //
 // CALCOM_API_KEY (cal_...) y CALCOM_EVENT_TYPES, JSON: {"eric": 123, "sergio": 456}.
 
 import { request, requestJson, requireEnv } from './http.ts'
-import { PermanentError, SlotUnavailableError, type BookingResult, type Calendar, type Locale, type Slot } from '../types.ts'
+import { errorMessage } from '../util.ts'
+import { PermanentError, SlotUnavailableError, type BookingResult, type Calendar, type CancelResult, type Locale, type Slot } from '../types.ts'
 
 const SLOTS_VERSION = '2024-09-04'
 const BOOKINGS_VERSION = '2024-08-13'
@@ -109,6 +110,25 @@ export class CalcomCalendar implements Calendar {
       }
     } catch (error) {
       if (isUnavailable(error)) throw new SlotUnavailableError()
+      throw error
+    }
+  }
+
+  async cancel(uid: string, reason: string): Promise<CancelResult> {
+    try {
+      await request('Cal.com', `${this.base}/bookings/${encodeURIComponent(uid)}/cancel`, {
+        method: 'POST',
+        headers: this.headers(BOOKINGS_VERSION),
+        json: { cancellationReason: reason },
+      })
+      return 'cancelled'
+    } catch (error) {
+      const status = (error as { status?: number }).status
+      // Borrada a mano en Cal.com: nada que cancelar.
+      if (status === 404) return 'gone'
+      // 400 "Cannot cancel a booking that has already ended" (o ya cancelada): reintentar no cambia nada.
+      if (status === 400 && /already ended/i.test(errorMessage(error))) return 'ended'
+      if (status === 400 && /already.*cancel/i.test(errorMessage(error))) return 'gone'
       throw error
     }
   }

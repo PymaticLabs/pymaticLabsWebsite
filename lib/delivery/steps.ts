@@ -6,7 +6,8 @@
 // Con LICENSE_MODE=manual, license no firma: pide la licencia a Eric (license_reminder si tarda) y
 // la bienvenida sale sin ella; al subirla, license_email (o renewal_email en un cobro del mensual).
 // Devolucion o contracargo: revoke (y, sin pago unico vigente, cancel_subscription), rectify (tras
-// invoice), refund_email, notice; contracargo ganado: reinstate.
+// invoice), refund_email, notice; contracargo ganado: reinstate. Devolucion entera o contracargo
+// perdido del Acompanado: cancel_bookings (sus sesiones que aun no han llegado, en Cal.com).
 // Version nueva: announce (uno por persona). Alta en el equipo: team_invite. Compra con el NIF de
 // otra empresa cliente: company_alert (a sus titulares).
 
@@ -740,6 +741,37 @@ const cancelSubscription: StepHandler = async (d, job) => {
   return { canceled }
 }
 
+/**
+ * Devolucion entera o contracargo perdido del Acompanado: sus sesiones que aun no han llegado se
+ * cancelan en Cal.com y en la zona. Las que ya pasaron se quedan. Repetirlo no hace nada.
+ */
+const cancelBookings: StepHandler = async (d, job) => {
+  const purchase = await purchaseOf(d, job)
+  const dispute = job.payload.reason === 'dispute'
+  const en = purchase.locale === 'en'
+  // Lo lee el cliente en el correo de Cal.com.
+  const reason = dispute ? (en ? 'Payment charged back' : 'Pago con contracargo') : en ? 'Purchase refunded' : 'Compra devuelta'
+  const cancelled: { number: number; host: string; startAt: string }[] = []
+  const bookings = purchase.companyId ? await d.repo.listBookingsByCompany(purchase.companyId) : []
+  for (const booking of bookings) {
+    if (booking.purchaseId !== purchase.id || booking.status !== 'booked') continue
+    if (new Date(booking.startAt) <= d.clock()) continue
+    const result = booking.providerUid ? await d.calendar.cancel(booking.providerUid, reason) : 'gone'
+    // Cal.com dice que ya acabo: como una que ya paso, se queda.
+    if (result === 'ended') continue
+    await d.repo.updateBooking(booking.id, { status: 'cancelled', note: `cancelada: ${dispute ? 'contracargo' : 'devolución'}` })
+    cancelled.push({ number: booking.number, host: booking.host, startAt: booking.startAt })
+  }
+  return { cancelled }
+}
+
+/** Las sesiones que cancelo ese paso, para el aviso interno (null si ninguna). */
+async function cancelledSessions(d: Delivery, key: string): Promise<string | null> {
+  const list = (await d.repo.getJobByKey(key))?.result?.cancelled
+  if (!Array.isArray(list) || !list.length) return null
+  return (list as { number: number; host: string; startAt: string }[]).map((s) => `${s.number}ª con ${hostName(s.host)}, ${formatDateTime(s.startAt, 'es')}`).join(' · ')
+}
+
 // --- Avisos a PymaticLabs ----------------------------------------------------------------------------
 
 const REVIEW_TODO: Record<string, string> = {
@@ -814,6 +846,7 @@ const notice: StepHandler = async (d, job) => {
         ...base,
         Devuelto: money(Number(job.payload.amount)),
         Licencia: lic ? `${lic.id}${lic.revokedAt ? ' (anulada)' : ''}` : null,
+        'Sesiones canceladas': job.payload.full && purchase ? await cancelledSessions(d, `cancel_bookings:${purchase.id}:refund`) : null,
       })
       break
     case 'inquiry':
@@ -842,6 +875,7 @@ const notice: StepHandler = async (d, job) => {
             : 'Revisar en Stripe',
         ...base,
         Contracargo: String(job.payload.disputeId ?? ''),
+        'Sesiones canceladas': status === 'lost' && purchase ? await cancelledSessions(d, `cancel_bookings:${purchase.id}:dispute-lost:${job.payload.disputeId}`) : null,
       })
       break
     }
@@ -891,5 +925,6 @@ export const HANDLERS: Record<string, StepHandler> = {
   revoke,
   reinstate,
   cancel_subscription: cancelSubscription,
+  cancel_bookings: cancelBookings,
   notice,
 }

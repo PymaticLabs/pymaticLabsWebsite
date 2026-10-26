@@ -459,6 +459,8 @@ async function onRefund(d: Delivery, charge: Stripe.Charge): Promise<EventOutcom
   const full = charge.refunded === true
   const p = purchase.id
   const refunds = (await d.payments.refundsOf(charge)).filter((r) => r.status !== 'failed' && r.status !== 'canceled').sort((a, b) => (a.id < b.id ? -1 : 1))
+  // Devuelta entera, el Acompanado pierde sus sesiones: el aviso espera a saber cuales se cancelaron.
+  const cancel = full ? cancelBookingsJob(purchase, `cancel_bookings:${p}:refund`, 'refund') : null
   const jobs: NewJob[] = []
   let credited = 0
   for (const refund of refunds) {
@@ -472,17 +474,32 @@ async function onRefund(d: Delivery, charge: Stripe.Charge): Promise<EventOutcom
       payload: { purchaseId: p, amount, ref: `credit:${p}:${refund.id}`, reason: 'refund', refundId: refund.id },
       dependsOn: [`invoice:${p}`],
     })
-    jobs.push({ key: `notice:refund:${refund.id}`, kind: 'notice', payload: { purchaseId: p, event: 'refund', amount, full, refundId: refund.id } })
+    jobs.push({
+      key: `notice:refund:${refund.id}`,
+      kind: 'notice',
+      payload: { purchaseId: p, event: 'refund', amount, full, refundId: refund.id },
+      ...(cancel ? { dependsOn: [cancel.key] } : {}),
+    })
   }
   if (full) {
     jobs.push({ key: `revoke:${p}:refund`, kind: 'revoke', payload: { purchaseId: p, reason: 'refund', final: true } })
     jobs.push({ key: `refund_email:${p}`, kind: 'refund_email', payload: { purchaseId: p, amount: charge.amount_refunded }, dependsOn: [`revoke:${p}:refund`] })
+    if (cancel) jobs.push(cancel)
   }
   // Primero la cola, despues la compra: si se corta en medio, el reintento de Stripe encola lo que falte.
   await d.repo.enqueueJobs(jobs, d.clock())
   const changed = await d.repo.recordRefund(p, charge.amount_refunded, full)
   if (!changed) return 'refund-already'
   return full ? 'refund' : 'partial-refund'
+}
+
+/**
+ * Cancelar las sesiones del Acompanado (devolucion entera o contracargo perdido). Espera a la reserva
+ * de la primera: si aun estaba en curso, cancela tambien la que deje hecha.
+ */
+function cancelBookingsJob(purchase: Purchase, key: string, reason: 'refund' | 'dispute'): NewJob | null {
+  if (purchase.kind !== 'one_time' || !isGuided(purchase.product)) return null
+  return { key, kind: 'cancel_bookings', payload: { purchaseId: purchase.id, reason }, dependsOn: [`booking:${purchase.id}`] }
 }
 
 /** Un contracargo de verdad (no una peticion de informacion): el banco ya retiro el dinero. */
@@ -546,6 +563,12 @@ async function onDisputeClosed(d: Delivery, dispute: Stripe.Dispute): Promise<Ev
       // Definitivo: como una devolucion (y sin pago unico vigente, se cancela el mensual).
       { key: `revoke:${p}:dispute-lost:${dispute.id}`, kind: 'revoke', payload: { purchaseId: p, reason: 'dispute', final: true } }
     )
+    // Y, como en la devolucion, las sesiones del Acompanado que aun no han llegado (antes del aviso).
+    const cancel = cancelBookingsJob(purchase, `cancel_bookings:${p}:dispute-lost:${dispute.id}`, 'dispute')
+    if (cancel) {
+      jobs.push(cancel)
+      jobs[0].dependsOn = [cancel.key]
+    }
     await d.repo.enqueueJobs(jobs, d.clock())
     await d.repo.updatePurchase(p, { status: 'dispute_lost' })
     return 'dispute-lost'

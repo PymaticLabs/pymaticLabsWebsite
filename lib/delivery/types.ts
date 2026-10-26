@@ -549,6 +549,9 @@ export interface BookingResult {
   meetingUrl: string | null
 }
 
+/** Al cancelar: cancelada ahora, ya no estaba (cancelada antes o borrada a mano) o ya acabo (nada que hacer). */
+export type CancelResult = 'cancelled' | 'gone' | 'ended'
+
 export interface Calendar {
   readonly name: string
   /** Huecos libres de cada persona entre dos instantes (ISO, UTC). */
@@ -563,6 +566,8 @@ export interface Calendar {
     reservationId: string | null
     metadata: Record<string, string>
   }): Promise<BookingResult>
+  /** Cancela una reserva por su uid. Una que ya acabo, ya cancelada o que no existe no es un error. */
+  cancel(uid: string, reason: string): Promise<CancelResult>
 }
 
 // --- Acceso a la zona -----------------------------------------------------------------------
@@ -659,3 +664,6 @@ export interface Payments {
   listPaidCheckoutSessions(sinceUnix: number): Promise<Record<string, unknown>[]>
   listPaidInvoices(sinceUnix: number): Promise<Record<string, unknown>[]>
 }
+
+/** El motivo con el que queda una factura en borrador que ya no esta en Holded (borrada a mano). */
+export const INVOICE_DELETED_IN_HOLDED = 'Borrado en Holded a mano'

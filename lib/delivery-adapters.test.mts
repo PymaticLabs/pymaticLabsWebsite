@@ -274,6 +274,28 @@ test('Cal.com: huecos de cada persona, apartar, y hueco ocupado al reservar', as
   assert.equal(calls.find((c) => c.url.endsWith('/bookings'))!.headers['cal-api-version'], '2024-08-13')
 })
 
+test('Cal.com: cancelar una reserva; una que ya acabo, ya cancelada o que no existe no es un error', async () => {
+  const calError = (status: number, message: string) => ({ status, json: { status: 'error', error: { code: status === 404 ? 'NotFoundException' : 'BadRequestException', message } } })
+  const calls = mockFetch((call) => {
+    if (call.url.endsWith('/bookings/bk-futura/cancel')) return { json: { status: 'success', data: { uid: 'bk-futura', status: 'cancelled' } } }
+    if (call.url.endsWith('/bookings/bk-pasada/cancel')) return calError(400, 'Cannot cancel a booking that has already ended')
+    if (call.url.endsWith('/bookings/bk-cancelada/cancel')) return calError(400, 'This booking has already been cancelled.')
+    if (call.url.endsWith('/bookings/bk-rara/cancel')) return calError(400, 'cancellationReason must be a string')
+    return calError(404, 'Booking with uid=bk-borrada was not found in the database')
+  })
+  const cal = new CalcomCalendar({ CALCOM_API_KEY: 'cal_test', CALCOM_EVENT_TYPES: '{"eric": 11, "sergio": 22}' })
+  assert.equal(await cal.cancel('bk-futura', 'Compra devuelta'), 'cancelled')
+  assert.equal(calls[0].method, 'POST')
+  assert.equal(calls[0].headers['cal-api-version'], '2024-08-13')
+  assert.equal(calls[0].headers.authorization, 'Bearer cal_test')
+  assert.deepEqual(JSON.parse(calls[0].body!), { cancellationReason: 'Compra devuelta' })
+  assert.equal(await cal.cancel('bk-pasada', 'Compra devuelta'), 'ended')
+  assert.equal(await cal.cancel('bk-cancelada', 'Compra devuelta'), 'gone')
+  assert.equal(await cal.cancel('bk-borrada', 'Compra devuelta'), 'gone')
+  // Otro 400 si es un error (permanente: el paso se para y avisa).
+  await assert.rejects(cal.cancel('bk-rara', 'Compra devuelta'), PermanentError)
+})
+
 test('Supabase Storage: subir, enlace firmado que caduca y leer lo que no esta', async () => {
   const calls = mockFetch((call) => {
     if (call.url.includes('/object/sign/')) return { json: { signedURL: '/object/sign/releases/versiones/1.2.0/a%20b.mcpb?token=abc' } }

@@ -18,7 +18,7 @@ import { termsAttachment } from './terms.ts'
 import { madridDate, normalizeEmail } from './util.ts'
 import type { Delivery } from './container.ts'
 import type { ZoneProfile } from '../zone-profile.ts'
-import { RateLimitedError, SeatLimitError, SlotUnavailableError, type Company, type CookieJar, type Locale, type Member, type Slot, type ZoneUser } from './types.ts'
+import { INVOICE_DELETED_IN_HOLDED, RateLimitedError, SeatLimitError, SlotUnavailableError, type Company, type CookieJar, type Locale, type Member, type Slot, type ZoneUser } from './types.ts'
 
 export class ZoneError extends Error {
   status: 400 | 401 | 403 | 404 | 409 | 429
@@ -165,7 +165,8 @@ export async function zoneOverview(d: Delivery, user: ZoneUser, companyId?: stri
     invoices: invoices
       .filter((i) => i.status !== 'draft')
       .map((i) => ({ id: i.id, kind: i.kind, number: i.number, amountTotal: i.amountTotal, currency: i.currency, date: i.approvedAt ?? i.createdAt, downloadable: Boolean(i.storagePath) })),
-    pendingInvoices: invoices.filter((i) => i.status === 'draft').length,
+    // Un borrador borrado en Holded a mano ya no llegara: no cuenta como pendiente.
+    pendingInvoices: invoices.filter((i) => i.status === 'draft' && i.holdReason !== INVOICE_DELETED_IN_HOLDED).length,
     purchases: purchases.map((p) => ({
       id: p.id,
       product: p.product,
