@@ -35,7 +35,8 @@ const TAX_CODE = process.env.STRIPE_TAX_CODE || 'txcd_10000000'
 
 async function product(id: string, name: string): Promise<Stripe.Product> {
   const found = await stripe.products.search({ query: `metadata['cerebro']:'${id}'` })
-  if (found.data[0]) return found.data[0]
+  // El nombre es el que ve el cliente en el pago y en las facturas de Stripe: se corrige si cambio.
+  if (found.data[0]) return found.data[0].name === name ? found.data[0] : stripe.products.update(found.data[0].id, { name })
   return stripe.products.create({ name, tax_code: TAX_CODE, metadata: { cerebro: id } })
 }
 
@@ -111,7 +112,7 @@ async function main() {
   const planProducts: { product: string; prices: string[] }[] = []
   for (const plan of plans) {
     const id = `plan-${plan.id}` as const
-    const p = await product(id, `Cerebro Digital · ${productName(id, 'es')}`)
+    const p = await product(id, productName(id, 'es'))
     const pr = await price(p.id, id, plan.monthly * 100, true)
     planProducts.push({ product: p.id, prices: [pr.id] })
     console.log(`  ${id}: ${p.id} · ${pr.id} (${lookupKey(id)})`)
