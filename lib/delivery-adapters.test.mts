@@ -205,6 +205,17 @@ test('Holded: una factura encontrada en un reintento se lee entera (el listado n
   assert.ok(calls.some((c) => c.url.endsWith('/invoices/inv9')))
 })
 
+test('Holded: los importes con coma decimal, como los da la v2 de verdad ("1210,00", "1.210,00")', async () => {
+  mockFetch((call) => {
+    if (call.url.endsWith('/invoices/a')) return { json: { id: 'a', document_number: null, draft: true, approved_at: null, total: '1210,00', tax: '210,00' } }
+    if (call.url.endsWith('/invoices/b')) return { json: { id: 'b', document_number: 'F260010', draft: false, approved_at: '2026-11-02T10:00:00', total: '12.100,50', tax: '2.100,50' } }
+    return { status: 404, json: { detail: 'no' } }
+  })
+  const holded = new HoldedInvoicer({ HOLDED_API_KEY: 'hk' })
+  assert.deepEqual(await holded.getDocument('invoice', 'a'), { id: 'a', number: null, approved: false, total: 1210, tax: 210 })
+  assert.deepEqual(await holded.getDocument('invoice', 'b'), { id: 'b', number: 'F260010', approved: true, total: 12100.5, tax: 2100.5 })
+})
+
 test('Holded: 429 se reintenta respetando Retry-After; 401 para la cola', async () => {
   mockFetch(() => ({ status: 429, json: { detail: 'You have reached the per-minute limit' }, headers: { 'Retry-After': '60' } }))
   const holded = new HoldedInvoicer({ HOLDED_API_KEY: 'hk' })

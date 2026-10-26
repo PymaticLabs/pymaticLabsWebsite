@@ -139,6 +139,8 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
   // 3. Facturas en borrador ya emitidas a mano
   for (const invoice of await d.repo.listDraftInvoices()) {
     if (!invoice.providerId) continue
+    // Una de otra pieza (la de mentira de las pruebas, o la de antes) no se puede buscar en esta.
+    if (invoice.provider !== d.invoicer.name) continue
     if (Date.now() - started > budget + 10_000) break
     try {
       const doc = await d.invoicer.getDocument(invoice.kind, invoice.providerId)

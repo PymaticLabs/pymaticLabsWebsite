@@ -28,8 +28,14 @@ interface HoldedDocument {
   tax?: number | string | null
 }
 
+// La v2 da los importes como texto y con coma decimal ("1210,00"; con miles, "1.210,00"): el
+// ultimo separador es el decimal.
 function amount(value: number | string | null | undefined): number | null {
-  const parsed = typeof value === 'string' ? Number(value) : value
+  let parsed = value
+  if (typeof value === 'string') {
+    const s = value.replace(/\s/g, '')
+    parsed = Number(s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, ''))
+  }
   return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : null
 }
 

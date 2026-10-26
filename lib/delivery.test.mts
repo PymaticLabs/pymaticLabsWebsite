@@ -480,6 +480,17 @@ test('conciliacion: una licencia sin pago da aviso urgente; un pago sin aviso se
   assert.ok((await w.d.repo.getPurchaseByCheckoutSession(String(lostSession.id)))?.welcomeSentAt)
 })
 
+test('conciliacion: una factura en borrador de otra pieza (la de mentira de antes) no se busca en la de ahora', async () => {
+  const w = world()
+  await pay(w, paidSession('hazlo-tu'))
+  await runJobs(w.d)
+  const [draft] = await w.d.repo.listDraftInvoices()
+  assert.ok(draft)
+  await w.d.repo.updateInvoice(draft.id, { provider: 'holded', providerId: 'doc_de_otra_pieza' })
+  const report = await reconcile(w.d)
+  assert.deepEqual(report.errors, [])
+})
+
 test('conciliacion: un pago devuelto con la licencia sin anular es una licencia sin pago', async () => {
   const w = world()
   const session = paidSession('hazlo-tu')
