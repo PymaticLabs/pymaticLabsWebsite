@@ -70,12 +70,13 @@ function localePrefix(locale: Locale) {
   return locale === 'en' ? '/en' : ''
 }
 
-function termsText(siteUrl: string, locale: Locale, version: string) {
+// Con las licencias a mano (LICENSE_MODE=manual) la licencia llega en unas horas, como dicen /gracias y la bienvenida.
+function termsText(siteUrl: string, locale: Locale, version: string, manualLicense = false) {
   const url = `${siteUrl}${localePrefix(locale)}/condiciones`
   return locale === 'en'
     ? {
         terms: `I accept the [terms of use and sale](${url}) (version of ${version}). I am buying as a business or professional, for my business, not as a consumer.`,
-        submit: 'Businesses and professionals only: the tax ID (NIF or EU VAT number) is required. The invoice arrives by email; the license, right away.',
+        submit: `Businesses and professionals only: the tax ID (NIF or EU VAT number) is required. The invoice arrives by email; the license, ${manualLicense ? 'within a few hours' : 'right away'}.`,
         taxId: 'Company tax ID (EIN or VAT number)',
         news: 'Digital Brain news by email',
         yes: 'Yes, send them',
@@ -83,7 +84,7 @@ function termsText(siteUrl: string, locale: Locale, version: string) {
       }
     : {
         terms: `Acepto las [condiciones de uso y venta](${url}) (versión del ${version}). Compro como empresa o profesional, para mi actividad, no como consumidor.`,
-        submit: 'Solo para empresas y profesionales: el NIF o NIF-IVA es obligatorio. La factura te llega por correo y la licencia, al momento.',
+        submit: `Solo para empresas y profesionales: el NIF o NIF-IVA es obligatorio. La factura te llega por correo y la licencia, ${manualLicense ? 'en unas horas' : 'al momento'}.`,
         taxId: 'NIF de la empresa (EIN o VAT number)',
         news: 'Novedades del Cerebro Digital por correo',
         yes: 'Sí, quiero recibirlas',
@@ -103,8 +104,9 @@ export function oneTimeSessionParams(input: {
   launchRef: string | null
   slot: Slot | null
   reservationId: string | null
+  manualLicense?: boolean
 }): Record<string, unknown> {
-  const text = termsText(input.siteUrl, input.locale, input.terms.version)
+  const text = termsText(input.siteUrl, input.locale, input.terms.version, input.manualLicense)
   const metadata: Record<string, string> = {
     product: input.product,
     seats: String(seatsFor(input.product)),
@@ -315,6 +317,7 @@ export async function createCheckout(d: Delivery, req: CheckoutRequest): Promise
         launchRef: launch ? launchRef : null,
         slot,
         reservationId,
+        manualLicense: d.config.licenseMode === 'manual',
       })
     )
     if (launch) await d.repo.setLaunchSlotSession(launchRef, session.id)

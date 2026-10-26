@@ -48,10 +48,11 @@ interface World {
   pricingButtons: boolean
   missingTables: string[]
   holdedStatus: number
+  versions: boolean
 }
 
 function services(overrides: Partial<World> = {}) {
-  const w: World = { live: true, bucketPublic: false, vault: ['entrega_jobs_secret', 'entrega_site_url'], webhookEvents: [...WEBHOOK_EVENTS], senderActive: true, pricingButtons: false, missingTables: [], holdedStatus: 200, ...overrides }
+  const w: World = { live: true, bucketPublic: false, vault: ['entrega_jobs_secret', 'entrega_site_url'], webhookEvents: [...WEBHOOK_EVENTS], senderActive: true, pricingButtons: false, missingTables: [], holdedStatus: 200, versions: true, ...overrides }
   const list = (data: unknown[]) => ({ object: 'list', data, has_more: false, url: '/v1/x' })
   const json = (body: unknown, status = 200, headers: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...headers } })
   globalThis.fetch = (async (input: string | URL | Request, init: RequestInit = {}) => {
@@ -66,6 +67,9 @@ function services(overrides: Partial<World> = {}) {
         const table = path.slice('/rest/v1/'.length)
         if (w.missingTables.includes(table)) return json({ code: 'PGRST205', message: `Could not find the table 'public.${table}'` }, 404)
         if (method === 'HEAD') return new Response(null, { status: 200, headers: { 'content-range': '*/0' } })
+        // Dos versiones: la ultima es la 1.10.0 (no la 1.9.0 por orden de texto), con Mac y Windows.
+        if (w.versions && table === 'versions' && url.searchParams.get('select') === 'id') return json([{ id: '1.9.0' }, { id: '1.10.0' }])
+        if (w.versions && table === 'version_files' && url.searchParams.get('version_id') === 'eq.1.10.0') return json([{ kind: 'mac' }, { kind: 'windows' }])
         return json([])
       }
       if (path.startsWith('/storage/v1/bucket/')) return json({ id: path.split('/').pop(), name: path.split('/').pop(), public: w.bucketPublic })
@@ -143,6 +147,7 @@ test('comprobacion de produccion: con todo puesto y cada servicio en orden, list
   assert.equal(find(report, 'Clave de las licencias a mano').detail, 'la del Mac de Eric (licencias.pub)')
   assert.equal(find(report, 'Migración 20261021130000_licencias_a_mano.sql').status, 'ok')
   assert.equal(find(report, 'Secretos de Vault').status, 'ok')
+  assert.equal(find(report, 'Versión publicada').detail, 'la 1.10.0, para Mac y Windows')
   assert.equal(find(report, 'Webhook').status, 'ok')
   assert.equal(find(report, 'Precio cerebro-plan-pro').status, 'ok')
   assert.equal(find(report, 'Cupón cerebro-lanzamiento-hazlo-tu').status, 'ok')
@@ -155,7 +160,7 @@ test('comprobacion de produccion: con todo puesto y cada servicio en orden, list
 })
 
 test('comprobacion de produccion: dice lo que falta y como arreglarlo, sin ensenar ningun secreto', async () => {
-  services({ live: false, bucketPublic: true, vault: ['entrega_site_url'], webhookEvents: ['checkout.session.completed'], senderActive: false, missingTables: ['license_requests'], holdedStatus: 401 })
+  services({ live: false, bucketPublic: true, vault: ['entrega_site_url'], webhookEvents: ['checkout.session.completed'], senderActive: false, missingTables: ['license_requests'], holdedStatus: 401, versions: false })
   const env = { ...ENV, STRIPE_SECRET_KEY: 'sk_test_51PruebaDeClaveSecreta', STRIPE_WEBHOOK_SECRET: '', CHECKOUT_OPEN: 'true', LICENSE_MANUAL_PUBLIC_KEY: 'FbnsgdEW0hB49Fh/Mj3c+KLezWlb47hp4N+y7SfP5BQ=' }
   const report = await productionCheck(env, { checkSite: true, now: new Date('2026-11-02T10:00:00Z') })
   assert.equal(report.ready, false)
@@ -169,6 +174,9 @@ test('comprobacion de produccion: dice lo que falta y como arreglarlo, sin ensen
   falta('Secretos de Vault')
   assert.match(find(report, 'Secretos de Vault').detail!, /entrega_jobs_secret/)
   falta('Bucket releases')
+  // Sin ninguna version publicada, el primer cliente no tendria nada que instalar.
+  falta('Versión publicada')
+  assert.match(find(report, 'Versión publicada').fix!, /publicar-version\.mts/)
   assert.match(find(report, 'Webhook').detail!, /le faltan avisos: .*invoice\.paid/)
   falta('Remitente info@pymaticlabs.com')
   falta('Botones de compra')

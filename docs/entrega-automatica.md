@@ -26,15 +26,16 @@ El camino mínimo, en orden. Los tiempos cuentan con las cuentas ya creadas. Dar
 | 4 | **Holded**: la clave de la API y los ids de los impuestos, con `HOLDED_INVOICE_MODE=draft` | 20 min | 3.5 |
 | 5 | **Cal.com**: el equipo, los dos eventos con su horario y la clave | 30 min | 3.6 |
 | 6 | **Vercel**: las variables de Production (abajo), la región dub1 y volver a desplegar | 20 min | 3.7 |
-| 7 | **La comprobación**, hasta que no diga FALTA | 10 min | abajo |
-| 8 | **Una compra de prueba** de punta a punta, en Preview | 45 min | abajo |
-| 9 | **Abrir**: `CHECKOUT_OPEN=true` en Production y volver a desplegar | 5 min | — |
+| 7 | **La versión vigente, en producción**: el Supabase de producción empieza sin ninguna y la bienvenida promete las descargas. `node --env-file=.env.produccion.local scripts/publicar-version.mts --version X.Y.Z --dir <SALIDA> --notas notas.md --notas-en notes.md --sin-aviso`, con `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `DELIVERY_SITE_URL=https://pymaticlabs.com` de producción en ese fichero solo para este paso (la clave secreta, borrada después) | 15 min | abajo |
+| 8 | **La comprobación**, hasta que no diga FALTA | 10 min | abajo |
+| 9 | **Una compra de prueba** de punta a punta, en Preview | 45 min | abajo |
+| 10 | **Abrir**: `CHECKOUT_OPEN=true` en Production y volver a desplegar | 5 min | — |
 
 En total, unas cuatro horas y media de trabajo, más lo que tarden el DNS y, si hace falta, la verificación de Stripe.
 
 ### Las variables de Production
 
-`DELIVERY_MODE=live` (o sin poner), **`LICENSE_MODE=manual`**, escrita, y `LICENSE_REQUEST_EMAIL` con el correo de Eric. Sin KMS, `manual` es lo que sale por defecto; pero si `GCP_KMS_KEY_VERSION` y `GOOGLE_SERVICE_ACCOUNT_JSON` siguen en Production de antes (esta guía pedía montarlas), sin `LICENSE_MODE` firmaría la web, con una clave que el producto de hoy no acepta, y cada cliente recibiría una licencia que no vale. La comprobación lo da como FALTA. Después, `NEXT_PUBLIC_SITE_URL`, `DELIVERY_IP_SALT`, `JOBS_SECRET`, `ADMIN_SECRET`, `STRIPE_SECRET_KEY` (la `sk_live_`), `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `BREVO_API_KEY`, `DELIVERY_FROM_EMAIL`, `DELIVERY_INTERNAL_EMAIL`, `DELIVERY_ALERT_EMAIL`, `HOLDED_API_KEY`, `HOLDED_INVOICE_MODE=draft`, los `HOLDED_TAX_*`, `CALCOM_API_KEY`, `CALCOM_EVENT_TYPES` y `CHECKOUT_OPEN=false` hasta el paso 9.
+`DELIVERY_MODE=live` (o sin poner), **`LICENSE_MODE=manual`**, escrita, y `LICENSE_REQUEST_EMAIL` con el correo de Eric. Sin KMS, `manual` es lo que sale por defecto; pero si `GCP_KMS_KEY_VERSION` y `GOOGLE_SERVICE_ACCOUNT_JSON` siguen en Production de antes (esta guía pedía montarlas), sin `LICENSE_MODE` firmaría la web, con una clave que el producto de hoy no acepta, y cada cliente recibiría una licencia que no vale. La comprobación lo da como FALTA. Después, `NEXT_PUBLIC_SITE_URL`, `DELIVERY_IP_SALT`, `JOBS_SECRET`, `ADMIN_SECRET`, `STRIPE_SECRET_KEY` (la `sk_live_`), `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `BREVO_API_KEY`, `DELIVERY_FROM_EMAIL`, `DELIVERY_INTERNAL_EMAIL`, `DELIVERY_ALERT_EMAIL`, `HOLDED_API_KEY`, `HOLDED_INVOICE_MODE=draft`, los `HOLDED_TAX_*`, `CALCOM_API_KEY`, `CALCOM_EVENT_TYPES` y `CHECKOUT_OPEN=false` hasta el paso 10.
 
 **No** van en Production: `GCP_KMS_KEY_VERSION`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `LICENSE_MANUAL_PUBLIC_KEY` (sin ella vale la clave del Mac de Eric, que es la que tiene que ser) ni ninguna `DELIVERY_*` de piezas falsas. Todo lo de la sección 4 que no se dice aquí tiene un valor por defecto que vale.
 

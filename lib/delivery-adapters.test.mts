@@ -5,6 +5,7 @@ import { GcpKmsSigner } from './delivery/adapters/gcp-kms-signer.ts'
 import { HoldedInvoicer } from './delivery/adapters/holded-invoicer.ts'
 import { BrevoMailer, brevoAttachments } from './delivery/adapters/brevo-mailer.ts'
 import { CalcomCalendar } from './delivery/adapters/calcom-calendar.ts'
+import { StripePayments } from './delivery/adapters/stripe-payments.ts'
 import { SupabaseStorage } from './delivery/adapters/supabase-storage.ts'
 import { SupabaseRepository } from './delivery/adapters/supabase-repository.ts'
 import { FakeCalendar } from './delivery/adapters/fakes.ts'
@@ -416,7 +417,14 @@ test('Checkout de pago unico: NIF obligatorio, direccion, Stripe Tax, condicione
   // Solo tarjeta: nada de pagos que quedan pendientes (la plaza y el hueco caducarian antes de cobrar).
   assert.deepEqual(params.payment_method_types, ['card'])
   assert.equal(params.success_url, 'https://pymaticlabs.com/en/gracias?pago={CHECKOUT_SESSION_ID}')
+  assert.match(params.custom_text.submit.message, /the license, right away\.$/)
   const team = oneTimeSessionParams({ siteUrl: 'https://x', product: 'hazlo-tu-equipo', priceId: 'p', locale: 'es', currency: 'usd', expiresAt: 1, terms: { version: 'v', sha256: 's' }, launchRef: null, slot: null, reservationId: null }) as Record<string, any>
+  assert.match(team.custom_text.submit.message, /la licencia, al momento\.$/)
+  // Con las licencias a mano, la pagina de pago dice lo mismo que /gracias: en unas horas.
+  const manual = oneTimeSessionParams({ siteUrl: 'https://x', product: 'hazlo-tu', priceId: 'p', locale: 'es', currency: 'eur', expiresAt: 1, terms: { version: 'v', sha256: 's' }, launchRef: null, slot: null, reservationId: null, manualLicense: true }) as Record<string, any>
+  assert.match(manual.custom_text.submit.message, /la licencia, en unas horas\.$/)
+  const manualEn = oneTimeSessionParams({ siteUrl: 'https://x', product: 'hazlo-tu', priceId: 'p', locale: 'en', currency: 'eur', expiresAt: 1, terms: { version: 'v', sha256: 's' }, launchRef: null, slot: null, reservationId: null, manualLicense: true }) as Record<string, any>
+  assert.match(manualEn.custom_text.submit.message, /the license, within a few hours\.$/)
   assert.equal(team.metadata.seats, '10')
   assert.equal(team.discounts, undefined)
   assert.equal(team.currency, 'usd')
@@ -424,6 +432,36 @@ test('Checkout de pago unico: NIF obligatorio, direccion, Stripe Tax, condicione
   const ein = team.custom_fields.find((f: { key: string }) => f.key === 'nif')
   assert.equal(ein.type, 'text')
   assert.equal(ein.optional, false)
+})
+
+test('Stripe: el portal se abre con la configuracion de stripe-setup (cerebro=portal), nunca con la del panel', async () => {
+  const portalWith = (configurations: { id: string; metadata: Record<string, string> }[]) => {
+    const payments = new StripePayments({ STRIPE_SECRET_KEY: 'sk_test_51Prueba' })
+    const created: Record<string, unknown>[] = []
+    const lists: Record<string, unknown>[] = []
+    Object.assign(payments as unknown as Record<string, unknown>, {
+      stripe: {
+        billingPortal: {
+          configurations: { list: async (params: Record<string, unknown>) => (lists.push(params), { data: configurations }) },
+          sessions: { create: async (params: Record<string, unknown>) => (created.push(params), { url: 'https://billing.stripe.com/p/session_1' }) },
+        },
+      },
+    })
+    return { payments, created, lists }
+  }
+  const { payments, created, lists } = portalWith([{ id: 'bpc_panel', metadata: {} }, { id: 'bpc_cerebro', metadata: { cerebro: 'portal' } }])
+  assert.equal(await payments.createPortalSession('cus_1', 'https://pymaticlabs.com/zona/mensual'), 'https://billing.stripe.com/p/session_1')
+  await payments.createPortalSession('cus_2', 'https://pymaticlabs.com/zona/mensual')
+  assert.deepEqual(created, [
+    { customer: 'cus_1', return_url: 'https://pymaticlabs.com/zona/mensual', configuration: 'bpc_cerebro' },
+    { customer: 'cus_2', return_url: 'https://pymaticlabs.com/zona/mensual', configuration: 'bpc_cerebro' },
+  ])
+  // Se busca una vez, entre las activas.
+  assert.deepEqual(lists, [{ active: true, limit: 100 }])
+  // Sin la nuestra no se abre la del panel (que dejaria cambiar el NIF y no tiene los planes).
+  const panelOnly = portalWith([{ id: 'bpc_panel', metadata: {} }])
+  await assert.rejects(panelOnly.payments.createPortalSession('cus_1', 'https://pymaticlabs.com/zona/mensual'), (e: Error) => e instanceof PermanentError && /stripe-setup/.test(e.message))
+  assert.deepEqual(panelOnly.created, [])
 })
 
 test('Checkout del mensual: con su cliente de Stripe y los meses incluidos como prueba', () => {

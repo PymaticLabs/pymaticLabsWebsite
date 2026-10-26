@@ -13,6 +13,7 @@ import { modalities, plans } from '../offer.ts'
 import { CalcomCalendar } from './adapters/calcom-calendar.ts'
 import { GcpKmsSigner } from './adapters/gcp-kms-signer.ts'
 import { requestJson } from './adapters/http.ts'
+import { compareVersions } from './adapters/memory-repository.ts'
 import { readConfig, type DeliveryConfig } from './config.ts'
 import { SESSION_HOSTS, WEBHOOK_EVENTS, launchCouponId, lookupKey, priceCents, type ProductId } from './products.ts'
 import { errorMessage } from './util.ts'
@@ -260,6 +261,17 @@ async function checkSupabase(env: Env, config: DeliveryConfig, add: Add) {
     const { data, error } = await db.storage.getBucket(bucket)
     if (error || !data) add(`Bucket ${bucket}`, 'falta', `no existe: ${error?.message ?? ''}`, 'Aplicar 20261021120100_almacen.sql')
     else add(`Bucket ${bucket}`, data.public ? 'falta' : 'ok', data.public ? 'es PÚBLICO: cualquiera bajaría las facturas o las versiones' : 'privado', 'Storage: quitarle «Public bucket»')
+  }
+
+  // Lo que se descarga: la bienvenida promete las descargas para Mac y Windows en la zona.
+  const versions = await db.from('versions').select('id')
+  if (!versions.error) {
+    const latest = ((versions.data ?? []) as { id: string }[]).map((v) => v.id).sort((a, b) => compareVersions(b, a))[0]
+    const files = latest ? await db.from('version_files').select('kind').eq('version_id', latest).eq('team_only', false) : null
+    const kinds = new Set(((files?.data ?? []) as { kind: string }[]).map((f) => f.kind))
+    const lacking = ['mac', 'windows'].filter((k) => !kinds.has(k))
+    const detail = !latest ? 'ninguna: el primer cliente no tendría nada que instalar' : lacking.length ? `la ${latest} no tiene para ${lacking.join(' ni ')}` : `la ${latest}, para Mac y Windows`
+    add('Versión publicada (las descargas de la zona)', latest && !lacking.length ? 'ok' : 'falta', detail, `scripts/publicar-version.mts --sin-aviso (${GUIDE}, sección 0)`)
   }
 
   // El acceso con codigo: lo que dice Supabase Auth en publico (/auth/v1/settings).

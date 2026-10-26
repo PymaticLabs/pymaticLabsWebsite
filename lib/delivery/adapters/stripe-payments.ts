@@ -28,6 +28,7 @@ export class StripePayments implements Payments {
   readonly name = 'stripe'
   private stripe: Stripe
   private prices = new Map<string, string>()
+  private portalConfiguration: string | null = null
 
   constructor(env: Record<string, string | undefined>) {
     this.stripe = new Stripe(requireEnv(env, 'STRIPE_SECRET_KEY'), { maxNetworkRetries: 2 })
@@ -49,8 +50,20 @@ export class StripePayments implements Payments {
     return { id: session.id, url: session.url, expiresAt: session.expires_at }
   }
 
+  /**
+   * Con la configuracion del portal que crea scripts/stripe-setup.mts (metadata cerebro=portal). Sin
+   * pasarla, Stripe usa la del panel: en vivo falla si nunca se guardo, o deja cambiar el NIF y no
+   * ofrece los planes. Sin la nuestra no se abre ninguna (la comprobacion de produccion lo avisa).
+   */
   async createPortalSession(customerId: string, returnUrl: string) {
-    const portal = await call('portal', () => this.stripe.billingPortal.sessions.create({ customer: customerId, return_url: returnUrl }))
+    if (!this.portalConfiguration) {
+      const list = await call('portal', () => this.stripe.billingPortal.configurations.list({ active: true, limit: 100 }))
+      const ours = list.data.find((c) => c.metadata?.cerebro === 'portal')
+      if (!ours) throw new PermanentError('Stripe no tiene la configuracion del portal (scripts/stripe-setup.mts)')
+      this.portalConfiguration = ours.id
+    }
+    const configuration = this.portalConfiguration
+    const portal = await call('portal', () => this.stripe.billingPortal.sessions.create({ customer: customerId, return_url: returnUrl, configuration }))
     return portal.url
   }
 
