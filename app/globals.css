@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+/* Pantallas bajas de ordenador (con el escalado de Windows al 125-175 % quedan de 500 a 760 px de alto
+   tras las barras del navegador): la portada de la home aprieta el titular para que los botones se vean. */
+@custom-variant low (@media (min-width: 640px) and (max-height: 760px));
+
 /* Marca Pymatic Labs (knowledge/01_Empresa/identidad-y-marca.md): azul #0463FE, negro y fondo blanco. */
 @theme {
   --color-brand: #0463FE;
@@ -8,22 +13,74 @@
   --color-brand-light: #6AA4FF;
   --color-ink: #000000;
   --color-body: #333842;
-  --color-muted: #6B7280;
-  --color-line: #E5E7EB;
+  --color-muted: #4F5867; /* 7,2:1 sobre blanco y 4,6:1 o mas sobre lo mas marcado del hilo del fondo */
+  --color-line: #E5E7EB; /* separadores */
+  --color-field: #7F8794; /* borde de campos y botones de contorno: 3,6:1 sobre blanco */
+  --color-danger: #B91C1C; /* errores: 6,5:1 sobre blanco */
   --color-paper: #FFFFFF;
   --color-paper-2: #F6F7F9;
+  /* Franjas de seccion: sobre el blanco se ven como paper-2, pero dejan pasar el hilo del fondo. */
+  --color-band: rgb(242 244 246 / 0.7);
+  --color-surface: #FFFFFF; /* tarjetas y paneles sobre el fondo */
+  --color-inverse: #000000; /* bloques oscuros con texto blanco (pie, cierre) */
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-atkinson-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Los textos pequenos, un punto mas grandes que los de Tailwind (12 y 14 px): se leen sin esfuerzo. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.55;
 }
 
-* {
-  border-color: var(--color-line);
+/* Modo oscuro: los mismos tokens con otros valores. El azul de marca se queda igual. */
+.dark {
+  --color-brand-soft: #0C1A36;
+  --color-ink: #F3F5F9;
+  --color-body: #C3C9D4;
+  --color-muted: #8A93A3;
+  --color-line: #1E2636;
+  --color-field: #646E7F; /* 3,7:1 sobre las superficies oscuras */
+  --color-danger: #F87171; /* 7:1 sobre el fondo oscuro */
+  --color-paper: #070A12;
+  --color-paper-2: #0E1320;
+  --color-band: rgb(17 23 38 / 0.7);
+  --color-surface: #0C111C;
+  --color-inverse: #111A2C;
 }
 
+/* Sobre fondo oscuro el texto azul necesita algo mas de luz para leerse bien. */
+.dark .text-brand {
+  color: var(--color-brand-light);
+}
+
+@layer base {
+  /* Dentro de la capa base, para que las utilidades de color de borde ganen. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-line);
+    /* El hueco entre un elemento y su anillo de foco, del color del fondo (no blanco en el modo oscuro). */
+    --tw-ring-offset-color: var(--color-paper);
+  }
+
+  /* Foco del teclado bien visible en enlaces y botones (los componentes con su propio anillo lo quitan). */
+  :focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 3px;
+  }
+
+  /* Sobre fondos oscuros (el modo oscuro, el pie y los bloques en negro), el azul claro: 7:1 o mas. */
+  .dark :focus-visible,
+  .bg-inverse :focus-visible {
+    outline-color: var(--color-brand-light);
+  }
+}
+
+/* Sin scroll suave global: Next anima con el cada cambio de pagina. Quien lo quiera lo pide al desplazar. */
 html {
   background-color: var(--color-paper);
   color-scheme: light;
-  scroll-behavior: smooth;
   scroll-padding-top: 5rem;
 }
 
@@ -33,21 +90,205 @@ body {
   font-family: var(--font-sans);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+html.dark {
+  color-scheme: dark;
+}
+
+/* Fondo de todas las paginas: el mismo hilo que dibuja el sello del Cerebro Digital, muy suave, en dos
+   remansos de luz (arriba a la derecha y abajo a la izquierda) que dejan limpio el centro, donde va el
+   texto. Va fijo a la pantalla y el contenido pasa por encima. La tesela es una curva de Hilbert de orden 4
+   en celdas de 28 px (como el hilo del sello, ver cerebro-icon.tsx) que va de abajo a la izquierda a abajo
+   a la derecha, con medio paso hasta cada borde: las teselas de una fila forman un solo hilo. Lleva un nodo en
+   algunas vueltas. Se genero una vez y va como mascara (negro con alfa): el color lo pone cada tema. Sin
+   JS ni imagenes. Los remansos miden segun el lado largo de la pantalla, pero no pasan de una parte del
+   alto: en las pantallas bajas y anchas (un portatil con el escalado de Windows) no llegan al centro.
+   En claro, el hilo llega a un 23 % de azul en lo mas marcado (los nodos tambien) y la luz de las
+   esquinas a un 7 %: el texto normal y el gris siguen por encima de 4,5:1, y el azul de los textos
+   pequenos pasa al azul hondo de la marca (ver mas abajo), que sobre el hilo tambien. */
+:root {
+  --thread-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='448' height='448'%3E%3Cpath d='M0 434H14h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h56v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-84h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-28h-56v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-28v-56h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h28v-28h28v28h56v-28h-28v-28h28v-28h-56v28h-28v-56h28v-28h-28v-56h28v28h28v-28h28v56h-28v28h84v-28h-28v-56h28v28h28v-28h28v56h-28v28h28v56h-28v-28h-56v28h28v28h-28v28h56v-28h28v56h-28v28h28v56h-28v-28h-28v28h-28v-56h28v-28h-56v28h-28v-28h-56v28h28v28h-28v28h56v-28h28v84h-28v-28h-56v28h28v28h-28v28h56v-28h28v28h56v-28h-28v-56h28v28h28v-28h28v56h-28v28h28H448' fill='none' stroke='%23000' stroke-opacity='0.6' stroke-width='1.5'/%3E%3Cg fill-opacity='.6'%3E%3Ccircle cx='42' cy='434' r='2.2'/%3E%3Ccircle cx='42' cy='406' r='2.2'/%3E%3Ccircle cx='210' cy='322' r='2.2'/%3E%3Ccircle cx='126' cy='238' r='2.2'/%3E%3Ccircle cx='98' cy='322' r='2.2'/%3E%3Ccircle cx='70' cy='322' r='2.2'/%3E%3Ccircle cx='98' cy='126' r='2.2'/%3E%3Ccircle cx='14' cy='70' r='2.2'/%3E%3Ccircle cx='154' cy='70' r='2.2'/%3E%3Ccircle cx='126' cy='126' r='2.2'/%3E%3Ccircle cx='126' cy='154' r='2.2'/%3E%3Ccircle cx='126' cy='210' r='2.2'/%3E%3Ccircle cx='434' cy='70' r='2.2'/%3E%3Ccircle cx='406' cy='98' r='2.2'/%3E%3Ccircle cx='434' cy='98' r='2.2'/%3E%3Ccircle cx='406' cy='126' r='2.2'/%3E%3Ccircle cx='378' cy='294' r='2.2'/%3E%3Ccircle cx='378' cy='350' r='2.2'/%3E%3Ccircle cx='406' cy='406' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+  --thread-tile-size: 448px;
+  --thread-color: rgb(4 99 254 / 0.38);
+  --thread-pools:
+    radial-gradient(circle at 100% 0, #000, rgb(0 0 0 / 0.8) min(26vmax, 46vh), transparent min(64vmax, 110vh)),
+    radial-gradient(circle at 0 100%, #000, rgb(0 0 0 / 0.75) min(24vmax, 42vh), transparent min(58vmax, 100vh));
+  /* La luz de las esquinas, en partes del color del hilo (0,18 de 0,38 es un 7 % de azul). */
+  --thread-glow:
+    radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.18), transparent min(52vmax, 96vh)),
+    radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.14), transparent min(48vmax, 88vh));
+}
+/* En oscuro, el hilo en el azul claro y aun mas tenue: las paginas dejan de ser planas sin ruido. */
+html.dark {
+  --thread-color: rgb(106 164 255 / 0.26);
+  --thread-glow:
+    radial-gradient(circle at 100% 0, rgb(0 0 0 / 0.45), transparent min(40vmax, 74vh)),
+    radial-gradient(circle at 0 100%, rgb(0 0 0 / 0.32), transparent min(36vmax, 66vh));
+}
+
+/* body aisla su fondo: asi el fondo fijo (z-index -1) queda encima de su color y debajo de todo lo demas. */
+body {
+  isolation: isolate;
+}
+/* El hilo y su luz en una sola capa fija: el color del tema, recortado por la tesela cortada (intersect)
+   por la suma de los dos remansos, y encima la luz de las esquinas, para que el blanco no sea plano. Los
+   prefijos los pone la build. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--thread-color);
+  mask-image: var(--thread-glow), var(--thread-tile), var(--thread-pools);
+  mask-size: 100% 100%, 100% 100%, var(--thread-tile-size), 100% 100%, 100% 100%;
+  mask-repeat: no-repeat, no-repeat, repeat, no-repeat, no-repeat;
+  mask-composite: add, add, intersect, add, add;
+}
+
+/* ---- Home: movimiento con sentido, una vez y sin bucles. Sin JS o con "reducir movimiento", todo se ve
+   quieto y entero desde el principio. ---- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes enter-x {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: none;
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+/* El si del permiso llama la atencion dos veces y se para. */
+@keyframes nudge {
+  50% {
+    box-shadow: 0 0 0 7px rgb(4 99 254 / 0.22);
+  }
+}
+@keyframes scroll-zoom {
+  from {
+    transform: scale(0.92);
   }
 }
 
-@keyframes fadeUp {
-  from {
+/* Apariciones al entrar en pantalla: [data-reveal] lo marca components/home/reveals.tsx con data-shown.
+   Dentro, los .enter (los dibujos de las baldosas, los pasos) entran despues, cada uno con su --d. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    transition:
+      opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0s),
+      transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0s);
+  }
+  html.js [data-reveal]:not([data-shown]) {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(32px);
   }
-  to {
-    opacity: 1;
-    transform: none;
+  html.js [data-reveal='zoom']:not([data-shown]) {
+    transform: scale(0.9);
   }
+  html.js [data-reveal]:not([data-shown]) .enter {
+    opacity: 0;
+  }
+  html.js [data-reveal][data-shown] .enter {
+    animation: enter-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--delay, 0s) + var(--d, 0s)) both;
+  }
+  html.js [data-reveal][data-shown] .enter-x {
+    animation-name: enter-x;
+  }
+  html.js [data-reveal]:not([data-shown]) .grow-x {
+    transform: scaleX(0);
+  }
+  html.js [data-reveal][data-shown] .grow-x {
+    transform-origin: left;
+    animation: grow-x 1.6s cubic-bezier(0.45, 0, 0.2, 1) calc(var(--delay, 0s) + var(--d, 0s)) both;
+  }
+
+  /* Trazos que se dibujan (con pathLength="1"): el hilo de la portada al cargar, el sello al aparecer. */
+  .draw-on-load {
+    stroke-dasharray: 1;
+    animation: draw 3.6s cubic-bezier(0.45, 0, 0.2, 1) 0.2s both;
+  }
+  html.js [data-reveal]:not([data-shown]) .draw-path {
+    stroke-dashoffset: 1;
+  }
+  html.js [data-reveal][data-shown] .draw-path {
+    animation: draw 2.8s cubic-bezier(0.45, 0, 0.2, 1) var(--delay, 0s) both;
+  }
+
+  /* La conversacion de la portada, tapada hasta que empieza (ver hero-chat.tsx). */
+  html.js [data-chat]:not([data-ready]) [data-chat-body] {
+    visibility: hidden;
+  }
+
+  /* El producto crece un poco al subirlo a la vista, donde el navegador sabe ligar animaciones al scroll. */
+  @supports (animation-timeline: view()) {
+    .scroll-zoom {
+      animation: scroll-zoom linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+}
+.draw-path,
+.draw-on-load {
+  stroke-dasharray: 1;
+}
+
+/* El parrafo que se enciende al bajar (manifesto.tsx): cada palabra, por su sitio (--i de --n), segun lo
+   que se ha bajado (--p, de 0 a 1). Sin JS, --p vale 1 y todo se ve encendido. */
+.manifesto {
+  --p: 1;
+}
+.manifesto > span {
+  opacity: clamp(0.14, calc(var(--p) * (var(--n) + 6) - var(--i)), 1);
+  transition: opacity 0.2s linear;
+}
+
+/* Titulares con el degradado de la marca: sobre blanco, todos los tonos por encima de 3:1. */
+.text-gradient {
+  background-image: linear-gradient(100deg, #0350d0 0%, #0463fe 45%, #0b8bd9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .text-gradient,
+.bg-inverse .text-gradient {
+  background-image: linear-gradient(100deg, #6aa4ff 0%, #93c5fd 50%, #7dd3fc 100%);
 }
 
 /* Textos largos renderizados desde Markdown (content/legal). */
@@ -86,6 +327,9 @@ body {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.dark .prose-content a {
+  color: var(--color-brand-light);
+}
 .prose-content strong {
   color: var(--color-ink);
 }
@@ -113,8 +357,46 @@ body {
   padding: 0.5rem 0.75rem;
   text-align: left;
   vertical-align: top;
+  /* Las palabras largas se cortan con guion y los correos se parten: la tabla cabe en el movil sin
+     ensanchar la pagina. Solo palabras de 6 letras o mas, con 3 a cada lado (donde el navegador no
+     sabe poner guiones, la palabra se parte sin el). */
+  overflow-wrap: break-word;
+  hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
 }
 .prose-content th {
   background: var(--color-paper-2);
   color: var(--color-ink);
 }
+@media (max-width: 639px) {
+  /* En el movil, columnas del mismo ancho: el ancho no lo decide la palabra mas larga. */
+  .prose-content table {
+    font-size: 0.875rem;
+    table-layout: fixed;
+  }
+  .prose-content th,
+  .prose-content td {
+    padding: 0.5rem;
+  }
+}
+
+/* En claro, el azul de los textos (en toda la web, sobre el hilo del fondo), un punto mas hondo: 6,4:1
+   sobre blanco y 5,2:1 encima de lo mas marcado del hilo. */
+html:not(.dark) .text-brand,
+html:not(.dark) .prose-content a {
+  color: var(--color-brand-dark);
+}
+
+/* La barra de arriba, para quien ya entro en la zona en este navegador (la pista de lib/zone-profile.ts):
+   mientras pregunta la sesion, un circulo neutro donde ira su perfil en vez de Entrar. Sin la pista, o
+   en cuanto se sabe que no hay sesion, Entrar. */
+.nav-ghost {
+  visibility: hidden;
+}
+html[data-socio='1'] .nav-ghost {
+  visibility: visible;
+}
+html[data-socio='1'] .nav-login {
+  visibility: hidden;
+}
+

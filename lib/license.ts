@@ -26,7 +26,17 @@ export interface LicenseData {
   equipo: boolean
   emitida: string // AAAA-MM-DD
   soporte_hasta: string // AAAA-MM-DD, incluido
+  /**
+   * El identificador del pago de Stripe (pi_... o in_...). Campo nuevo, opcional: licencia.py de
+   * hoy solo acepta los siete de arriba, asi que solo se pone cuando el esqueleto lo acepte
+   * (cambio de Eric, docs/entrega-automatica.md). Sin el, el fichero es byte a byte el de siempre.
+   */
+  pago?: string
 }
+
+const FIELDS = 'cliente,emitida,equipo,id,modalidad,nif,soporte_hasta'
+const FIELDS_WITH_PAYMENT = 'cliente,emitida,equipo,id,modalidad,nif,pago,soporte_hasta'
+const PAYMENT_RE = /^[A-Za-z0-9_]{3,255}$/
 
 export interface LicenseDocument {
   formato: number
@@ -67,6 +77,8 @@ export function serializeLicense(doc: LicenseDocument): string {
       equipo: doc.licencia.equipo,
       emitida: doc.licencia.emitida,
       soporte_hasta: doc.licencia.soporte_hasta,
+      // undefined no se escribe: sin pago, el fichero no cambia
+      pago: doc.licencia.pago,
     },
     firma: doc.firma,
   }
@@ -105,7 +117,7 @@ export function publicKeyFromRaw(publicBase64: string): KeyObject {
 }
 
 export function rawPublicKey(key: KeyObject): string {
-  const der = createPublicKey(key).export({ format: 'der', type: 'spki' })
+  const der = (key.type === 'public' ? key : createPublicKey(key)).export({ format: 'der', type: 'spki' })
   return der.subarray(der.length - 32).toString('base64')
 }
 
@@ -129,10 +141,20 @@ export function validateLicense(data: LicenseData): void {
     throw new LicenseError('emitida y soporte_hasta: tienen que ser fechas AAAA-MM-DD')
   }
   if (data.soporte_hasta < data.emitida) throw new LicenseError('soporte_hasta es anterior a emitida')
+  if (data.pago !== undefined && (typeof data.pago !== 'string' || !PAYMENT_RE.test(data.pago))) {
+    throw new LicenseError('pago: tiene que ser un identificador de Stripe')
+  }
 }
 
-/** verificar() de licencia.py: la firma primero, los campos despues. */
-export function verifyLicense(text: string, publicBase64: string = LICENSES_PUBLIC_KEY): LicenseData {
+/**
+ * verificar() de licencia.py: la firma primero, los campos despues. Con allowPayment, acepta
+ * ademas el campo pago (lo que hara licencia.py cuando Eric lo anada); sin el, como hoy.
+ */
+export function verifyLicense(
+  text: string,
+  publicBase64: string = LICENSES_PUBLIC_KEY,
+  { allowPayment = false }: { allowPayment?: boolean } = {}
+): LicenseData {
   let doc: LicenseDocument
   try {
     doc = JSON.parse(text)
@@ -149,9 +171,24 @@ export function verifyLicense(text: string, publicBase64: string = LICENSES_PUBL
     throw new LicenseError('la firma no cuadra con la clave de licencias')
   }
   const fields = Object.keys(doc.licencia).sort().join()
-  if (fields !== 'cliente,emitida,equipo,id,modalidad,nif,soporte_hasta') throw new LicenseError(`campos: ${fields}`)
+  if (fields !== FIELDS && !(allowPayment && fields === FIELDS_WITH_PAYMENT)) throw new LicenseError(`campos: ${fields}`)
   validateLicense(doc.licencia)
   return doc.licencia
+}
+
+/** Los datos de la licencia sin campos vacios: pago solo si viene (canonical() lo firma tal cual). */
+export function licenseFields(data: LicenseData): LicenseData {
+  const license: LicenseData = {
+    id: data.id,
+    cliente: data.cliente.trim(),
+    nif: data.nif.trim(),
+    modalidad: data.modalidad,
+    equipo: data.equipo,
+    emitida: data.emitida,
+    soporte_hasta: data.soporte_hasta,
+  }
+  if (data.pago !== undefined) license.pago = data.pago
+  return license
 }
 
 /**
@@ -164,7 +201,7 @@ export function signLicense(
   seedBase64: string,
   expectedPublic: string = LICENSES_PUBLIC_KEY
 ): { text: string; fileName: string } {
-  const license: LicenseData = { ...data, cliente: data.cliente.trim(), nif: data.nif.trim() }
+  const license = licenseFields(data)
   validateLicense(license)
   const privateKey = privateKeyFromSeed(seedBase64)
   if (rawPublicKey(privateKey) !== expectedPublic) {
@@ -172,7 +209,7 @@ export function signLicense(
   }
   const signature = sign(null, canonical(license), privateKey).toString('base64')
   const text = serializeLicense({ formato: LICENSE_FORMAT, licencia: license, firma: signature })
-  verifyLicense(text, expectedPublic)
+  verifyLicense(text, expectedPublic, { allowPayment: license.pago !== undefined })
   return { text, fileName: licenseFileName(license.cliente) }
 }
 

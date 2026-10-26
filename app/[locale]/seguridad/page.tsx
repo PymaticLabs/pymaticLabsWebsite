@@ -40,7 +40,8 @@ export default async function SeguridadPage({
 
   return (
     <>
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft to-white">
+      {/* El degradado deja ver el hilo del fondo (ver body::before en globals.css) */}
+      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader as="h1" eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} className="mb-0" />
         </div>
@@ -53,7 +54,7 @@ export default async function SeguridadPage({
               <ShieldCheck className="h-6 w-6 text-brand" aria-hidden="true" />
               {t('promiseTitle')}
             </h2>
-            <blockquote className="rounded-2xl bg-ink p-6 sm:p-8 text-lg leading-relaxed text-white/90">
+            <blockquote className="rounded-2xl bg-inverse p-6 sm:p-8 text-lg leading-relaxed text-white/90">
               “{tPromise('quote')}”
             </blockquote>
           </div>
@@ -104,7 +105,7 @@ export default async function SeguridadPage({
         </div>
       </section>
 
-      <section className="py-16 bg-paper-2" id="vulnerabilidades">
+      <section className="py-16 bg-band" id="vulnerabilidades">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <h2 className="text-3xl font-bold tracking-tight text-ink">{t('policyTitle')}</h2>

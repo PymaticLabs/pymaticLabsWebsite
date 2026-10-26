@@ -24,7 +24,7 @@
 
 ## Pages
 - Home: https://pymaticlabs.com/ (English: https://pymaticlabs.com/en)
-- How it works: https://pymaticlabs.com/como-funciona
+- Features: https://pymaticlabs.com/funciones
 - Pricing: https://pymaticlabs.com/precios
 - Security and privacy: https://pymaticlabs.com/seguridad
 - Contact: https://pymaticlabs.com/contacto

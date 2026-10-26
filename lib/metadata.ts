@@ -2,6 +2,11 @@ import type { Metadata } from 'next'
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pymaticlabs.com'
 
+/** La imagen al compartir un enlace (WhatsApp, LinkedIn...): el sello, el titular de la home y una pregunta de ejemplo, en cada idioma. */
+export function ogImage(locale: string) {
+  return locale === 'en' ? '/og-image-en.png' : '/og-image.png'
+}
+
 interface PageMetadataOptions {
   title: string | { absolute: string }
   description: string
@@ -16,7 +21,7 @@ export function generatePageMetadata({
   description,
   path = '',
   locale = 'es',
-  image = '/og-image.png',
+  image = ogImage(locale),
   noindex = false,
 }: PageMetadataOptions): Metadata {
   const url = locale === 'es' ? path || '/' : `/en${path}`

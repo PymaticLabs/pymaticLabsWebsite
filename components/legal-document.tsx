@@ -1,18 +1,19 @@
 import { getTranslations } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { renderContent } from '@/lib/markdown'
+import { LEGAL_VERSIONS as VERSIONS, type LegalDocumentId } from '@/lib/legal-versions'
 
-export type LegalDocumentId =
-  | 'aviso-legal'
-  | 'politica-privacidad'
-  | 'politica-cookies'
-  | 'condiciones'
-  | 'privacidad-producto'
+// Las fechas de cada version viven en lib/legal-versions.ts (la de las condiciones va tambien en
+// cada compra).
+export type { LegalDocumentId }
 
 // Todos los textos legales son borradores hasta que los revise un abogado (traspaso, seccion 6).
 export default async function LegalDocument({ id, locale }: { id: LegalDocumentId; locale: string }) {
   const t = await getTranslations({ locale, namespace: 'legal' })
   const { html, fallback } = renderContent('legal', locale, id)
+  const date = new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(VERSIONS[id])
+  )
 
   return (
     <div className="pt-32 pb-20">
@@ -21,7 +22,7 @@ export default async function LegalDocument({ id, locale }: { id: LegalDocumentI
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">{t(`titles.${id}`)}</h1>
           <Badge variant="accent">{t('draftBadge')}</Badge>
         </div>
-        <p className="text-sm text-muted">{t('lastUpdated')}</p>
+        <p className="text-sm text-muted">{t('lastUpdated', { date })}</p>
         <p className="mt-4 rounded-xl bg-paper-2 px-4 py-3 text-sm text-body">{t('draftNote')}</p>
         {fallback && (
           <p className="mt-3 rounded-xl border border-brand/20 bg-brand-soft px-4 py-3 text-sm text-ink" lang="en">

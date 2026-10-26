@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CircleCheck } from 'lucide-react'
+import { CircleAlert, CircleCheck } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
 import { CONTACT_INTERESTS, type ContactInterest } from '@/lib/contact'
 
@@ -151,7 +151,8 @@ export default function ContactForm({ defaultInterest }: { defaultInterest?: Con
         />
       </div>
       {error && (
-        <p className="text-red-600 text-sm" role="alert">
+        <p className="flex gap-2 text-base text-danger" role="alert">
+          <CircleAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           {error}
         </p>
       )}

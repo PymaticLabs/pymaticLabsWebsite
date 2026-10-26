@@ -1,4 +1,4 @@
-// Oferta del Cerebro Digital, v1.3 (knowledge/11_Comercial/oferta-del-cerebro-digital.md).
+// Oferta del Cerebro Digital, v1.5 (knowledge/11_Comercial/oferta-del-cerebro-digital.md).
 // Precios sin IVA. En Norteamerica, los mismos numeros en USD.
 // Si cambia la oferta, se cambia aqui y en ningun otro sitio.
 

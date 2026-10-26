@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Hero from '@/components/home/hero'
-import WhatIs from '@/components/home/what-is'
-import Features from '@/components/home/features'
-import Different from '@/components/home/different'
-import PrivacyPromise from '@/components/home/promise'
-import HowToBuy from '@/components/home/how-to-buy'
+import Manifesto from '@/components/home/manifesto'
+import Story from '@/components/home/story'
+import Bento from '@/components/home/bento'
+import Privacy from '@/components/home/privacy'
+import Steps from '@/components/home/steps'
 import PricingTeaser from '@/components/home/pricing-teaser'
-import FaqList from '@/components/faq-list'
-import FinalCta from '@/components/final-cta'
+import Faq from '@/components/home/faq'
+import Closing from '@/components/home/closing'
+import Reveals from '@/components/home/reveals'
 import { generatePageMetadata } from '@/lib/metadata'
 import { getOrganizationSchema, getProductSchema, getWebSiteSchema } from '@/lib/schemas'
 
@@ -26,14 +27,18 @@ export async function generateMetadata({
   })
 }
 
+// La home, como la pagina de un producto: el producto funcionando (la conversacion), lo que pasa hoy en la
+// empresa, las tareas contadas con el chat, todo lo que lee, la privacidad, como se empieza, el precio, las
+// dudas y quienes estan detras. Cada seccion es una idea, con aire y movimiento con sentido.
 export default async function HomePage({
   params,
 }: {
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'faq' })
+  setRequestLocale(locale)
   const tMeta = await getTranslations({ locale, namespace: 'meta' })
+  const t = await getTranslations({ locale, namespace: 'home.manifesto' })
   const schemas = [
     getOrganizationSchema(),
     getWebSiteSchema(),
@@ -50,14 +55,15 @@ export default async function HomePage({
         />
       ))}
       <Hero />
-      <WhatIs />
-      <Features />
-      <Different />
-      <PrivacyPromise />
-      <HowToBuy />
+      <Manifesto problem={t('problem')} promise={t('promise')} />
+      <Story />
+      <Bento />
+      <Privacy />
+      <Steps />
       <PricingTeaser />
-      <FaqList title={t('title')} items={t.raw('items')} id="faq" />
-      <FinalCta />
+      <Faq />
+      <Closing />
+      <Reveals />
     </>
   )
 }

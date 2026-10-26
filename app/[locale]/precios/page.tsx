@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
-import { isCheckoutOpen, paymentLinks } from '@/lib/checkout'
+import { isCheckoutOpen } from '@/lib/checkout'
 import {
   CUSTOM_FROM_PRICE,
   PACK_ESPANA_PRICE,
@@ -50,11 +50,12 @@ export default async function PreciosPage({
 
   return (
     <>
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft to-white">
+      {/* El degradado deja ver el hilo del fondo (ver body::before en globals.css) */}
+      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader as="h1" eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} />
+          <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
-          <div className="mb-8 rounded-2xl border border-brand/20 bg-white p-5 sm:flex sm:items-center sm:justify-between gap-6">
+          <div className="mb-8 rounded-2xl border border-brand/20 bg-surface p-5 sm:flex sm:items-center sm:justify-between gap-6">
             <p className="font-semibold text-ink">{tOffer('launchNote')}</p>
             <ul className="mt-3 sm:mt-0 flex flex-wrap gap-x-5 gap-y-1">
               <li className="text-sm text-muted">{t('includedTitle')}:</li>
@@ -104,10 +105,10 @@ export default async function PreciosPage({
       </section>
 
       {/* Mensual */}
-      <section className="py-16 sm:py-20 bg-paper-2" id="mensual">
+      <section className="py-16 sm:py-20 bg-band" id="mensual">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader title={t('monthly.title')} subtitle={t('monthly.subtitle')} />
-          <div className="overflow-x-auto rounded-2xl border border-line bg-white">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-line">
@@ -191,7 +192,7 @@ export default async function PreciosPage({
         </div>
       </section>
 
-      <FaqList title={t('faqTitle')} items={t.raw('faq')} className="py-16 sm:py-20 bg-paper-2" />
+      <FaqList title={t('faqTitle')} items={t.raw('faq')} className="py-16 sm:py-20 bg-band" />
     </>
   )
 }
@@ -206,27 +207,33 @@ function BuyAction({
   t: Awaited<ReturnType<typeof getTranslations<'pricing'>>>
 }) {
   const contactHref = `${localePath(locale, '/contacto')}?interes=${modality.id}`
-  const paymentLink = paymentLinks()[modality.id]
 
-  // Hazlo tu: enlace de pago de Stripe. Acompañado: factura de Holded primero.
-  if (isCheckoutOpen() && (modality.guided || paymentLink)) {
+  // Pago con Stripe Checkout, creado por el servidor (/api/checkout). En el Acompañado, antes se
+  // elige la primera sesión y con quién (/comprar/<modalidad>).
+  if (isCheckoutOpen()) {
     return (
       <div className="space-y-2">
-        <p className="text-xs text-muted">{modality.guided ? t('payWith.invoice') : t('payWith.card')}</p>
-        <Button className="w-full" asChild>
-          {modality.guided || !paymentLink ? (
-            <Link href={contactHref}>{t('requestInvoice')}</Link>
-          ) : (
-            <a href={paymentLink.url}>{t('buy')}</a>
-          )}
-        </Button>
+        <p className="text-xs text-muted">{t('payWith.card')}</p>
+        {modality.guided ? (
+          <Button className="w-full" asChild>
+            <Link href={localePath(locale, `/comprar/${modality.id}`)}>{t('chooseSession')}</Link>
+          </Button>
+        ) : (
+          <form action="/api/checkout" method="post">
+            <input type="hidden" name="product" value={modality.id} />
+            <input type="hidden" name="locale" value={locale} />
+            <Button className="w-full" type="submit">
+              {t('buy')}
+            </Button>
+          </form>
+        )}
       </div>
     )
   }
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted">{modality.guided ? t('payWith.invoice') : t('payWith.card')}</p>
+      <p className="text-xs text-muted">{t('payWith.card')}</p>
       <Button className="w-full" variant="outline" disabled>
         {t('comingSoon')}
       </Button>
