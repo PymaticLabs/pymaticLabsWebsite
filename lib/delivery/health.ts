@@ -454,7 +454,7 @@ const MANUAL: [string, string][] = [
   ['Stripe: la URL de las condiciones y de la privacidad en Public details (la pide la casilla del pago)', `${GUIDE}, 3.4, paso 2`],
   ['Holded: Verifactu activo; las facturas quedan en borrador hasta confirmar que aprobar por la API lo registra', `${GUIDE}, 3.5`],
   ['Cal.com: los dos eventos sin «requiere confirmación», con videollamada', `${GUIDE}, 3.6`],
-  ['Vercel: región fra1 y los secretos de producción Sensitive y solo en Production', `${GUIDE}, 3.7`],
+  ['Vercel: región dub1 (Dublín, junto a Supabase) y los secretos de producción Sensitive y solo en Production', `${GUIDE}, 3.7`],
 ]
 
 /**
