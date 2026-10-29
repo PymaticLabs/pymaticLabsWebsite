@@ -166,7 +166,7 @@ export default function Bento() {
                   <p className="enter ml-auto w-fit max-w-[90%] rounded-2xl rounded-br-md bg-brand px-3 py-2 text-white" style={delay(0.2)}>
                     {t('mobile.q')}
                   </p>
-                  <p className="enter w-fit max-w-[90%] rounded-2xl rounded-bl-md bg-[#EDEEF1] px-3 py-2 text-ink dark:bg-[#1C2230]" style={delay(0.7)}>
+                  <p className="enter w-fit max-w-[90%] rounded-2xl rounded-bl-md bg-bubble px-3 py-2 text-ink" style={delay(0.7)}>
                     {t('mobile.a')}
                   </p>
                 </div>

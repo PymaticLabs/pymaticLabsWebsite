@@ -38,6 +38,20 @@ export default function Navbar({ zone }: { zone: boolean }) {
   const [accountOpen, setAccountOpen] = useState(false)
   const loginRef = useRef<HTMLAnchorElement>(null)
   const focusLogin = useRef(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const mobileMenuId = useId()
+
+  // Con el menu del movil abierto, Escape lo cierra y devuelve el foco al boton que lo abrio.
+  useEffect(() => {
+    if (!isMobileOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setIsMobileOpen(false)
+      menuButtonRef.current?.focus()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [isMobileOpen])
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10)
@@ -211,6 +225,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
           )}
 
           <button
+            ref={menuButtonRef}
             className="md:hidden p-2.5 text-ink"
             onClick={() => {
               setIsMobileOpen(!isMobileOpen)
@@ -218,14 +233,16 @@ export default function Navbar({ zone }: { zone: boolean }) {
             }}
             aria-label={isMobileOpen ? t('closeMenu') : t('openMenu')}
             aria-expanded={isMobileOpen}
+            aria-controls={isMobileOpen ? mobileMenuId : undefined}
           >
             {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </nav>
 
+      {/* Con el movil en horizontal (o con la letra muy grande) puede no caber: se desplaza dentro */}
       {isMobileOpen && (
-        <div className="md:hidden bg-surface border-t border-line px-4 py-4 space-y-1">
+        <div id={mobileMenuId} className="md:hidden max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-surface border-t border-line px-4 py-4 space-y-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}

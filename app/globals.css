@@ -23,6 +23,7 @@
   --color-band: rgb(242 244 246 / 0.7);
   --color-surface: #FFFFFF; /* tarjetas y paneles sobre el fondo */
   --color-inverse: #000000; /* bloques oscuros con texto blanco (pie, cierre) */
+  --color-bubble: #EDEEF1; /* las respuestas del cerebro en los chats de la home */
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-atkinson-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -47,6 +48,7 @@
   --color-band: rgb(17 23 38 / 0.7);
   --color-surface: #0C111C;
   --color-inverse: #111A2C;
+  --color-bubble: #1C2230;
 }
 
 /* Sobre fondo oscuro el texto azul necesita algo mas de luz para leerse bien: tambien el de pasar el
@@ -210,6 +212,15 @@ body::before {
     box-shadow: 0 0 0 7px rgb(4 99 254 / 0.22);
   }
 }
+/* El seguro de las apariciones: todo a la vista, sea cual sea su forma de esperar (ver mas abajo). */
+@keyframes reveal-failsafe {
+  to {
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+    visibility: visible;
+  }
+}
 @keyframes scroll-zoom {
   from {
     transform: scale(0.92);
@@ -263,6 +274,18 @@ body::before {
   /* La conversacion de la portada, tapada hasta que empieza (ver hero-chat.tsx). */
   html.js [data-chat]:not([data-ready]) [data-chat-body] {
     visibility: hidden;
+  }
+
+  /* Por si el JS tarda (una red lenta) o falla: lo que espera a aparecer se ve igual a los 3 s, ya
+     entero. Las apariciones dejan de esperar cuando reveals.tsx pone data-reveals en <html> (con lo que
+     ya esta a la vista marcado como visto, para que no se vuelva a tapar), y la conversacion cuando
+     hero-chat.tsx pone data-ready. Con el JS a tiempo, el seguro no llega a saltar. */
+  html.js:not([data-reveals]) [data-reveal]:not([data-shown]),
+  html.js:not([data-reveals]) [data-reveal]:not([data-shown]) :is(.enter, .grow-x, .draw-path) {
+    animation: reveal-failsafe 0.6s ease-out 3s forwards;
+  }
+  html.js [data-chat]:not([data-ready]) [data-chat-body] {
+    animation: reveal-failsafe 0s 3s forwards;
   }
 
   /* El producto crece un poco al subirlo a la vista, donde el navegador sabe ligar animaciones al scroll. */

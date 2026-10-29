@@ -34,8 +34,8 @@ export function ChatWindow({
   return (
     <div
       className={cn(
-        'flex flex-col overflow-hidden rounded-[28px] border border-black/[0.06] bg-white/95 text-left shadow-[0_40px_100px_-30px_rgb(4_40_120/0.35)] backdrop-blur-xl',
-        'dark:border-white/10 dark:bg-[#0C111C]/95 dark:shadow-[0_40px_100px_-30px_rgb(0_0_0/0.8)]',
+        'flex flex-col overflow-hidden rounded-[28px] border border-black/[0.06] bg-surface/95 text-left shadow-[0_40px_100px_-30px_rgb(4_40_120/0.35)]',
+        'dark:border-white/10 dark:shadow-[0_40px_100px_-30px_rgb(0_0_0/0.8)]',
         className
       )}
     >
@@ -89,7 +89,7 @@ export function Answer({ children, pop }: { children: React.ReactNode; pop?: boo
   return (
     <div className={cn('flex items-end gap-2', pop && POP)}>
       <CerebroIcon className="mb-0.5 h-7 w-7" />
-      <div className="max-w-[85%] rounded-[22px] rounded-bl-md bg-[#EDEEF1] px-4 py-2.5 text-[15px] leading-snug text-ink dark:bg-[#1C2230] sm:text-base">
+      <div className="max-w-[85%] rounded-[22px] rounded-bl-md bg-bubble px-4 py-2.5 text-[15px] leading-snug text-ink sm:text-base">
         {children}
       </div>
     </div>
@@ -104,7 +104,7 @@ export function Typing() {
   return (
     <div className="flex items-end gap-2">
       <CerebroIcon className="mb-0.5 h-7 w-7" />
-      <div className="flex gap-1 rounded-[22px] rounded-bl-md bg-[#EDEEF1] px-4 py-3.5 dark:bg-[#1C2230]">
+      <div className="flex gap-1 rounded-[22px] rounded-bl-md bg-bubble px-4 py-3.5">
         {[0, 1, 2].map((i) => (
           <span key={i} className="h-2 w-2 rounded-full bg-muted motion-safe:animate-[typing-dot_1.1s_ease-in-out_3_both]" style={{ animationDelay: `${i * 0.15}s` }} />
         ))}
