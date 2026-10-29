@@ -5,7 +5,8 @@
 //
 // Tras JOBS_ALERT_AFTER fallos seguidos de un paso se avisa a PymaticLabs con el motivo, y otra vez
 // si muere (JOBS_MAX_ATTEMPTS, o un error permanente). Un paso muerto se reintenta a mano desde
-// /api/admin/jobs.
+// /api/admin/jobs. Si muere la factura de una compra, sus rectificativas pendientes dejan de
+// esperarla (si no, esperarian para siempre, y con ellas el correo de la devolucion y el aviso).
 //
 // Lo llaman el webhook (al momento, con after()) y /api/jobs/run (cada minuto, con pg_cron).
 
@@ -51,6 +52,22 @@ async function alert(d: Delivery, job: Job, message: string, state: 'retrying' |
   }
 }
 
+/**
+ * Un paso parado no deja correr a quien depende de el. Si es la factura de una compra (invoice:<p>),
+ * sus rectificativas pendientes (rectify:<p>:...) dejan de esperarla: corren ya, dan el aviso de
+ * rectificar a mano, y tras ellas salen el correo de la devolucion y el aviso. Si la factura se
+ * reintenta despues y sale, la rectificativa sigue siendo a mano.
+ */
+async function releaseDependents(d: Delivery, job: Job, now: Date) {
+  if (job.kind !== 'invoice' || !job.key.startsWith('invoice:')) return
+  const purchaseId = job.key.slice('invoice:'.length)
+  try {
+    await d.repo.releaseDependency(job.key, `rectify:${purchaseId}:`, now)
+  } catch (error) {
+    console.error(`[entrega] no se pudo soltar a quien espera a ${job.key}: ${errorMessage(error)}`)
+  }
+}
+
 async function runOne(d: Delivery, handlers: Record<string, StepHandler>, job: Job, stats: RunStats) {
   const handler = handlers[job.kind]
   try {
@@ -67,6 +84,7 @@ async function runOne(d: Delivery, handlers: Record<string, StepHandler>, job: J
     if (dead) {
       await d.repo.failJob(job.id, message, { dead: true }, now)
       stats.dead += 1
+      await releaseDependents(d, job, now)
       await alert(d, job, message, 'dead')
       return
     }

@@ -1,4 +1,5 @@
-// Utilidades de la entrega: fechas en hora peninsular, NIF y razon social limpios, CRC32C (lo
+// Utilidades de la entrega: fechas en hora peninsular, el margen de un cobro fallido en las
+// licencias, NIF y razon social limpios, CRC32C (lo
 // pide Google Cloud KMS para comprobar lo que va y viene), HTML y comparaciones de secretos.
 
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
@@ -42,6 +43,29 @@ export function addDays(isoDate: string, days: number): string {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
 }
 
+/**
+ * Clausula 4: un cobro del mensual sin pagar se suspende tras avisar con estos dias (socios,
+ * 27-10-2026: mientras, siguen el mantenimiento, el soporte y las versiones nuevas). Por eso cada
+ * licencia con mantenimiento y soporte (meses incluidos o un cobro del mensual) cubre estos dias mas
+ * que lo pagado o incluido: su soporte_hasta es el fin del periodo mas este margen.
+ */
+export const UNPAID_NOTICE_DAYS = 15
+
+/** El soporte_hasta que se firma: el fin del periodo pagado o incluido, con el margen de un cobro fallido. */
+export function withUnpaidMargin(periodEnd: string): string {
+  return addDays(periodEnd, UNPAID_NOTICE_DAYS)
+}
+
+/**
+ * Hasta cuando esta pagado o incluido lo que cubre una licencia (lo que ensenan la zona y los
+ * correos): su soporte_hasta sin el margen. Sin mantenimiento (soporte_hasta el dia de emitida), ese dia.
+ */
+export function paidUntil(license: { emitida: string; soporteHasta: string }): string {
+  if (license.soporteHasta <= license.emitida) return license.soporteHasta
+  const end = addDays(license.soporteHasta, -UNPAID_NOTICE_DAYS)
+  return end > license.emitida ? end : license.emitida
+}
+
 /** Dia de la semana de una fecha AAAA-MM-DD: 0 domingo ... 6 sabado. */
 export function weekday(isoDate: string): number {
   const [y, m, d] = isoDate.split('-').map(Number)
@@ -79,6 +103,7 @@ export function normalizeEmail(value: string | null | undefined): string | null 
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 320 ? email : null
 }
 
+/** Los 27 de la UE, por su codigo ISO 3166-1 (Grecia es GR; sin XI, Irlanda del Norte). */
 export const EU_COUNTRIES = new Set([
   'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT',
   'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK',
@@ -119,8 +144,9 @@ export function newId(): string {
   return randomUUID()
 }
 
+/** Con punto de millar tambien en cuatro cifras («1.210,00 €»), como formatPrice (lib/offer.ts). */
 export function formatMoney(cents: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale === 'en' ? 'en-IE' : 'es-ES', { style: 'currency', currency: currency.toUpperCase() }).format(
+  return new Intl.NumberFormat(locale === 'en' ? 'en-IE' : 'es-ES', { style: 'currency', currency: currency.toUpperCase(), useGrouping: 'always' }).format(
     cents / 100
   )
 }
@@ -145,4 +171,17 @@ export function crc32c(data: Buffer): number {
 export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message
   return String(error)
+}
+
+/** La promesa, o un error si tarda mas de ms (una base de datos o un proveedor que se queda colgado). */
+export async function withTimeout<T>(promise: Promise<T>, ms: number, message = 'no contesta'): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms)
+  })
+  try {
+    return await Promise.race([promise, timeout])
+  } finally {
+    clearTimeout(timer)
+  }
 }

@@ -49,9 +49,19 @@
   --color-inverse: #111A2C;
 }
 
-/* Sobre fondo oscuro el texto azul necesita algo mas de luz para leerse bien. */
-.dark .text-brand {
+/* Sobre fondo oscuro el texto azul necesita algo mas de luz para leerse bien: tambien el de pasar el
+   raton y el de la pagina en la que se esta (menu del perfil, zona de socio). */
+.dark .text-brand,
+.dark .aria-\[current\=page\]\:text-brand[aria-current='page'] {
   color: var(--color-brand-light);
+}
+
+/* El de pasar el raton, como el hover: de Tailwind v4, solo con raton: en una pantalla tactil el
+   enlace que se toca no se queda azul. */
+@media (hover: hover) {
+  .dark .hover\:text-brand:hover {
+    color: var(--color-brand-light);
+  }
 }
 
 @layer base {
@@ -383,8 +393,15 @@ body::before {
 /* En claro, el azul de los textos (en toda la web, sobre el hilo del fondo), un punto mas hondo: 6,4:1
    sobre blanco y 5,2:1 encima de lo mas marcado del hilo. */
 html:not(.dark) .text-brand,
+html:not(.dark) .aria-\[current\=page\]\:text-brand[aria-current='page'],
 html:not(.dark) .prose-content a {
   color: var(--color-brand-dark);
+}
+
+@media (hover: hover) {
+  html:not(.dark) .hover\:text-brand:hover {
+    color: var(--color-brand-dark);
+  }
 }
 
 /* La barra de arriba, para quien ya entro en la zona en este navegador (la pista de lib/zone-profile.ts):

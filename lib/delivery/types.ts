@@ -4,7 +4,8 @@
 // el camino (pago -> factura -> licencia -> cuenta -> correo) corra y se pruebe sin cuentas ni red:
 // repositorio (Supabase / memoria), firma (Google Cloud KMS / clave local de prueba), factura
 // (Holded / falsa), correo (Brevo / buzon local), almacen (Supabase Storage / disco), calendario
-// (Cal.com / falso), acceso a la zona (Supabase Auth / falso) y pagos (Stripe / falso).
+// (Cal.com / falso), acceso a la zona (Supabase Auth / falso), pagos (Stripe / falso) y la comprobacion
+// del NIF-IVA (VIES / falsa).
 //
 // Sin imports con alias (@/...): los tests corren con `node --test`, sin compilar.
 
@@ -48,7 +49,11 @@ export interface Company {
 
 export type PurchaseKind = 'one_time' | 'renewal'
 export type PurchaseStatus = 'paid' | 'needs_review' | 'refunded' | 'partially_refunded' | 'disputed' | 'dispute_lost'
-/** El IVA que cobro Stripe Tax: espanol, inversion del sujeto pasivo (UE), fuera de la UE o exento. */
+/**
+ * El IVA de la venta, decidido antes de pagar (lib/delivery/checkout-tax.ts): el 21 % espanol;
+ * inversion del sujeto pasivo (UE con NIF-IVA valido en VIES); sin IVA espanol por localizacion
+ * (fuera de la UE, y Canarias, Ceuta y Melilla: export); exento, solo en compras de antes.
+ */
 export type TaxTreatment = 'standard' | 'reverse_charge' | 'export' | 'exempt'
 
 export interface Purchase {
@@ -412,6 +417,8 @@ export interface Repository {
   setVersionAnnounced(id: string, at: string): Promise<void>
   addVersionFiles(files: VersionFileInput[]): Promise<VersionFile[]>
   getLatestVersion(): Promise<{ version: Version; files: VersionFile[] } | null>
+  /** Todas las versiones publicadas, sin sus ficheros (la fecha de fin de la seguridad de cada una). */
+  listVersions(): Promise<Version[]>
   getVersionFile(id: string): Promise<VersionFile | null>
 
   enqueueJobs(jobs: NewJob[], now: Date): Promise<void>
@@ -420,6 +427,12 @@ export interface Repository {
   /** Un intento fallido: vuelve a pending con next_run_at, o queda dead. */
   failJob(id: string, error: string, next: { runAt: string } | { dead: true }, now: Date): Promise<void>
   markJobAlerted(id: string, now: Date): Promise<void>
+  /**
+   * Los pasos pendientes cuya clave empieza por keyPrefix dejan de esperar a dependency (sale de su
+   * depends_on, paso a paso y solo si siguen pendientes). Cuantos cambiaron. Lo usa la cola cuando un
+   * paso se para (lib/delivery/jobs.ts).
+   */
+  releaseDependency(dependency: string, keyPrefix: string, now: Date): Promise<number>
   getJobByKey(key: string): Promise<Job | null>
   listJobs(filter: { status?: Job['status']; limit?: number }): Promise<Job[]>
   /** Vuelve a poner en cola un paso muerto, con los intentos a cero. */
@@ -436,6 +449,8 @@ export interface Repository {
   setLaunchSlotSession(ref: string, sessionId: string): Promise<void>
   markLaunchSlot(ref: string, status: 'used' | 'released'): Promise<void>
   countLaunchSlotsUsed(): Promise<number>
+  /** Las plazas que ese cliente (huella de su IP) tiene apartadas en pagos abiertos, la mas vieja primero. */
+  listOpenLaunchSlots(clientHash: string, now: Date): Promise<{ ref: string; sessionId: string | null }[]>
 }
 
 // --- Firma de licencias ----------------------------------------------------------------------
@@ -628,9 +643,9 @@ export interface PaymentStatus {
   amount: number | null
 }
 
-/** Lo que dice Stripe Tax de un cobro: el motivo de cada impuesto y los NIF del cliente con su verificacion. */
+/** El IVA de un cobro segun Stripe (para cruzarlo con el del aviso) y los NIF del cliente que tenga guardados. */
 export interface TaxDetails {
-  /** taxability_reason de cada linea de impuesto (standard_rated, reverse_charge, not_collecting...). */
+  /** taxability_reason de cada linea de impuesto (de cuando se cobraba con Stripe Tax; con el tipo fijo, vacio o standard_rated). */
   reasons: string[]
   amountTax: number | null
   taxIds: { type: string; value: string; verification: string | null }[]
@@ -646,7 +661,16 @@ export interface Payments {
   readonly name: string
   /** El precio de Stripe por su lookup_key (cerebro-<producto>). */
   priceId(lookupKey: string): Promise<string>
+  /** El tipo de IVA del 21 % de Stripe (txr_..., el de stripe-setup con cerebro=iva-21), para las ventas con IVA. */
+  taxRateId(): Promise<string>
   createCheckoutSession(params: Record<string, unknown>): Promise<{ id: string; url: string; expiresAt: number }>
+  /**
+   * Cierra un pago abierto que el cliente dejo a medias (expira la sesion de Checkout). status: expired
+   * si queda cerrado (ahora o de antes), complete si ya se pago, missing si no existe; con sus metadatos.
+   */
+  expireCheckoutSession(sessionId: string): Promise<{ status: 'expired' | 'complete' | 'missing'; metadata: Record<string, string> }>
+  /** Solo lee un pago (sin cambiar nada): si sigue abierto, pagado o cerrado, con sus metadatos. */
+  getCheckoutSession(sessionId: string): Promise<{ status: 'open' | 'expired' | 'complete' | 'missing'; metadata: Record<string, string> }>
   createPortalSession(customerId: string, returnUrl: string): Promise<string>
   /** La factura de suscripcion que cobro ese PaymentIntent (para las devoluciones del mensual). */
   invoiceIdForPaymentIntent(paymentIntentId: string): Promise<string | null>
@@ -654,8 +678,15 @@ export interface Payments {
   paymentStatus(ref: string): Promise<PaymentStatus>
   /** Las devoluciones de un cobro, cada una con su id y su importe (del aviso, o preguntando a Stripe). */
   refundsOf(charge: { id: string; refunds?: { data?: unknown[]; has_more?: boolean } | null }): Promise<RefundInfo[]>
-  /** El IVA de Stripe Tax de una sesion de Checkout o de una factura del mensual, y los NIF del cliente. */
+  /** El IVA de una sesion de Checkout o de una factura del mensual, y los NIF del cliente. */
   taxDetails(input: { checkoutSessionId?: string | null; invoiceId?: string | null; customerId?: string | null }): Promise<TaxDetails>
+  /**
+   * El pais de la tarjeta con la que se cobro ese pago (pi_...): el del banco que la emitio
+   * (latest_charge.payment_method_details.card.country). null si no hay cargo o no fue con tarjeta.
+   * La segunda prueba del pais en las ventas sin IVA fuera de la UE (events.ts); nunca se rechaza una
+   * tarjeta por su pais. Una pieza de pagos que no lo sepa (sin el metodo) no frena nada.
+   */
+  cardCountry?(paymentIntentId: string): Promise<string | null>
   /** El lookup_key de un precio (de que plan es un cobro tras cambiar de plan en el portal). */
   priceLookupKey(priceId: string): Promise<string | null>
   /** Cancela la suscripcion ya, si sigue viva. false si ya estaba cancelada o no existe. */
@@ -663,6 +694,24 @@ export interface Payments {
   /** Sesiones de Checkout pagadas y facturas del mensual cobradas desde esa fecha (Unix). */
   listPaidCheckoutSessions(sinceUnix: number): Promise<Record<string, unknown>[]>
   listPaidInvoices(sinceUnix: number): Promise<Record<string, unknown>[]>
+}
+
+// --- NIF-IVA (VIES) -----------------------------------------------------------------------------
+
+/**
+ * Lo que dice VIES de un NIF-IVA: valido (con el numero de la consulta, la prueba), no valido, o que
+ * no se ha podido comprobar (VIES o el pais caidos, demasiadas consultas, sin respuesta a tiempo).
+ * Sin respuesta nunca se da por valido: no se vende a 0 %.
+ */
+export type ViesResult =
+  | { status: 'valid'; requestIdentifier: string; requestDate: string; name: string | null; address: string | null }
+  | { status: 'invalid'; reason: string | null }
+  | { status: 'unavailable'; reason: string }
+
+export interface VatChecker {
+  readonly name: string
+  /** countryCode: el prefijo de IVA (EL en Grecia); vatNumber, sin el. Nunca lanza: un fallo es unavailable. */
+  check(query: { countryCode: string; vatNumber: string }): Promise<ViesResult>
 }
 
 /** El motivo con el que queda una factura en borrador que ya no esta en Holded (borrada a mano). */

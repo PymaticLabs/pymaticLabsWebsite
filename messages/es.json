@@ -10,7 +10,8 @@
     "securityTitle": "Seguridad y privacidad",
     "securityDescription": "Tu cerebro vive en tus equipos. Nuestra promesa de privacidad, lo que hay detrás y la política de vulnerabilidades del Cerebro Digital.",
     "contactTitle": "Contacto",
-    "contactDescription": "Cuéntanos qué hace tu empresa y te decimos qué modalidad del Cerebro Digital te encaja."
+    "contactDescription": "Cuéntanos qué hace tu empresa y te decimos qué modalidad del Cerebro Digital te encaja.",
+    "pricingDescriptionList": "Pago único y licencia perpetua por empresa. Hazlo tú desde {price}, sin IVA."
   },
   "nav": {
     "home": "Cerebro Digital, de Pymatic Labs: inicio",
@@ -21,7 +22,7 @@
     "contacto": "Contacto",
     "cta": "Ver precios",
     "langSwitch": "EN",
-    "langLabel": "Read in English",
+    "langLabel": "EN, read in English",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "themeDark": "Activar modo oscuro",
@@ -74,7 +75,7 @@
       "steps": [
         {
           "title": "Se lo pides como a un compañero.",
-          "text": "Sin menús ni botones: con tus palabras, como lo dirías en la oficina."
+          "text": "Sin menús ni botones: con tus palabras."
         },
         {
           "title": "Lo hace con tus datos y tu logo.",
@@ -82,7 +83,7 @@
         },
         {
           "title": "Y antes de guardar nada, te pide el «sí».",
-          "text": "Nada cambia a tus espaldas: te enseña lo que va a hacer y espera tu permiso."
+          "text": "Nada cambia a tus espaldas: te enseña lo que va a hacer."
         },
         {
           "title": "Lo que le enseñas una vez, ya lo sabe.",
@@ -107,7 +108,7 @@
     "bento": {
       "eyebrow": "Tus documentos",
       "title": "Se lee todo lo que ya tienes.",
-      "text": "PDF, Word, Excel, correos, planos y escaneados. Sin ordenar, renombrar ni subir nada. Y tus originales no se tocan.",
+      "text": "PDF, Word, Excel, correos, planos y escaneados. Sin ordenar, renombrar ni subir nada.",
       "read": {
         "title": "Le das tu carpeta y se la lee entera.",
         "kinds": [
@@ -148,7 +149,7 @@
       },
       "mobile": {
         "title": "También desde el móvil.",
-        "text": "Con el ordenador del cerebro encendido.",
+        "text": "Con el ordenador del cerebro encendido y Claude abierto.",
         "q": "¿A qué hora abre el almacén el sábado?",
         "a": "De 9:00 a 13:00."
       }
@@ -175,8 +176,8 @@
         },
         {
           "icon": "health",
-          "title": "Lo delicado, ni lo abre",
-          "text": "Lo de salud, nunca. Nóminas o DNI, solo si lo permites."
+          "title": "Lo de salud, ni lo abre",
+          "text": "Y nóminas o DNI, solo si lo permites."
         }
       ],
       "claude": "Para contestarte, Claude consulta solo lo que necesita. En el montaje te enseñamos a apagar su entrenamiento y su memoria.",
@@ -196,7 +197,7 @@
         },
         {
           "title": "Le preguntas",
-          "text": "Con tus palabras, como a un compañero. Y si no sabe hacer una tarea, se la enseñas una vez."
+          "text": "Con tus palabras, como a un compañero."
         }
       ],
       "needs": "Necesitas un ordenador con Windows o Mac y una cuenta de pago de Claude, el asistente de inteligencia artificial con el que hablas.",
@@ -221,7 +222,7 @@
         },
         {
           "value": "14 días",
-          "text": "De garantía si el producto falla."
+          "text": "De garantía de montaje, si un fallo del producto impide montarlo."
         },
         {
           "value": "Sin cuotas",
@@ -245,11 +246,11 @@
         },
         {
           "q": "¿Mis documentos salen de mi ordenador?",
-          "a": "Tu cerebro y tus documentos se quedan en tus equipos, y Pymatic Labs no los recibe. Para contestarte, Claude consulta solo lo que necesita; en el montaje te enseñamos a apagar su entrenamiento y su memoria."
+          "a": "Tu cerebro y tus documentos se guardan en tus equipos, y Pymatic Labs no los recibe. Pero lo que Claude lee para contestarte sí sale: viaja a Anthropic, la empresa de Claude, y queda en tu historial de Claude hasta que lo borras. En el montaje te enseñamos a apagar su entrenamiento y su memoria."
         },
         {
           "q": "¿Y si se equivoca?",
-          "a": "Te dice de qué documento saca cada respuesta, para que lo compruebes. Si algo ha cambiado, se lo dices y te propone corregirlo. Y si no lo sabe, te lo dice: no se inventa nada."
+          "a": "Te dice de qué documento saca cada respuesta, para que lo compruebes. Si algo ha cambiado, se lo dices y te propone corregirlo. Y si no lo sabe, te lo dice."
         },
         {
           "q": "¿Hay que pagar todos los meses?",
@@ -284,7 +285,7 @@
           {
             "icon": "unknown",
             "title": "Si no lo sabe, lo dice",
-            "text": "No inventa. Apunta la pregunta para documentarla."
+            "text": "Apunta la pregunta para documentarla."
           },
           {
             "icon": "history",
@@ -309,7 +310,7 @@
           {
             "icon": "learn",
             "title": "Aprende tareas nuevas",
-            "text": "Se la explicas una vez y queda guardada."
+            "text": "Se las explicas una vez y quedan guardadas."
           },
           {
             "icon": "excel",
@@ -319,7 +320,7 @@
           {
             "icon": "pdf",
             "title": "PDF con tu logo",
-            "text": "Presupuestos y partes con tu imagen."
+            "text": "Presupuestos y partes."
           },
           {
             "icon": "connect",
@@ -374,7 +375,7 @@
           {
             "icon": "mobile",
             "title": "Desde el móvil",
-            "text": "Con el ordenador del cerebro encendido."
+            "text": "Con el ordenador del cerebro encendido y Claude abierto."
           }
         ]
       },
@@ -426,7 +427,7 @@
       ],
       [
         "Montaje",
-        "Una extensión de Claude: doble clic y tres preguntas. Sin terminal."
+        "Una extensión de Claude: doble clic y tres preguntas."
       ],
       [
         "Personas",
@@ -446,7 +447,7 @@
       ],
       [
         "Internet",
-        "Para hablar con Claude. Tus documentos se quedan en tus equipos."
+        "Para hablar con Claude. Lo que lee para contestarte viaja a Anthropic, la empresa de Claude."
       ],
       [
         "Licencia",
@@ -507,29 +508,26 @@
     "included": [
       "Licencia para siempre",
       "La extensión y las guías para montarlo",
-      "Garantía de 14 días si falla el producto",
-      "Seguridad al día, gratis"
+      "Garantía de montaje de 14 días",
+      "Correcciones de seguridad gratis durante el soporte de tu versión"
     ],
     "extras": {
       "hazlo-tu": [
-        "1 persona",
-        "Lo montas tú, con las guías"
+        "A tu ritmo, sin sesiones"
       ],
       "hazlo-tu-equipo": [
-        "Hasta 10 personas",
         "Áreas con llave",
         "3 meses de Pro incluidos"
       ],
       "acompanado": [
-        "1 persona",
-        "Te lo montamos: 2 sesiones de 1 h",
+        "2 sesiones de 1 h",
         "Ideas de automatizaciones para tu empresa",
         "1 mes de Esencial incluido"
       ],
       "acompanado-equipo": [
-        "Hasta 10 personas",
-        "Te lo montamos: 2 sesiones de 1 h",
-        "Equipo y áreas con llave listos",
+        "2 sesiones de 1 h",
+        "Ideas de automatizaciones para tu empresa",
+        "Áreas con llave listas",
         "3 meses de Pro incluidos"
       ]
     },
@@ -544,7 +542,7 @@
     "sessions": {
       "title": "Montaje y garantía",
       "items": [
-        "En el Acompañado lo montamos nosotros: dos videollamadas de 1 hora, con Eric o con Sergio, de 18:00 a 22:00 o los sábados de 10:00 a 14:00 (hora peninsular). La primera la eliges al comprar.",
+        "En el Acompañado lo montamos nosotros: dos videollamadas de 1 hora, con Eric o con Sergio, de lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00 (hora de Madrid). La primera la eliges al comprar. En persona, solo en fin de semana y con prima: el viaje, a lo que cueste, más el 50 % del pago único.",
         "Si el cerebro no se puede montar por un fallo del producto, te devolvemos el dinero. Lo pides por escrito en los 14 días siguientes a la compra.",
         "No es una garantía de satisfacción. Si faltas a una sesión, se pierde.",
         "¿Lo montas tú y quieres ayuda? Pasas al Acompañado pagando la diferencia."
@@ -581,7 +579,7 @@
           ]
         },
         {
-          "label": "Soporte por correo en 48 h",
+          "label": "Soporte por correo en 48 h",
           "values": [
             true,
             false,
@@ -589,7 +587,7 @@
           ]
         },
         {
-          "label": "Soporte prioritario en 24 h",
+          "label": "Soporte prioritario en 24 h",
           "values": [
             false,
             true,
@@ -597,7 +595,7 @@
           ]
         },
         {
-          "label": "Packs al día con la normativa",
+          "label": "Packs al día con la normativa (en preparación)",
           "values": [
             false,
             true,
@@ -613,7 +611,7 @@
           ]
         },
         {
-          "label": "Sesión mensual de 1 h",
+          "label": "Sesión mensual de 1 h",
           "values": [
             false,
             false,
@@ -638,26 +636,27 @@
         }
       ],
       "premiumNote": "La sesión mensual sirve para revisar qué ha cambiado en la empresa y detectar oportunidades de automatización. Si en la sesión se identifica una candidata que encaje en el alcance del corpus existente y clasifique como sencilla, se implementa dentro del plan. Las de complejidad media o superior, o las que requieran sistemas o integraciones nuevos, se presupuestan aparte. Máximo una implementada al mes, no acumulable.",
-      "securityNote": "Las correcciones de seguridad son gratis para todos, con o sin mensual.",
-      "included": "Con equipo, 3 meses de Pro incluidos. Acompañado sin equipo, 1 mes de Esencial."
+      "securityNote": "Las correcciones de seguridad son gratis durante el periodo de soporte de tu versión, con o sin mensual.",
+      "included": "Con equipo, 3 meses de Pro incluidos. Acompañado sin equipo, 1 mes de Esencial.",
+      "perYear": "o {price} al año",
+      "yes": "Incluido",
+      "no": "No incluido",
+      "annualNote": "¿Prefieres pagarlo por años? El año, por adelantado, cuesta lo que 10 meses. Lo eliges al contratar el mensual en tu zona de socio, y desde allí puedes cambiar entre pago mensual y anual.",
+      "securityUntil": "Cada versión las recibe durante cinco años desde que se publica: la que se vende ahora, la {version}, hasta {date}.",
+      "securityPeriod": "Cada versión las recibe durante cinco años desde que se publica."
     },
     "apart": {
       "title": "Aparte",
-      "packEspana": {
-        "name": "Pack España",
-        "text": "Tareas fiscales, laborales y de prevención, y conexión con programas españoles.",
-        "badge": "En preparación"
-      },
       "custom": {
         "name": "A medida",
         "from": "desde",
-        "text": "Te montamos el cerebro nosotros, con el Pack España y el plan Esencial.",
+        "text": "Te montamos el cerebro nosotros, con el plan Esencial.",
         "cta": "Hablar con nosotros"
       },
       "moreThan10": "¿Más de 10 personas? Lo presupuestamos a medida."
     },
-    "markets": "Precios para España y el resto de Europa. En Norteamérica, los mismos números en dólares (USD).",
-    "b2b": "Venta solo a empresas y profesionales.",
+    "markets": "Se suma el 21 % de IVA en España (península y Baleares) y desde otro país de la UE sin NIF-IVA válido. Sin IVA español: empresas de la UE con NIF-IVA válido, de Canarias, Ceuta y Melilla, y de fuera de la UE.",
+    "b2b": "Venta a empresas y profesionales de cualquier país, en euros.",
     "faqTitle": "Dudas sobre la compra",
     "faq": [
       {
@@ -674,17 +673,19 @@
       },
       {
         "q": "¿Puedo empezar solo y ampliar a equipo?",
-        "a": "Sí. Escríbenos y te pasamos una licencia nueva."
+        "a": "Sí. Escríbenos: pagas la diferencia entre el precio con equipo de ese momento y lo que pagaste, y te pasamos una licencia nueva."
       },
       {
         "q": "¿Y si dejo el mensual?",
-        "a": "El cerebro sigue funcionando. Pierdes el soporte, no el uso."
+        "a": "El cerebro sigue funcionando. Pierdes el mantenimiento y el soporte: lo nuevo de las próximas versiones no se enciende. Las correcciones de seguridad te siguen llegando gratis durante el periodo de soporte de tu versión."
       },
       {
         "q": "¿Los precios llevan IVA?",
-        "a": "No. La factura lleva el IVA que corresponda."
+        "a": "No. El IVA se decide antes de pagar, con el país y la identificación fiscal de tu empresa; un NIF-IVA de la UE se comprueba en el VIES. La factura lo desglosa o, sin IVA español, lleva la mención que lo explica."
       }
-    ]
+    ],
+    "launchOver": "Las 10 plazas del precio de lanzamiento ya se han cubierto: rige el precio de lista.",
+    "modalitiesTitle": "Las cuatro modalidades"
   },
   "security": {
     "eyebrow": "Seguridad y privacidad",
@@ -698,7 +699,7 @@
       "Con Claude Team o Enterprise, Anthropic no entrena con esos datos, por contrato, y la memoria de Claude viene apagada.",
       "Con Claude Pro o Max, la memoria viene encendida y el entrenamiento se decide en los ajustes de privacidad de Claude. Por eso en el montaje te enseñamos a apagar los dos."
     ],
-    "behindNote": "El montaje no puede comprobar esos ajustes de Claude: te indica cómo ponerlos. Anthropic fija además dos excepciones: las valoraciones de respuestas que le envíes y lo que marquen sus filtros de seguridad.",
+    "behindNote": "El montaje no puede comprobar esos ajustes de Claude. Anthropic fija además dos excepciones: las valoraciones de respuestas que le envíes y lo que marquen sus filtros de seguridad.",
     "privacyLink": "Leer la política de privacidad del Cerebro Digital",
     "alsoTitle": "Además",
     "also": [
@@ -706,11 +707,11 @@
       "Nada se instala ni se conecta sin tu permiso.",
       "La licencia se comprueba en tu equipo, sin internet: no hay interruptor remoto.",
       "Las actualizaciones solo se aceptan si van firmadas por Pymatic Labs.",
-      "Las correcciones de seguridad son gratis durante el periodo de soporte de tu versión, con o sin mensual."
+      "Las correcciones de seguridad son gratis durante el periodo de soporte de tu versión, cinco años desde que se publica, con o sin mensual."
     ],
     "policyTitle": "Política de vulnerabilidades",
     "draftBadge": "Borrador",
-    "draftNote": "Borrador pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
+    "draftNote": "Pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
     "reportTitle": "¿Has encontrado un fallo de seguridad?",
     "reportText": "Escríbenos a info@pymaticlabs.com con «Seguridad» en el asunto.",
     "reportCta": "Escribir a seguridad"
@@ -727,7 +728,7 @@
     "subtitleManual": "En unos minutos te llega un correo de bienvenida con el acceso a tu zona de socio. Tu licencia, en otro correo, en unas horas.",
     "stepsManual": [
       "El enlace a tu zona de socio, con las descargas para Mac y Windows y, en cuanto estén, tu licencia y tus facturas.",
-      "Tu licencia, en otro correo en unas horas (y en tu zona de socio). Guárdala: el montaje te la pedirá.",
+      "Tu licencia, en otro correo en unas horas. Guárdala: el montaje te la pedirá.",
       "Las condiciones que aceptaste y, en el Acompañado, la cita de tu primera sesión.",
       "La factura, en un correo aparte."
     ],
@@ -736,14 +737,14 @@
   },
   "purchase": {
     "metaTitle": "Comprar el Cerebro Digital",
-    "metaDescription": "Pago con Stripe para empresas y profesionales. La licencia y la zona de socio llegan al momento.",
-    "metaDescriptionManual": "Pago con Stripe para empresas y profesionales. El acceso a la zona de socio llega al momento y la licencia, en unas horas.",
+    "metaDescription": "Pago con Stripe para empresas y profesionales de cualquier país. La licencia y la zona de socio llegan al momento.",
+    "metaDescriptionManual": "Pago con Stripe para empresas y profesionales de cualquier país. El acceso a la zona de socio llega al momento y la licencia, en unas horas.",
     "title": "Comprar {product}",
-    "subtitle": "Pagas en Stripe, con tu NIF o NIF-IVA. Al momento te llegan por correo la licencia y el acceso a tu zona de socio; la factura, aparte.",
-    "subtitleManual": "Pagas en Stripe, con tu NIF o NIF-IVA. Al momento te llega por correo el acceso a tu zona de socio; la licencia, en unas horas, y la factura, aparte.",
-    "price": "Precio de lista: {list}. Los 10 primeros clientes pagan {launch}: se aplica solo en el pago mientras queden plazas. Sin IVA.",
+    "subtitle": "Indica los datos fiscales de tu empresa y pagas en Stripe. Al momento te llegan por correo la licencia y el acceso a tu zona de socio; la factura, aparte.",
+    "subtitleManual": "Indica los datos fiscales de tu empresa y pagas en Stripe. Al momento te llega por correo el acceso a tu zona de socio; la licencia, en unas horas, y la factura, aparte.",
+    "price": "Precio de lista: {list}. Los 10 primeros clientes pagan {launch}: se aplica solo en el pago mientras queden plazas. Sin IVA: se suma el 21 % en España (península y Baleares) y desde otro país de la UE sin NIF-IVA válido; en los demás casos, no se suma IVA español.",
     "chooseTitle": "Elige tu primera sesión de montaje",
-    "chooseText": "Una hora por videollamada, con Eric o con Sergio. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora peninsular. La segunda la reservas desde tu zona de socio.",
+    "chooseText": "Una hora por videollamada, con Eric o con Sergio. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora de Madrid. La segunda la reservas desde tu zona de socio. En persona, solo en fin de semana y con prima: el viaje, a lo que cueste, más el 50 % del pago único.",
     "thirdWeek": "Las dos próximas semanas están completas: estos son los huecos de la tercera.",
     "noSlots": "Ahora mismo no quedan huecos libres. Escríbenos y te buscamos uno.",
     "slotsError": "No hemos podido cargar los huecos libres. Prueba en un momento o escríbenos.",
@@ -761,17 +762,72 @@
       "company_required": "Entra en tu zona de socio para contratarlo.",
       "already_subscribed": "Ya tienes el mensual: lo cambias desde tu zona de socio.",
       "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.",
-      "busy": "Ahora mismo hay muchos pagos abiertos con sesión. Prueba en unos minutos o escríbenos a info@pymaticlabs.com."
+      "busy": "Ahora mismo hay muchos pagos abiertos con sesión. Prueba en unos minutos o escríbenos a info@pymaticlabs.com.",
+      "tax_id_required": "Escribe el NIF de tu empresa para ir al pago.",
+      "tax_id_invalid": "Ese NIF no es un NIF español válido: revisa las letras y los números (CIF, DNI o NIE). Si tu empresa no es de España, elige su país.",
+      "currency": "Solo vendemos en euros.",
+      "launch_busy": "Ahora no hay plaza del precio de lanzamiento para ti: las que quedan están apartadas por pagos a medio hacer, o desde tu conexión (la de una oficina, por ejemplo) ya hay dos abiertos. Vuelve a probar en media hora: si alguno no se completa, su plaza queda libre.",
+      "country_invalid": "Elige de la lista el país de tu empresa.",
+      "territory_invalid": "Elige dónde está tu empresa en España: península y Baleares, Canarias, Ceuta o Melilla.",
+      "vat_id_invalid": "Ese NIF-IVA no tiene la forma de los del país que has elegido. Revísalo o, para pagar con el 21 % de IVA español, déjalo vacío y escribe la identificación fiscal de tu empresa.",
+      "eu_tax_id_required": "Escribe el NIF-IVA de tu empresa o, si no tiene, su identificación fiscal.",
+      "other_tax_id_required": "Escribe la identificación fiscal de tu empresa para ir al pago.",
+      "other_tax_id_invalid": "Esa identificación fiscal no vale: usa letras, números y guiones, de 4 a 30 caracteres.",
+      "vat_invalid": "VIES, el registro europeo, dice que ese NIF-IVA no es válido. Revísalo o, para pagar con el 21 % de IVA español, déjalo vacío y escribe la identificación fiscal de tu empresa.",
+      "vat_unavailable": "No hemos podido comprobar tu NIF-IVA en VIES, el registro europeo, que ahora no contesta. Inténtalo en unos minutos.",
+      "other_tax_id_is_vat": "Ese número es un NIF-IVA válido en VIES, el registro europeo. Escríbelo en el campo del NIF-IVA y no se cobra IVA."
+    },
+    "taxId": {
+      "label": "NIF de la empresa",
+      "placeholder": "CIF, DNI o NIE",
+      "hint": "Irá en la factura y en la licencia.",
+      "required": "Escribe el NIF de tu empresa.",
+      "invalid": "Ese NIF no es un NIF español válido: revisa las letras y los números (CIF, DNI o NIE)."
+    },
+    "priceList": "Precio: {list}. Las 10 plazas del precio de lanzamiento ya se han cubierto. Sin IVA: se suma el 21 % en España (península y Baleares) y desde otro país de la UE sin NIF-IVA válido; en los demás casos, no se suma IVA español.",
+    "securityUntil": "Correcciones de seguridad gratis hasta {date}, con o sin mensual: cada versión las recibe durante cinco años desde que se publica, y la que se vende ahora es la {version}.",
+    "securityPeriod": "Correcciones de seguridad gratis, con o sin mensual, durante cinco años desde que se publica cada versión. La fecha de fin, con mes y año, va en las notas de cada versión.",
+    "country": {
+      "label": "País de la empresa",
+      "hint": "El de su sede.",
+      "scope": {
+        "spain": "Si tu empresa es de España:",
+        "eu": "Si es de otro país de la Unión Europea o de Mónaco:",
+        "other": "Si es de fuera de la UE, o de la UE sin NIF-IVA:"
+      }
+    },
+    "territory": {
+      "label": "Territorio",
+      "peninsula": "Península y Baleares",
+      "canarias": "Canarias",
+      "ceuta": "Ceuta",
+      "melilla": "Melilla"
+    },
+    "vatId": {
+      "label": "NIF-IVA de la empresa (opcional)",
+      "placeholder": "{prefix} y el número",
+      "placeholderAny": "Prefijo del país y el número",
+      "hint": "El intracomunitario, dado de alta en VIES.",
+      "invalid": "Ese NIF-IVA no tiene la forma de los de ese país: revisa el prefijo y los números."
+    },
+    "otherTaxId": {
+      "label": "Identificación fiscal de la empresa",
+      "placeholder": "Su número fiscal en su país",
+      "hint": "Irá en la factura y en la licencia.",
+      "required": "Escribe la identificación fiscal de tu empresa.",
+      "requiredEu": "Escribe su NIF-IVA o, si no tiene, su identificación fiscal.",
+      "invalid": "Usa letras, números y guiones: de 4 a 30 caracteres.",
+      "hintEu": "Solo si no tiene NIF-IVA. Irá en la factura y en la licencia."
     }
   },
   "contact": {
     "title": "Hablemos",
     "subtitle": "Cuéntanos qué hace tu empresa y te decimos qué modalidad te encaja.",
-    "name": "Nombre",
-    "email": "Correo electrónico",
-    "company": "Empresa",
+    "name": "Nombre (obligatorio)",
+    "email": "Correo electrónico (obligatorio)",
+    "company": "Empresa (opcional)",
     "phone": "Teléfono (opcional)",
-    "interest": "¿Qué te interesa?",
+    "interest": "¿Qué te interesa? (opcional)",
     "interestOptions": {
       "hazlo-tu": "Hazlo tú",
       "hazlo-tu-equipo": "Hazlo tú con equipo",
@@ -780,19 +836,23 @@
       "a-medida": "A medida",
       "no-lo-se": "Aún no lo sé"
     },
-    "message": "Mensaje",
+    "message": "Mensaje (obligatorio)",
     "submit": "Enviar",
-    "sending": "Enviando...",
+    "sending": "Enviando…",
     "successTitle": "¡Recibido!",
     "successMsg": "Te responderemos en menos de 24 horas.",
     "errorMsg": "No se ha podido enviar. Escríbenos a info@pymaticlabs.com.",
-    "privacyNote": "Responsable: Pymatic Labs. Usamos tus datos solo para contestarte, porque nos lo pides. Los tratan nuestros proveedores de web y correo (Vercel, Resend y Google). Puedes verlos, corregirlos o borrarlos escribiendo a info@pymaticlabs.com.",
+    "privacyNote": "Responsable: Pymatic Labs. Usamos tus datos solo para contestarte, porque nos lo pides. Los tratan nuestros proveedores de web, correo y base de datos (Vercel, Resend, Google y Supabase). Puedes verlos, corregirlos o borrarlos escribiendo a info@pymaticlabs.com.",
     "privacyLink": "Política de privacidad",
     "orSchedule": "¿Prefieres una videollamada?",
-    "scheduleCta": "Reservar una llamada",
+    "scheduleCta": "Reservar una videollamada",
     "emailLabel": "Correo:",
     "locationLabel": "Dónde:",
-    "locationValue": "Castellón de la Plana, España"
+    "locationValue": "Castellón de la Plana, España",
+    "interestPlaceholder": "Elige una opción",
+    "messageHint": "Al menos 20 caracteres.",
+    "honeypot": "No rellenes este campo",
+    "tooManyMsg": "Has enviado varios mensajes seguidos. Espera un rato o escríbenos a info@pymaticlabs.com."
   },
   "footer": {
     "tagline": "Cerebro Digital: la memoria de tu empresa, con IA.",
@@ -813,7 +873,7 @@
       "condiciones": "Condiciones de uso y venta",
       "privacidadProducto": "Privacidad del Cerebro Digital"
     },
-    "b2b": "Venta solo a empresas y profesionales.",
+    "b2b": "Venta a empresas y profesionales de cualquier país.",
     "copyright": "PYMATICLABS, S.L. Todos los derechos reservados."
   },
   "legal": {
@@ -827,14 +887,14 @@
     "descriptions": {
       "aviso-legal": "Datos de PYMATICLABS, S.L., titular de pymaticlabs.com, y condiciones de uso del sitio web.",
       "politica-privacidad": "Qué datos personales tratamos cuando visitas pymaticlabs.com o nos escribes desde ella.",
-      "politica-cookies": "pymaticlabs.com solo usa cookies técnicas: la del tema, si la pides, y la de la sesión de la zona de socio, si entras en ella.",
+      "politica-cookies": "pymaticlabs.com solo guarda en tu navegador lo técnico: la cookie del tema, si la pides, y, si entras en la zona de socio, la cookie de la sesión y un aviso sin datos tuyos.",
       "condiciones": "Condiciones de uso y venta del Cerebro Digital, para empresas y profesionales.",
       "privacidad-producto": "Qué datos personales trata Pymatic Labs al vender el Cerebro Digital y dar soporte, y cuáles no."
     },
     "lastUpdated": "Versión del {date}",
     "draftBadge": "Borrador",
-    "draftNote": "Borrador pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
-    "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."
+    "draftNote": "Pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
+    "fallbackNote": "Este texto solo está en castellano, y la versión en castellano es la única que vale. Va aquí debajo y también en <link>su página en castellano</link>."
   },
   "zone": {
     "meta": {
@@ -873,7 +933,7 @@
     "login": {
       "title": "Entra en tu zona de socio",
       "unavailable": "La zona de socio abre con la venta del Cerebro Digital. Si ya eres cliente y necesitas algo, escríbenos a info@pymaticlabs.com.",
-      "intro": "Con el correo de la compra o con el que te dio de alta tu empresa. Te mandamos un código de un solo uso: no hay contraseñas.",
+      "intro": "Con el correo de la compra o con el que te dio de alta tu empresa. Te mandamos un código de un solo uso.",
       "emailLabel": "Tu correo",
       "send": "Enviarme el código",
       "sending": "Enviando…",
@@ -901,7 +961,7 @@
     },
     "home": {
       "title": "Tu Cerebro Digital",
-      "intro": "Todo lo de tu compra en un sitio: la licencia, las descargas de la última versión y, según lo que tengas, tus sesiones, tu equipo, el mensual y las facturas.",
+      "intro": "Todo lo de tu compra en un sitio.",
       "monthlyOk": "Mensual contratado. En unos minutos lo verás aquí, y la factura te llega por correo con cada cobro.",
       "license": {
         "title": "Tu licencia",
@@ -925,7 +985,7 @@
         "subscribed": "Tienes el Mensual {plan}.",
         "included": "Incluido en tu compra hasta el {date}.",
         "none": "Ahora no tienes mantenimiento ni soporte.",
-        "security": "Las correcciones de seguridad te llegan gratis, con mensual o sin él.",
+        "security": "Las correcciones de seguridad te llegan gratis durante el periodo de soporte de tu versión, con mensual o sin él.",
         "go": "Ver el mensual"
       },
       "team": {
@@ -938,11 +998,11 @@
         "count": "{count, plural, =0 {Aún no hay facturas emitidas} one {# factura} other {# facturas}}",
         "go": "Ver las facturas"
       },
-      "introMember": "Lo que necesitas para usar el Cerebro Digital de tu empresa: la licencia, las descargas de la última versión y, si las hay, las sesiones de montaje."
+      "introMember": "Lo que necesitas para usar el Cerebro Digital de tu empresa."
     },
     "license": {
       "title": "Tu licencia",
-      "intro": "El fichero de licencia prueba que el Cerebro Digital es de tu empresa, y el montaje te lo pide. Guárdalo; si lo pierdes, lo bajas aquí otra vez.",
+      "intro": "El fichero de licencia prueba que el Cerebro Digital es de tu empresa, y el montaje te lo pide. Si lo pierdes, lo bajas aquí otra vez.",
       "current": "La licencia que vale ahora",
       "team": "hasta {seats} personas",
       "solo": "una persona",
@@ -952,10 +1012,10 @@
       "download": "Descargar la licencia",
       "downloadShort": "Descargar",
       "preparing": "Tu licencia se está preparando. En unos minutos estará aquí y en tu correo.",
-      "pending": "Tu licencia está en camino: la firmamos y te llega por correo en unas horas. En cuanto esté, la tienes también aquí.",
+      "pending": "La firmamos y te llega por correo en unas horas. En cuanto esté, la tienes también aquí.",
       "pendingTitle": "Tu licencia, en camino",
       "onTheWay": "En camino",
-      "introPending": "El fichero de licencia prueba que el Cerebro Digital es de tu empresa, y el montaje te lo pide. Te llega por correo en cuanto lo firmemos y, desde entonces, también lo tienes aquí.",
+      "introPending": "El fichero de licencia prueba que el Cerebro Digital es de tu empresa, y el montaje te lo pide.",
       "pendingRenewal": "Tu licencia nueva del mensual está en camino: te llega por correo en unas horas y aparecerá aquí. Mientras, la de abajo sigue valiendo.",
       "fields": {
         "id": "Número",
@@ -968,8 +1028,8 @@
       "howTitle": "Lo que conviene saber",
       "how": {
         "keep": "Guarda el fichero con tus copias de seguridad. Si se modifica, deja de valer.",
-        "support": "La fecha de mantenimiento y soporte no limita el uso: el Cerebro Digital sigue funcionando después. Lo nuevo de cada versión se enciende si esa fecha cubre la de la versión.",
-        "security": "Las correcciones de seguridad te llegan gratis aunque esa fecha haya pasado.",
+        "support": "La fecha de mantenimiento y soporte no limita el uso: el Cerebro Digital sigue funcionando después. Lo nuevo de cada versión se enciende si sale hasta esa fecha y, con mantenimiento, también en los 15 días siguientes, por si falla un cobro del mensual (el fichero de la licencia ya lleva esos 15 días).",
+        "security": "Las correcciones de seguridad te llegan gratis aunque esa fecha haya pasado: cada versión las recibe durante cinco años desde que se publica.",
         "team": "Con equipo, la licencia vale para todas las personas que des de alta, hasta el límite de tu compra."
       },
       "others": "Licencias anteriores",
@@ -996,8 +1056,8 @@
         },
         "registry": {
           "title": "Instalador del registro (equipo)",
-          "text": "Para dejar la extensión instalada de una vez en los Windows de tu equipo. Si no sabes usarlo, pásaselo a tu persona de soporte.",
-          "short": "Windows del equipo"
+          "text": "Para instalar el registro del cerebro de equipo en el servidor de la oficina. No se instala en los ordenadores de cada persona: pásaselo a tu persona de soporte.",
+          "short": "el servidor de la oficina"
         },
         "extra": {
           "title": "Para tu persona técnica",
@@ -1016,7 +1076,7 @@
     },
     "invoices": {
       "title": "Facturas",
-      "intro": "Las facturas de tus compras y de cada cobro del mensual, y las condiciones que aceptaste en cada compra. Cada factura te llega también por correo al emitirse.",
+      "intro": "Las facturas de tus compras y de cada cobro del mensual. Cada factura te llega también por correo al emitirse.",
       "pending": "{count, plural, one {Hay # factura en preparación: te llega por correo en cuanto se emita y aparece aquí.} other {Hay # facturas en preparación: te llegan por correo en cuanto se emitan y aparecen aquí.}}",
       "listTitle": "Facturas emitidas",
       "empty": "Aún no hay facturas emitidas.",
@@ -1037,7 +1097,7 @@
         "dispute_lost": "contracargo"
       },
       "terms": "Condiciones del {version}",
-      "taxNote": "El IVA lo calcula Stripe en el pago, según tu país y tu NIF-IVA. Si tus datos fiscales no son correctos, escríbenos a info@pymaticlabs.com."
+      "taxNote": "El IVA de cada factura es el que se decidió al pagar, con los datos fiscales de tu empresa. Si no son correctos, escríbenos a info@pymaticlabs.com."
     },
     "monthly": {
       "title": "Mensual",
@@ -1048,40 +1108,46 @@
         "already_subscribed": "Ya tienes el mensual: lo cambias desde el portal de Stripe.",
         "unavailable": "No hemos podido abrir el pago. Prueba otra vez en un momento.",
         "product": "Ese plan no existe.",
-        "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar."
+        "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.",
+        "vat_invalid": "VIES, el registro europeo, ya no da por válido el NIF-IVA de tu empresa, y sin él no podemos facturar sin IVA. Escríbenos a info@pymaticlabs.com y lo vemos.",
+        "vat_unavailable": "No hemos podido comprobar el NIF-IVA de tu empresa en VIES, el registro europeo, que ahora no contesta. Inténtalo en unos minutos.",
+        "country_invalid": "No tenemos un país válido de tu empresa y sin él no podemos calcular el IVA. Escríbenos a info@pymaticlabs.com y lo arreglamos."
       },
       "statusTitle": "Tu mantenimiento y soporte",
       "subscribed": "Tienes el Mensual {plan}.",
       "statuses": {
-        "active": "Activo: se cobra cada mes por adelantado y se renueva solo hasta que lo canceles.",
+        "active": "Activo: se cobra por adelantado, cada mes o cada año según el pago que elegiste, y se renueva solo hasta que lo canceles.",
         "trialing": "Aún no se cobra: el primer cobro llega cuando acaban los meses incluidos en tu compra.",
-        "past_due": "Hay un cobro pendiente. Revisa la tarjeta en el portal de Stripe.",
-        "unpaid": "Hay cobros sin pagar. Revisa la tarjeta: si siguen sin pagarse, se suspende tras avisarte con 15 días.",
+        "past_due": "Hay un cobro sin pagar: te lo hemos avisado por correo. Revisa la tarjeta en el portal de Stripe. Durante 15 días desde el aviso sigues teniendo el mantenimiento y el soporte, versiones nuevas incluidas; si para entonces no se ha pagado, se suspenden.",
+        "unpaid": "Hay cobros sin pagar y el mantenimiento y el soporte están suspendidos. Paga lo pendiente o cambia la tarjeta en el portal de Stripe para seguir; tu licencia y lo instalado siguen funcionando.",
         "paused": "En pausa."
       },
-      "licenseUntil": "Tu licencia actual cubre hasta el {date}. Cada cobro trae una licencia nueva con la fecha nueva, aquí en la zona.",
+      "licenseUntil": "Pagado hasta el {date}. Cada cobro trae una licencia nueva con la fecha nueva, aquí en la zona.",
       "included": "Tu compra incluye mantenimiento y soporte hasta el {date}.",
-      "includedNext": "Para seguir después, contrata el mensual: no se cobra nada hasta el {date}.",
-      "includedNextPlan": "Para seguir después, contrata el mensual: con el plan {plan} o uno menor no se cobra nada hasta el {date}; con uno mayor, se cobra desde que lo contratas.",
+      "includedNext": "Para seguir después, contrata el mensual: como tus meses incluidos acaban ya, se cobra desde el día en que lo contratas.",
+      "includedNextPlan": "Para seguir después, contrata el mensual: con el plan {plan} o uno menor, pagues al mes o al año, no se cobra nada hasta el {date}; con uno mayor, se cobra desde que lo contratas.",
       "none": "Ahora no tienes mantenimiento ni soporte.",
       "noneText": "Tu licencia sigue valiendo y lo instalado sigue funcionando. Con el mensual vuelves a tener las versiones nuevas con lo nuevo encendido, y soporte.",
       "portal": "Cambiar la tarjeta, el plan o cancelar",
-      "portalNote": "Se abre el portal de clientes de Stripe, que es quien cobra. Al acabar, vuelves aquí.",
+      "portalNote": "Se abre el portal de clientes de Stripe, que es quien cobra. Allí cambias también entre pago mensual y anual: pasar a anual o a un plan mayor se cobra ese día; bajar de plan o volver al pago mensual, al acabar el periodo pagado. Mientras te queden meses incluidos, ningún cambio se cobra antes de que acaben. Cuando termines, vuelves aquí.",
       "securityTitle": "La seguridad no depende del mensual",
-      "security": "Las correcciones de seguridad llegan gratis a todos los clientes durante el periodo de soporte de su versión, tengan o no el mensual.",
+      "security": "Las correcciones de seguridad llegan gratis a todos los clientes durante el periodo de soporte de su versión: cinco años desde que se publica.",
       "plansTitle": "Planes del mensual",
-      "plansText": "Al pulsar vas al pago de Stripe, con tu empresa ya puesta.",
+      "plansText": "Al mes, o por año adelantado al precio de 10 meses. Al pulsar vas al pago de Stripe, con tu empresa ya puesta.",
       "plansClosed": "La contratación en línea abre en breve. Mientras, escríbenos a info@pymaticlabs.com.",
       "planName": "Mensual {plan}",
       "perMonth": "al mes, sin IVA",
-      "subscribe": "Contratar {plan}"
+      "subscribe": "Contratar {plan}",
+      "yearly": "o {price} al año, sin IVA: el precio de 10 meses",
+      "subscribeMonth": "Contratar {plan} al mes",
+      "subscribeYear": "Contratar {plan} al año"
     },
     "team": {
       "title": "Tu equipo",
       "intro": "Con tu licencia con equipo entran hasta {seats} personas, contándote a ti. Cada una entra con su correo y un código, como tú, y baja la extensión. No ven las facturas ni el equipo.",
       "count": "{count} de {seats} personas dadas de alta",
       "memberNote": "El equipo lo gestiona la persona que compró. Si alguien más necesita entrar, pídeselo a ella.",
-      "solo": "Tu licencia es para una persona. Para que la usen más, se pasa a la licencia con equipo: escríbenos a info@pymaticlabs.com.",
+      "solo": "Tu licencia es para una persona. Para que la usen más, se pasa a la licencia con equipo pagando la diferencia: escríbenos a info@pymaticlabs.com.",
       "how": "Al dar de alta a alguien, le llega un correo con el enlace a la zona. Al darle de baja, deja de poder entrar al momento.",
       "errors": {
         "email": "Escribe un correo completo, por ejemplo nombre@tuempresa.es.",
@@ -1103,7 +1169,7 @@
       "removeLabel": "Dar de baja a {email}",
       "remove": "Dar de baja",
       "addTitle": "Dar de alta a una persona",
-      "addText": "Escribe su correo de trabajo. Le llega un correo para entrar.",
+      "addText": "Escribe su correo de trabajo.",
       "fullText": "Ya están las {seats} personas de tu licencia. Para dar de alta a otra, da de baja a alguien antes. Para más de {seats}, escríbenos.",
       "emailLabel": "Correo de la persona",
       "adding": "Dando de alta…",
@@ -1111,7 +1177,7 @@
     },
     "sessions": {
       "title": "Sesiones de montaje",
-      "intro": "Dos sesiones de una hora por videollamada, con Eric o con Sergio, para dejar tu Cerebro Digital montado. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora peninsular.",
+      "intro": "Dos sesiones de una hora por videollamada, con Eric o con Sergio, para dejar tu Cerebro Digital montado. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora de Madrid.",
       "notGuided": "Las sesiones de montaje son del Acompañado. Para tenerlas, pasa al Acompañado pagando la diferencia: escríbenos a info@pymaticlabs.com.",
       "bookedTitle": "Tus sesiones",
       "noneBooked": "Aún no tienes ninguna sesión reservada.",
@@ -1146,5 +1212,14 @@
       "noSlotsHost": "Con esa persona no quedan huecos en estas semanas. Prueba con la otra o escríbenos.",
       "bookedNotice": "Sesión reservada. Te llega la confirmación por correo, con el enlace de la videollamada."
     }
+  },
+  "notFound": {
+    "metaTitle": "Página no encontrada",
+    "eyebrow": "Error 404",
+    "title": "Esta página no existe",
+    "text": "Puede que el enlace esté mal copiado o que la página ya no exista. Desde aquí puedes volver al inicio, ver los precios o escribirnos.",
+    "home": "Volver al inicio",
+    "pricing": "Ver precios",
+    "contact": "Escríbenos"
   }
 }

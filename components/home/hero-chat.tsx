@@ -36,7 +36,7 @@ export default function HeroChat({ texts }: { texts: HeroChatTexts }) {
   const [play, setPlay] = useState<Play>(final)
   const [ready, setReady] = useState(false)
   const [animated, setAnimated] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
+  const box = useRef<HTMLElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => {
@@ -89,7 +89,8 @@ export default function HeroChat({ texts }: { texts: HeroChatTexts }) {
   }, [start])
 
   return (
-    <figure ref={box} data-chat="" data-ready={ready ? '' : undefined}>
+    // tabIndex -1: al ver otra vez, el foco pasa a la figura (el boton se oculta mientras se repite).
+    <figure ref={box} tabIndex={-1} data-chat="" data-ready={ready ? '' : undefined} className="focus:outline-none">
       {/* Para lectores de pantalla, la conversacion entera de una vez (la ventana es solo imagen) */}
       <figcaption className="sr-only">
         {texts.caption}: «{texts.q1}» — «{texts.a1}» ({texts.source1})
@@ -117,7 +118,10 @@ export default function HeroChat({ texts }: { texts: HeroChatTexts }) {
       {/* Siempre ocupa su sitio (nada salta al aparecer); solo se ve y se pulsa al acabar */}
       <button
         type="button"
-        onClick={start}
+        onClick={() => {
+          box.current?.focus()
+          start()
+        }}
         tabIndex={animated && play.done ? 0 : -1}
         aria-hidden={animated && play.done ? undefined : true}
         className={cn(

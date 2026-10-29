@@ -10,6 +10,7 @@ import { reconcile } from './delivery/reconcile.ts'
 import { revocationList } from './delivery/versions.ts'
 import { fakeCharge, fakeCheckoutSession, fakeDispute, fakeEvent, fakeInvoice } from './delivery/fake-stripe.ts'
 import { priceCents } from './delivery/products.ts'
+import { cifWithControl } from './delivery/checkout-nif.ts'
 import { unzip } from './delivery/zip.ts'
 import { licenseFile, zoneOverview } from './delivery/zone.ts'
 import { canonical, LICENSES_PUBLIC_KEY, privateKeyFromSeed, rawPublicKey, serializeLicense, signLicense, verifyLicense, type LicenseData } from './license.ts'
@@ -46,7 +47,7 @@ function world(env: Record<string, string> = {}) {
 const HOUR = 3600_000
 let counter = 0
 function buyer(n = ++counter) {
-  return { company: `Manual ${n} SL`, taxId: `B${String(30000000 + n)}`, email: `compras${n}@manual${n}.test` }
+  return { company: `Manual ${n} SL`, taxId: cifWithControl(`B${String(3000000 + n)}`), email: `compras${n}@manual${n}.test` }
 }
 
 async function buy(w: ReturnType<typeof world>, product: ModalityId = 'hazlo-tu-equipo') {
@@ -90,14 +91,14 @@ test('a mano: la compra pide la licencia a Eric con los campos tal cual, la bien
   const company = (await w.d.repo.getCompany(purchase.companyId!))!
   assert.deepEqual(
     [request.status, request.kind, request.modalidad, request.equipo, request.seats, request.emitida, request.soporteHasta, request.nif, request.cliente, request.paymentRef],
-    ['pending', 'one_time', 'hazlo-tu', true, 10, '2026-11-02', '2027-02-02', company.taxId, company.name, purchase.paymentRef]
+    ['pending', 'one_time', 'hazlo-tu', true, 10, '2026-11-02', '2027-02-17', company.taxId, company.name, purchase.paymentRef]
   )
 
   // El correo a Eric: los campos, el JSON, como subirla, y sin numero de la web.
   const ask = w.f.mailer.sent.find((m) => m.to === 'eric@pymaticlabs.test' && /Licencia a firmar/.test(m.subject))
   assert.ok(ask)
   assert.match(ask.subject, /^PRUEBA · /) // pago de prueba de Stripe
-  assert.ok(ask.text.includes(JSON.stringify({ cliente: request.cliente, nif: request.nif, modalidad: 'hazlo-tu', equipo: true, emitida: '2026-11-02', soporte_hasta: '2027-02-02' })))
+  assert.ok(ask.text.includes(JSON.stringify({ cliente: request.cliente, nif: request.nif, modalidad: 'hazlo-tu', equipo: true, emitida: '2026-11-02', soporte_hasta: '2027-02-17' })))
   assert.ok(ask.text.includes(`scripts/subir-licencia.mts --web https://web.example.test --compra ${purchase.id} --fichero`))
   assert.match(ask.text, /del 0001 al 5000/)
   assert.doesNotMatch(ask.text, /PML-LIC-2026-\d{4}/)
@@ -117,7 +118,7 @@ test('a mano: la compra pide la licencia a Eric con los campos tal cual, la bien
   const user = { id: (await w.d.repo.listMembers(purchase.companyId!))[0].userId!, email: purchase.email }
   const o = await zoneOverview(w.d, user)
   assert.deepEqual(o.licenses, [])
-  assert.deepEqual(o.pendingLicenses.map((p) => [p.kind, p.modalidad, p.equipo, p.soporteHasta]), [['one_time', 'hazlo-tu', true, '2027-02-02']])
+  assert.deepEqual(o.pendingLicenses.map((p) => [p.kind, p.modalidad, p.equipo, p.soporteHasta, p.paidUntil]), [['one_time', 'hazlo-tu', true, '2027-02-17', '2027-02-02']])
 })
 
 test('a mano: la licencia subida se comprueba con la clave y con la compra, se guarda, llega al cliente en .zip y se baja de la zona', async () => {
@@ -128,7 +129,7 @@ test('a mano: la licencia subida se comprueba con la clave y con la compra, se g
   // Lo que no vale: otra clave, otro soporte_hasta, otro NIF, sin equipo, un numero de la web, nada.
   const other = key()
   await rejects(uploadManualLicense(w.d, purchase.id, sign(request, 'PML-LIC-2026-0101', {}, other.seed, other.publicKey)), 400, /no verifica con la clave de pruebas/)
-  await rejects(uploadManualLicense(w.d, purchase.id, sign(request, 'PML-LIC-2026-0101', { soporte_hasta: '2027-03-02' })), 409, /no cuadra con la compra: soporte_hasta "2027-03-02" \(la compra: "2027-02-02"\)/)
+  await rejects(uploadManualLicense(w.d, purchase.id, sign(request, 'PML-LIC-2026-0101', { soporte_hasta: '2027-03-02' })), 409, /no cuadra con la compra: soporte_hasta "2027-03-02" \(la compra: "2027-02-17"\)/)
   await rejects(uploadManualLicense(w.d, purchase.id, sign(request, 'PML-LIC-2026-0101', { nif: 'B99999999' })), 409, /nif "B99999999"/)
   await rejects(uploadManualLicense(w.d, purchase.id, sign(request, 'PML-LIC-2026-0101', { equipo: false })), 409, /equipo false .*plazas: 10 con equipo false/)
   await rejects(uploadManualLicense(w.d, purchase.id, sign(request, 'PML-LIC-2026-5001')), 400, /los numeros del Mac son del 0001 al 5000/)
@@ -253,8 +254,8 @@ test('a mano: el mensual pide su licencia nueva (aunque la del pago unico siga s
   await runJobs(w.d)
   const renewal = (await w.d.repo.getPurchaseByPaymentRef(String(invoice.id)))!
   const renewalRequest = (await w.d.repo.getLicenseRequestByPurchase(renewal.id))!
-  // La modalidad y el equipo, de la pedida del pago unico; el soporte, el del periodo cobrado.
-  assert.deepEqual([renewalRequest.kind, renewalRequest.modalidad, renewalRequest.equipo, renewalRequest.soporteHasta], ['renewal', 'hazlo-tu', true, '2027-04-02'])
+  // La modalidad y el equipo, de la pedida del pago unico; el soporte, el del periodo cobrado y 15 dias de margen.
+  assert.deepEqual([renewalRequest.kind, renewalRequest.modalidad, renewalRequest.equipo, renewalRequest.soporteHasta], ['renewal', 'hazlo-tu', true, '2027-04-17'])
   assert.equal(await w.d.repo.getJobByKey(`renewal_email:${renewal.id}`), null)
   assert.ok(w.f.mailer.sent.some((m) => /^Cobro del mensual: licencia a mano/.test(m.subject)))
   assert.equal((await w.d.repo.listJobs({ status: 'dead' })).length, 0)
@@ -356,7 +357,8 @@ test('a mano: una devolucion a la vez que la subida gana siempre: la licencia qu
     }
     await w.d.repo.enqueueJobs([{ key: `revoke:${purchase.id}:refund`, kind: 'revoke', payload: { purchaseId: purchase.id, reason: 'refund', final: true } }], new Date('2026-11-02T10:00:00Z'))
     await runJobs(w.d)
-    assert.equal(((await upload) as { already: boolean }).already, false)
+    // upload se asigna dentro de updateLicenseRequest: TypeScript lo da aqui por null.
+    assert.equal(((await (upload as Promise<unknown> | null)) as { already: boolean }).already, false)
     await refund(w, session, purchase.amountTotal)
     const lic = (await w.d.repo.getLicenseByPurchase(purchase.id))!
     assert.deepEqual([lic.revokedReason, (await w.d.repo.getLicenseRequestByPurchase(purchase.id))!.status], ['refund', 'issued'])

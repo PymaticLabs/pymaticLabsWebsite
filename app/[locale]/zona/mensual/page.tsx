@@ -13,14 +13,16 @@ import { loadZone } from '@/lib/zone-page'
 import { monthlyState, planName } from '@/lib/zone-view'
 
 // El mensual (solo quien compro): en que punto esta su mantenimiento y soporte y, segun el caso, el
-// portal de cliente de Stripe (tarjeta, plan, cancelar) o los tres planes para contratarlo. Si aun le
-// quedan meses incluidos, el primer cobro llega cuando acaban (lib/checkout.ts, trialEndFor).
+// portal de cliente de Stripe (tarjeta, plan, pago mensual o anual, cancelar) o los tres planes para
+// contratarlo, al mes o por ano adelantado (el precio de 10 meses: oferta v1.9). Si aun le quedan
+// meses incluidos, el primer cobro llega cuando acaban (lib/checkout.ts, trialEndFor). El IVA, el de
+// su empresa (con NIF-IVA, VIES otra vez al contratar: si no vale o no contesta, el error aqui).
 
 export const dynamic = 'force-dynamic'
 
 type Params = Promise<{ locale: string }>
 
-const ERRORS = ['closed', 'company_required', 'already_subscribed', 'unavailable', 'product', 'rate_limited'] as const
+const ERRORS = ['closed', 'company_required', 'already_subscribed', 'unavailable', 'product', 'rate_limited', 'vat_invalid', 'vat_unavailable', 'country_invalid'] as const
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale } = await params
@@ -124,6 +126,7 @@ export default async function MensualPage({ params, searchParams }: { params: Pa
                   <span className="text-3xl font-bold text-ink">{formatPrice(plan.monthly, locale)}</span>
                   <span className="text-sm text-muted">{t('monthly.perMonth')}</span>
                 </p>
+                <p className="mt-1 text-sm text-muted">{t('monthly.yearly', { price: formatPrice(plan.yearly, locale) })}</p>
                 <ul className="mt-5 flex-1 space-y-2">
                   {rows
                     .filter((row) => row.values[index])
@@ -135,12 +138,16 @@ export default async function MensualPage({ params, searchParams }: { params: Pa
                     ))}
                 </ul>
                 {open && (
-                  <form action="/api/checkout" method="post" className="mt-6">
+                  // El boton que se pulsa dice el periodo (period=month o year).
+                  <form action="/api/checkout" method="post" className="mt-6 space-y-3">
                     <input type="hidden" name="product" value={`plan-${plan.id}`} />
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="company" value={data.company.id} />
-                    <Button type="submit" size="lg" variant={plan.id === 'pro' ? 'default' : 'outline'} className="w-full">
-                      {t('monthly.subscribe', { plan: tOffer(`plans.${plan.id}`) })}
+                    <Button type="submit" name="period" value="month" size="lg" variant={plan.id === 'pro' ? 'default' : 'outline'} className="w-full">
+                      {t('monthly.subscribeMonth', { plan: tOffer(`plans.${plan.id}`) })}
+                    </Button>
+                    <Button type="submit" name="period" value="year" size="lg" variant="outline" className="w-full">
+                      {t('monthly.subscribeYear', { plan: tOffer(`plans.${plan.id}`) })}
                     </Button>
                   </form>
                 )}

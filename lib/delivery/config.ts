@@ -8,6 +8,8 @@
 import { randomBytes } from 'node:crypto'
 import { LICENSES_PUBLIC_KEY } from '../license.ts'
 import { LAUNCH_CUSTOMERS } from '../offer.ts'
+import { PYMATICLABS_VAT_ID, viesRequester } from './vies.ts'
+import { VIES_REST_API } from './adapters/vies-checker.ts'
 
 export type DeliveryMode = 'fake' | 'live'
 
@@ -28,6 +30,8 @@ export interface AdapterChoice {
   calendar: 'fake' | 'calcom'
   auth: 'fake' | 'supabase'
   payments: 'fake' | 'stripe'
+  /** La consulta del NIF-IVA antes de vender sin IVA a una empresa de la UE. */
+  vies: 'fake' | 'vies'
 }
 
 export interface JobsConfig {
@@ -44,7 +48,9 @@ export interface JobsConfig {
 export interface LimitsConfig {
   /** Pagos abiertos por IP cada 10 minutos. */
   checkoutPerIp: number
-  /** Huecos de Cal.com apartados a la vez: por IP y en total (lo que dura un pago abierto). */
+  /** Consultas a VIES cada 10 minutos por IPv4, o por /48 en IPv6: cada una es una llamada a la Comision Europea. */
+  viesPerIp: number
+  /** Huecos de Cal.com apartados a la vez: por IPv4 (o /48 en IPv6) y en total (lo que dura un pago abierto). */
   holdsPerIp: number
   holdsTotal: number
   /** Codigos pedidos por IP cada 15 minutos, y por correo cada hora (de mas, no se manda nada). */
@@ -108,10 +114,17 @@ export interface DeliveryConfig {
   ipSalt: string
   limits: LimitsConfig
   launchLimit: number
-  /** Plazas de lanzamiento abiertas a la vez desde una misma IP (frena a quien las acapare). */
+  /** Plazas de lanzamiento abiertas a la vez desde una misma conexion (la IPv4, o el /56 en IPv6): frena a quien las acapare. */
   launchClientLimit: number
   /** Lo que dura un pago abierto en Stripe Checkout (el minimo de Stripe son 30). */
   checkoutMinutes: number
+  /**
+   * VIES: el NIF-IVA que pregunta (el de PymaticLabs, de alta en el ROI: asi VIES da numero de
+   * consulta), cuanto se le espera antes de decir al cliente que pruebe en unos minutos y si se
+   * pregunta a su servicio de prueba (VIES_TEST_SERVICE=true: solo con Stripe de prueba y fuera de
+   * produccion; adapters/vies-checker.ts).
+   */
+  vies: { requester: string; timeoutMs: number; testService: boolean }
   /** Lo que valen los enlaces de descarga. */
   downloadTtlSeconds: number
   /** Dias hacia atras que mira la conciliacion diaria. */
@@ -171,6 +184,7 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
     calendar: pick(env.DELIVERY_CALENDAR, ['fake', 'calcom'] as const, fake ? 'fake' : 'calcom', 'DELIVERY_CALENDAR'),
     auth: pick(env.DELIVERY_AUTH, ['fake', 'supabase'] as const, fake ? 'fake' : 'supabase', 'DELIVERY_AUTH'),
     payments: pick(env.DELIVERY_PAYMENTS, ['fake', 'stripe'] as const, fake ? 'fake' : 'stripe', 'DELIVERY_PAYMENTS'),
+    vies: pick(env.DELIVERY_VIES, ['fake', 'vies'] as const, fake ? 'fake' : 'vies', 'DELIVERY_VIES'),
   }
   // Pagos de mentira (o todo en falso) con la clave de KMS: cualquiera sacaria licencias de verdad gratis.
   if ((fake || adapters.payments === 'fake') && adapters.signer === 'gcp-kms') {
@@ -185,8 +199,24 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
   }
   const stripeKey = env.STRIPE_SECRET_KEY?.trim() ?? ''
   const stripeLive = adapters.payments === 'fake' ? false : stripeKey ? /^(sk|rk)_live_/.test(stripeKey) : null
+  // VIES de mentira con cobros de verdad: daria por valido cualquier NIF-IVA bien escrito y venderia a 0 %.
+  if (adapters.vies === 'fake' && stripeLive) throw new Error('DELIVERY_VIES=fake con Stripe en vivo: sin VIES de verdad no se vende sin IVA a la UE')
+  // El servicio de prueba de VIES contesta por el numero (100, valido), no por el registro: lo mismo.
+  const viesTestService = pick(env.VIES_TEST_SERVICE, ['true', 'false'] as const, 'false', 'VIES_TEST_SERVICE') === 'true'
+  if (viesTestService && (stripeLive || env.VERCEL_ENV === 'production')) {
+    throw new Error('VIES_TEST_SERVICE=true con Stripe en vivo o en produccion: el servicio de prueba de VIES no comprueba ningun NIF-IVA')
+  }
+  // Otra direccion de VIES (un servidor de mentira, o el servicio de prueba con un «?» al final, que
+  // deja fuera la ruta del adaptador): lo mismo. Solo la de verdad.
+  const viesApiUrl = env.VIES_API_URL?.trim().replace(/\/+$/, '') ?? ''
+  if (viesApiUrl && viesApiUrl !== VIES_REST_API && (stripeLive || env.VERCEL_ENV === 'production')) {
+    throw new Error(`VIES_API_URL=${viesApiUrl} con Stripe en vivo o en produccion: solo el VIES de verdad comprueba el NIF-IVA (quitarla)`)
+  }
   const ipSalt = env.DELIVERY_IP_SALT?.trim() || (fake ? env.DELIVERY_FAKE_SECRET || randomBytes(32).toString('hex') : '')
   if (ipSalt.length < 16) throw new Error('DELIVERY_IP_SALT sin configurar (o corta): openssl rand -hex 32')
+  // Un VIES_REQUESTER mal puesto se dice al montar (no al primer cliente de la UE).
+  const viesRequesterId = env.VIES_REQUESTER?.trim().toUpperCase().replace(/[\s.-]/g, '') || PYMATICLABS_VAT_ID
+  viesRequester(viesRequesterId)
 
   return {
     mode,
@@ -210,6 +240,7 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
     ipSalt,
     limits: {
       checkoutPerIp: int(env.LIMIT_CHECKOUT_PER_IP, 10),
+      viesPerIp: int(env.LIMIT_VIES_PER_IP, 10),
       holdsPerIp: int(env.LIMIT_HOLDS_PER_IP, 3),
       holdsTotal: int(env.LIMIT_HOLDS_TOTAL, 30),
       loginPerIp: int(env.LIMIT_LOGIN_PER_IP, 10),
@@ -221,6 +252,7 @@ export function readConfig(env: Env = process.env): DeliveryConfig {
     launchLimit: int(env.LAUNCH_LIMIT, LAUNCH_CUSTOMERS),
     launchClientLimit: int(env.LAUNCH_CLIENT_LIMIT, 2),
     checkoutMinutes: Math.max(30, int(env.CHECKOUT_MINUTES, 30)),
+    vies: { requester: viesRequesterId, timeoutMs: Math.min(20_000, int(env.VIES_TIMEOUT_MS, 6000)), testService: viesTestService },
     downloadTtlSeconds: int(env.DOWNLOAD_URL_TTL_SECONDS, 300),
     reconcileDays: int(env.RECONCILE_DAYS, 40),
     jobs: {
@@ -261,6 +293,7 @@ export function devToolsEnabled(config: DeliveryConfig): boolean {
     a.storage === 'local' &&
     a.calendar === 'fake' &&
     a.auth === 'fake' &&
-    a.payments === 'fake'
+    a.payments === 'fake' &&
+    a.vies === 'fake'
   )
 }

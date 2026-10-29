@@ -73,11 +73,11 @@ export function ChatWindow({
 /** Entrada de un mensaje nuevo (solo con movimiento permitido). */
 const POP = 'motion-safe:animate-[pop-in_0.45s_cubic-bezier(0.2,0.7,0.2,1)_both]'
 
-/** Lo que pregunta la persona. */
+/** Lo que pregunta la persona: el blanco, por encima de 4,5:1 en todo el degradado. */
 export function Ask({ children, pop }: { children: React.ReactNode; pop?: boolean }) {
   return (
     <div className={cn('flex justify-end', pop && POP)}>
-      <p className="max-w-[85%] rounded-[22px] rounded-br-md bg-gradient-to-b from-[#2F7BFF] to-brand px-4 py-2.5 text-[15px] leading-snug text-white sm:text-base">
+      <p className="max-w-[85%] rounded-[22px] rounded-br-md bg-gradient-to-b from-brand to-brand-dark px-4 py-2.5 text-[15px] leading-snug text-white sm:text-base">
         {children}
       </p>
     </div>
@@ -96,14 +96,17 @@ export function Answer({ children, pop }: { children: React.ReactNode; pop?: boo
   )
 }
 
-/** "Escribiendo...": tres puntos mientras piensa. */
+/**
+ * "Escribiendo...": tres puntos mientras piensa. Saltan tres veces (unos 3,6 s) y se quedan quietos en
+ * reposo, sin bucles: en la historia de las tareas los puntos se quedan a la vista mientras se lee.
+ */
 export function Typing() {
   return (
     <div className="flex items-end gap-2">
       <CerebroIcon className="mb-0.5 h-7 w-7" />
       <div className="flex gap-1 rounded-[22px] rounded-bl-md bg-[#EDEEF1] px-4 py-3.5 dark:bg-[#1C2230]">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="h-2 w-2 rounded-full bg-muted motion-safe:animate-[typing-dot_1.1s_ease-in-out_infinite]" style={{ animationDelay: `${i * 0.15}s` }} />
+          <span key={i} className="h-2 w-2 rounded-full bg-muted motion-safe:animate-[typing-dot_1.1s_ease-in-out_3_both]" style={{ animationDelay: `${i * 0.15}s` }} />
         ))}
       </div>
     </div>
@@ -129,7 +132,7 @@ export function Source({ children, pop }: { children: React.ReactNode; pop?: boo
 export function FileCard({ name, meta }: { name: string; meta: string }) {
   return (
     <span className="mt-2.5 flex items-center gap-3 rounded-2xl bg-surface p-2.5 pr-4 shadow-[0_1px_3px_rgb(0_0_0/0.08)]">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E5484D] text-[11px] font-bold tracking-wide text-white">PDF</span>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D13438] text-[11px] font-bold tracking-wide text-white">PDF</span>
       <span className="min-w-0">
         <span className="block font-semibold text-ink">{name}</span>
         <span className="block text-sm text-muted">{meta}</span>

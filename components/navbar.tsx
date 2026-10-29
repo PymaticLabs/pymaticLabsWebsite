@@ -12,8 +12,17 @@ import { localePath } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { profileInitials, profileShortcuts, setProfileHint, type ZoneProfile, type ZoneProfileResponse } from '@/lib/zone-profile'
 
-/** Las paginas de la zona de socio: se pintan en el servidor con la sesion. */
-const ZONE_PAGE = /^\/(en\/)?zona(\/|$)/
+/** Las paginas de la zona de socio (en la ruta sin idioma): se pintan en el servidor con la sesion. */
+const ZONE_PAGE = /^\/zona(\/|$)/
+
+/**
+ * La ruta sin el idioma ('/', '/precios'). En las paginas estaticas usePathname da la ruta interna de
+ * next-intl (/es/precios, tambien en castellano); en las dinamicas, la de fuera (/precios o /en/precios).
+ * Se quitan los dos prefijos: asi el servidor y el navegador dan lo mismo.
+ */
+function useBarePath() {
+  return usePathname().replace(/^\/(es|en)(?=\/|$)/, '') || '/'
+}
 
 /** hidden: la zona aun no esta montada; guest: sin sesion (o aun no se sabe); si no, quien entro. */
 type Account = 'hidden' | 'guest' | ZoneProfile
@@ -22,7 +31,7 @@ type Account = 'hidden' | 'guest' | ZoneProfile
 export default function Navbar({ zone }: { zone: boolean }) {
   const t = useTranslations('nav')
   const locale = useLocale()
-  const pathname = usePathname()
+  const barePath = useBarePath()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [account, setAccount] = useState<Account>(zone ? 'guest' : 'hidden')
@@ -81,6 +90,12 @@ export default function Navbar({ zone }: { zone: boolean }) {
     setAccount('guest')
   }, [])
 
+  // Al cambiar de pagina (tambien con la flecha de atras), los menus se cierran.
+  useEffect(() => {
+    setIsMobileOpen(false)
+    setAccountOpen(false)
+  }, [barePath])
+
   // Tras cerrar la sesion desde el menu, el foco pasa a Entrar (el boton del perfil ya no esta).
   useEffect(() => {
     if (account === 'guest' && focusLogin.current) {
@@ -90,9 +105,11 @@ export default function Navbar({ zone }: { zone: boolean }) {
   }, [account])
 
   // La misma pagina en el otro idioma: las rutas no cambian, solo el prefijo /en.
-  const barePath = pathname.replace(/^\/en(?=\/|$)/, '') || ''
+  const path = barePath === '/' ? '' : barePath
   const altLocale = locale === 'en' ? 'es' : 'en'
-  const altHref = localePath(altLocale, barePath === '/' ? '' : barePath)
+  const altHref = localePath(altLocale, path)
+  const current = localePath(locale, path)
+  const closeMobile = () => setIsMobileOpen(false)
 
   const navLinks = [
     { href: localePath(locale, '/funciones'), label: t('comoFunciona') },
@@ -101,7 +118,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
     { href: localePath(locale, '/contacto'), label: t('contacto') },
   ]
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => current === href
   const loginHref = localePath(locale, '/zona/entrar')
 
   return (
@@ -113,7 +130,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* El producto, con su sello, y debajo quien lo hace. */}
-        <Link href={localePath(locale)} className="flex min-h-11 items-center gap-2.5" aria-label={t('home')}>
+        <Link href={localePath(locale)} onClick={closeMobile} className="flex min-h-11 items-center gap-2.5" aria-label={t('home')}>
           <CerebroIcon className="h-9 w-9" />
           <span className="flex flex-col">
             <span className="text-[17px] font-bold leading-tight text-ink">{t('brand')}</span>
@@ -143,6 +160,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
             <Link
               href={altHref}
               hrefLang={altLocale}
+              lang={altLocale}
               aria-label={t('langLabel')}
               className="inline-flex h-11 items-center text-sm font-medium text-muted hover:text-ink border border-line rounded-full px-4 bg-surface/70 dark:bg-transparent"
             >
@@ -170,13 +188,14 @@ export default function Navbar({ zone }: { zone: boolean }) {
                   <Link
                     ref={loginRef}
                     href={loginHref}
+                    onClick={closeMobile}
                     aria-label={t('loginLabel')}
-                    aria-current={pathname === loginHref ? 'page' : undefined}
+                    aria-current={isActive(loginHref) ? 'page' : undefined}
                     className={cn(
                       LOGIN_PILL,
                       'nav-login col-start-1 row-start-1 bg-surface/70 transition-colors hover:border-brand hover:text-brand dark:bg-transparent',
                       // En la propia pagina de entrar, se ve que ya se esta ahi.
-                      pathname === loginHref ? 'border-brand text-brand' : 'border-field/50 text-ink'
+                      isActive(loginHref) ? 'border-brand text-brand' : 'border-field/50 text-ink'
                     )}
                   >
                     <UserRound className="h-4 w-4" aria-hidden="true" />
@@ -211,8 +230,9 @@ export default function Navbar({ zone }: { zone: boolean }) {
             <Link
               key={link.href}
               href={link.href}
-              className="block text-base text-ink hover:text-brand py-3"
-              onClick={() => setIsMobileOpen(false)}
+              aria-current={isActive(link.href) ? 'page' : undefined}
+              className={cn('block text-base hover:text-brand py-3', isActive(link.href) ? 'text-brand font-medium' : 'text-ink')}
+              onClick={closeMobile}
             >
               {link.label}
             </Link>
@@ -222,13 +242,14 @@ export default function Navbar({ zone }: { zone: boolean }) {
             <Link
               href={altHref}
               hrefLang={altLocale}
+              lang={altLocale}
               aria-label={t('langLabel')}
               className="inline-flex h-11 items-center text-sm font-medium text-muted border border-line rounded-full px-4"
             >
               {t('langSwitch')}
             </Link>
             <Button className="h-11 px-5" asChild>
-              <Link href={localePath(locale, '/precios')} onClick={() => setIsMobileOpen(false)}>
+              <Link href={localePath(locale, '/precios')} onClick={closeMobile}>
                 {t('cta')}
               </Link>
             </Button>
@@ -239,8 +260,8 @@ export default function Navbar({ zone }: { zone: boolean }) {
   )
 }
 
-/** La forma del boton Entrar (y de su copia invisible, que da el ancho del hueco). */
-const LOGIN_PILL = 'inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium'
+/** La forma del boton Entrar (y de su copia invisible, que da el ancho del hueco), siempre en una linea. */
+const LOGIN_PILL = 'inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-medium'
 
 const SHORTCUT_ICONS = { licencia: KeyRound, descargas: Download, facturas: Receipt }
 
@@ -263,7 +284,8 @@ function AccountMenu({
 }) {
   const t = useTranslations('nav.account')
   const locale = useLocale()
-  const pathname = usePathname()
+  const barePath = useBarePath()
+  const current = localePath(locale, barePath === '/' ? '' : barePath)
   const panelId = useId()
   const root = useRef<HTMLDivElement>(null)
   const button = useRef<HTMLButtonElement>(null)
@@ -321,7 +343,7 @@ function AccountMenu({
       if (!res.ok && res.status !== 401) throw new Error(String(res.status))
       setProfileHint(false)
       // En la zona, a entrar (sus paginas se pintan con la sesion); en las demas solo cambia la barra.
-      if (ZONE_PAGE.test(pathname)) {
+      if (ZONE_PAGE.test(barePath)) {
         window.location.assign(localePath(locale, '/zona/entrar'))
         return
       }
@@ -399,7 +421,7 @@ function AccountMenu({
               <li key={href}>
                 <Link
                   href={href}
-                  aria-current={pathname === href ? 'page' : undefined}
+                  aria-current={current === href ? 'page' : undefined}
                   onClick={() => onToggle(false)}
                   className={cn(
                     'flex min-h-11 items-center gap-3 rounded-xl px-3 text-base text-ink transition-colors hover:bg-paper-2 hover:text-brand',

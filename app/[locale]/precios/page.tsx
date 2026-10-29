@@ -6,18 +6,15 @@ import SectionHeader from '@/components/section-header'
 import ModalityCard from '@/components/pricing/modality-card'
 import FaqList from '@/components/faq-list'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
 import { isCheckoutOpen } from '@/lib/checkout'
-import {
-  CUSTOM_FROM_PRICE,
-  PACK_ESPANA_PRICE,
-  formatPrice,
-  modalities,
-  plans,
-  type Modality,
-} from '@/lib/offer'
+import { CUSTOM_FROM_PRICE, formatPrice, modalities, plans, type Modality } from '@/lib/offer'
+import { formatMonthYear, offerStatus } from './offer-status'
+
+// Estatica, rehecha cada 5 minutos: lee si quedan plazas de lanzamiento (sin ninguna, solo el precio
+// de lista) y hasta cuando tiene correcciones de seguridad la version que se vende (./offer-status.ts).
+export const revalidate = 300
 
 export async function generateMetadata({
   params,
@@ -26,9 +23,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'meta' })
+  // Sin plazas de lanzamiento, el «desde 500 € (precio de lanzamiento)» ya no vale: el de lista.
+  const { launchOpen } = await offerStatus()
+  const from = Math.min(...modalities.map((m) => m.listPrice))
   return generatePageMetadata({
     title: t('pricingTitle'),
-    description: t('pricingDescription'),
+    description: launchOpen ? t('pricingDescription') : t('pricingDescriptionList', { price: formatPrice(from, locale) }),
     path: '/precios',
     locale,
   })
@@ -47,6 +47,7 @@ export default async function PreciosPage({
   const included = t.raw('included') as string[]
   const sessions = t.raw('sessions.items') as string[]
   const rows = t.raw('monthly.rows') as { label: string; values: boolean[] }[]
+  const { launchOpen, security } = await offerStatus()
 
   return (
     <>
@@ -56,7 +57,7 @@ export default async function PreciosPage({
           <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
           <div className="mb-8 rounded-2xl border border-brand/20 bg-surface p-5 sm:flex sm:items-center sm:justify-between gap-6">
-            <p className="font-semibold text-ink">{tOffer('launchNote')}</p>
+            <p className="font-semibold text-ink">{launchOpen ? tOffer('launchNote') : t('launchOver')}</p>
             <ul className="mt-3 sm:mt-0 flex flex-wrap gap-x-5 gap-y-1">
               <li className="text-sm text-muted">{t('includedTitle')}:</li>
               {included.map((item) => (
@@ -68,6 +69,8 @@ export default async function PreciosPage({
             </ul>
           </div>
 
+          {/* Del h1 a los h3 de las tarjetas, por un h2 (para quien navega por los titulos) */}
+          <h2 className="sr-only">{t('modalitiesTitle')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {modalities.map((modality) => (
               <ModalityCard
@@ -75,6 +78,7 @@ export default async function PreciosPage({
                 modality={modality}
                 extras={t.raw(`extras.${modality.id}`) as string[]}
                 highlighted={modality.id === 'acompanado'}
+                launchOpen={launchOpen}
               >
                 <BuyAction modality={modality} locale={locale} t={t} />
               </ModalityCard>
@@ -83,8 +87,9 @@ export default async function PreciosPage({
 
           <div className="mt-6 space-y-1 text-center text-sm text-muted">
             {!isCheckoutOpen() && <p className="font-medium text-ink">{t('comingSoonNote')}</p>}
-            <p>{t('markets')}</p>
+            {/* A quien se vende y, debajo, el IVA de cada caso: lo unico que lo dice en la pagina */}
             <p>{t('b2b')}</p>
+            <p>{t('markets')}</p>
           </div>
         </div>
       </section>
@@ -108,7 +113,32 @@ export default async function PreciosPage({
       <section className="py-16 sm:py-20 bg-band" id="mensual">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader title={t('monthly.title')} subtitle={t('monthly.subtitle')} />
-          <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+          {/* En el movil, una tarjeta por plan con lo que incluye (la tabla no cabe: Pro y Premium quedarian fuera) */}
+          <ul className="space-y-4 sm:hidden">
+            {plans.map((plan, i) => (
+              <li key={plan.id} className="rounded-2xl border border-line bg-surface p-5">
+                <h3 className="text-lg font-semibold text-ink">{tOffer(`plans.${plan.id}`)}</h3>
+                <p className="mt-1 text-2xl font-bold text-ink">
+                  {formatPrice(plan.monthly, locale)}
+                  <span className="text-sm font-normal text-muted">{t('monthly.perMonth')}</span>
+                </p>
+                <p className="text-sm text-muted">
+                  {t('monthly.perYear', { price: formatPrice(plan.yearly, locale) })} · {tOffer('noVat')}
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {rows
+                    .filter((row) => row.values[i])
+                    .map((row) => (
+                      <li key={row.label} className="flex gap-2 text-sm text-body">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+                        {row.label}
+                      </li>
+                    ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto rounded-2xl border border-line bg-surface sm:block">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-line">
@@ -121,6 +151,9 @@ export default async function PreciosPage({
                       <span className="block text-2xl font-bold text-ink mt-1">
                         {formatPrice(plan.monthly, locale)}
                         <span className="text-sm font-normal text-muted">{t('monthly.perMonth')}</span>
+                      </span>
+                      <span className="block text-xs font-normal text-muted">
+                        {t('monthly.perYear', { price: formatPrice(plan.yearly, locale) })}
                       </span>
                       <span className="block text-xs font-normal text-muted">{tOffer('noVat')}</span>
                     </th>
@@ -136,10 +169,11 @@ export default async function PreciosPage({
                     {row.values.map((value, i) => (
                       <td key={plans[i].id} className="p-4 text-center">
                         {value ? (
-                          <Check className="mx-auto h-5 w-5 text-brand" aria-label="✓" />
+                          <Check className="mx-auto h-5 w-5 text-brand" aria-hidden="true" />
                         ) : (
-                          <Minus className="mx-auto h-5 w-5 text-line" aria-label="—" />
+                          <Minus className="mx-auto h-5 w-5 text-field" aria-hidden="true" />
                         )}
+                        <span className="sr-only">{value ? t('monthly.yes') : t('monthly.no')}</span>
                       </td>
                     ))}
                   </tr>
@@ -149,7 +183,13 @@ export default async function PreciosPage({
           </div>
           <div className="mt-6 space-y-3 text-sm text-body">
             <p className="font-medium text-ink">{t('monthly.included')}</p>
-            <p>{t('monthly.securityNote')}</p>
+            <p>{t('monthly.annualNote')}</p>
+            <p>
+              {t('monthly.securityNote')}{' '}
+              {security
+                ? t('monthly.securityUntil', { version: security.version, date: formatMonthYear(security.until, locale) })
+                : t('monthly.securityPeriod')}
+            </p>
             <p className="text-muted">
               <strong className="text-ink">{tOffer('plans.premium')}.</strong> {t('monthly.premiumNote')}
             </p>
@@ -157,35 +197,25 @@ export default async function PreciosPage({
         </div>
       </section>
 
-      {/* Aparte */}
+      {/* Aparte: solo el A medida, igual para todos (sin Pack Espana, socios 29-10-2026). Una tarjeta
+          ancha: el texto a la izquierda y el boton a la derecha; en el movil, uno debajo del otro. */}
       <section className="py-16 sm:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader title={t('apart.title')} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-line p-6">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-xl font-semibold text-ink">{t('apart.packEspana.name')}</h3>
-                <Badge variant="accent">{t('apart.packEspana.badge')}</Badge>
-              </div>
-              <p className="mt-2 text-2xl font-bold text-ink">
-                {formatPrice(PACK_ESPANA_PRICE, locale)}{' '}
-                <span className="text-sm font-normal text-muted">{tOffer('noVat')}</span>
-              </p>
-              <p className="mt-3 text-body leading-relaxed">{t('apart.packEspana.text')}</p>
-            </div>
-            <div className="rounded-2xl border border-line p-6 flex flex-col">
+          <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8 sm:flex sm:items-center sm:justify-between sm:gap-8">
+            <div>
               <h3 className="text-xl font-semibold text-ink">{t('apart.custom.name')}</h3>
               <p className="mt-2 text-2xl font-bold text-ink">
                 <span className="text-base font-normal text-muted">{t('apart.custom.from')} </span>
                 {formatPrice(CUSTOM_FROM_PRICE, locale)}{' '}
                 <span className="text-sm font-normal text-muted">{tOffer('noVat')}</span>
               </p>
-              <p className="mt-3 text-body leading-relaxed flex-1">{t('apart.custom.text')}</p>
-              <div className="mt-5">
-                <Button variant="outline" asChild>
-                  <Link href={`${localePath(locale, '/contacto')}?interes=a-medida`}>{t('apart.custom.cta')}</Link>
-                </Button>
-              </div>
+              <p className="mt-3 text-body leading-relaxed">{t('apart.custom.text')}</p>
+            </div>
+            <div className="mt-5 sm:mt-0 sm:shrink-0">
+              <Button variant="outline" asChild>
+                <Link href={`${localePath(locale, '/contacto')}?interes=a-medida`}>{t('apart.custom.cta')}</Link>
+              </Button>
             </div>
           </div>
           <p className="mt-6 text-center text-body">{t('apart.moreThan10')}</p>
@@ -208,25 +238,15 @@ function BuyAction({
 }) {
   const contactHref = `${localePath(locale, '/contacto')}?interes=${modality.id}`
 
-  // Pago con Stripe Checkout, creado por el servidor (/api/checkout). En el Acompañado, antes se
-  // elige la primera sesión y con quién (/comprar/<modalidad>).
+  // Pago con Stripe Checkout, creado por el servidor (/api/checkout) desde /comprar/<modalidad>, que
+  // pide antes los datos fiscales de la empresa (y, en el Acompañado, la primera sesión y con quién).
   if (isCheckoutOpen()) {
     return (
       <div className="space-y-2">
         <p className="text-xs text-muted">{t('payWith.card')}</p>
-        {modality.guided ? (
-          <Button className="w-full" asChild>
-            <Link href={localePath(locale, `/comprar/${modality.id}`)}>{t('chooseSession')}</Link>
-          </Button>
-        ) : (
-          <form action="/api/checkout" method="post">
-            <input type="hidden" name="product" value={modality.id} />
-            <input type="hidden" name="locale" value={locale} />
-            <Button className="w-full" type="submit">
-              {t('buy')}
-            </Button>
-          </form>
-        )}
+        <Button className="w-full" asChild>
+          <Link href={localePath(locale, `/comprar/${modality.id}`)}>{modality.guided ? t('chooseSession') : t('buy')}</Link>
+        </Button>
       </div>
     )
   }

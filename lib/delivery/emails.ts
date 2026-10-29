@@ -1,11 +1,11 @@
 // Los correos de la entrega, en castellano y en ingles: bienvenida (con la licencia, o diciendo que
 // llega en unas horas si la firma Eric a mano), la licencia firmada a mano, licencia nueva del
-// mensual, devolucion, version nueva, alta en el equipo y el aviso a los titulares de una compra con
-// su NIF; y los internos (venta, licencia a firmar, alertas, conciliacion). Cada uno con HTML y texto
-// plano.
+// mensual, cobro del mensual sin pagar, devolucion, version nueva, alta en el equipo y el aviso a los
+// titulares de una compra con su NIF; y los internos (venta, licencia a firmar, alertas,
+// conciliacion). Cada uno con HTML y texto plano.
 
 import { BRAND, hostName, productName } from './products.ts'
-import { escapeHtml, formatMoney } from './util.ts'
+import { escapeHtml, formatMoney, paidUntil } from './util.ts'
 import type { Locale } from './types.ts'
 
 export interface RenderedMail {
@@ -57,13 +57,16 @@ function layout(blocks: Block[], locale: Locale): { html: string; text: string }
   return { html, text }
 }
 
-/** Lo que dura la licencia: perpetua, y su mantenimiento y soporte hasta una fecha (o sin el). */
+/**
+ * Lo que dura la licencia: perpetua, y su mantenimiento y soporte hasta una fecha (o sin el). La
+ * seguridad, gratis durante el periodo de soporte de cada version (oferta v1.9, clausula 11).
+ */
 function licenseTerms(supportUntil: string, emitida: string, locale: Locale): string {
   const en = locale === 'en'
   if (supportUntil === emitida) {
     return en
-      ? 'It is perpetual and gets security fixes for free; it does not include maintenance or support.'
-      : 'Es perpetua y recibe gratis las correcciones de seguridad; no incluye mantenimiento ni soporte.'
+      ? 'It is perpetual and gets security fixes for free during the support period of each version (five years from its release); it does not include maintenance or support.'
+      : 'Es perpetua y recibe gratis las correcciones de seguridad durante el periodo de soporte de cada versión (cinco años desde que se publica); no incluye mantenimiento ni soporte.'
   }
   return en
     ? `It is perpetual; maintenance and support run until ${formatDate(supportUntil, locale)}.`
@@ -119,8 +122,8 @@ export function welcomeEmail(input: {
     const when = formatDateTime(input.booking.start, locale)
     blocks.push({
       text: en
-        ? `Your first setup session is booked with ${hostName(input.booking.host)}: ${when} (Spanish peninsular time), 1 hour by video call. You will get the calendar invitation separately. You book the second one from your member area.`
-        : `Tu primera sesión de montaje está reservada con ${hostName(input.booking.host)}: ${when} (hora peninsular), 1 hora por videollamada. La invitación del calendario te llega aparte. La segunda la reservas desde tu zona de socio.`,
+        ? `Your first setup session is booked with ${hostName(input.booking.host)}: ${when} (Madrid time), 1 hour by video call. You will get the calendar invitation separately. You book the second one from your member area.`
+        : `Tu primera sesión de montaje está reservada con ${hostName(input.booking.host)}: ${when} (hora de Madrid), 1 hora por videollamada. La invitación del calendario te llega aparte. La segunda la reservas desde tu zona de socio.`,
       ...(input.booking.meetingUrl ? { link: { href: input.booking.meetingUrl, label: en ? 'Video call link' : 'Enlace de la videollamada' } } : {}),
     })
   } else if (input.guided && input.booking && 'failed' in input.booking && input.booking.calendar) {
@@ -191,15 +194,44 @@ export function renewalEmail(input: { locale: Locale; company: string; licenseId
   return { subject: en ? `Your new ${BRAND.en} license` : `Tu licencia nueva del ${BRAND.es}`, ...layout(blocks, input.locale) }
 }
 
-export function refundEmail(input: { locale: Locale; company: string; amount: number; currency: string; subscriptionCanceled?: boolean }): RenderedMail {
+/**
+ * La devolucion entera de un pago unico. accessRevoked false: la empresa tiene otro pago unico
+ * vigente, asi que solo deja de valer la licencia de esta compra (la zona y la otra licencia siguen,
+ * y no hay nada que borrar). ownAccessClosed: con la empresa por su otra compra, quien compro esta
+ * (otra persona, entregada a mano) sale de la zona: no se le dice que sigue en ella. creditNote: la
+ * factura ya se habia emitido, y la rectificativa llega (si seguia en borrador, el cliente no la
+ * recibio: no se promete).
+ */
+export function refundEmail(input: {
+  locale: Locale
+  company: string
+  amount: number
+  currency: string
+  subscriptionCanceled?: boolean
+  accessRevoked?: boolean
+  ownAccessClosed?: boolean
+  licenseId?: string | null
+  product?: string
+  creditNote?: boolean
+}): RenderedMail {
   const en = input.locale === 'en'
   const amount = formatMoney(input.amount, input.currency, input.locale)
+  const which = [input.product ? productName(input.product, input.locale) : null, input.licenseId].filter(Boolean).join(', ')
   const blocks: Block[] = [
     { text: en ? `Hello ${input.company},` : `Hola, ${input.company}:` },
     {
-      text: en
-        ? `We have refunded ${amount}. As the terms say (clause 5), the license ends and your member area is closed. Within 7 days, please remove the extension and the skeleton, with its standard documents, from all your computers and confirm it to us in writing. Your own brain is yours and you keep it.`
-        : `Te hemos devuelto ${amount}. Como dicen las condiciones (cláusula 5), la licencia termina y se cierra tu zona de socio. En 7 días, borra la extensión y el esqueleto, con sus documentos estándar, de todos tus equipos y confírmanoslo por escrito. Tu cerebro es tuyo y te lo quedas.`,
+      text:
+        input.accessRevoked === false && input.ownAccessClosed
+          ? en
+            ? `We have refunded ${amount}. As the terms say (clause 5), the license of that purchase${which ? ` (${which})` : ''} is no longer valid. ${input.company} keeps its other purchase and its member area, which its owners manage; your own access to the member area is closed.`
+            : `Te hemos devuelto ${amount}. Como dicen las condiciones (cláusula 5), la licencia de esa compra${which ? ` (${which})` : ''} deja de valer. ${input.company} sigue con su otra compra y su zona de socio, que llevan sus titulares; tu acceso a la zona se cierra.`
+          : input.accessRevoked === false
+          ? en
+            ? `We have refunded ${amount}. As the terms say (clause 5), the license of that purchase${which ? ` (${which})` : ''} is no longer valid. ${input.company} keeps its other purchase, with its license and your member area: there is nothing to remove.`
+            : `Te hemos devuelto ${amount}. Como dicen las condiciones (cláusula 5), la licencia de esa compra${which ? ` (${which})` : ''} deja de valer. ${input.company} sigue con su otra compra, con su licencia y tu zona de socio: no hay nada que borrar.`
+          : en
+            ? `We have refunded ${amount}. As the terms say (clause 5), the license ends and your member area is closed. Within 7 days, please remove the extension and the skeleton, with its standard documents, from all your computers and confirm it to us in writing. Your own brain is yours and you keep it.`
+            : `Te hemos devuelto ${amount}. Como dicen las condiciones (cláusula 5), la licencia termina y se cierra tu zona de socio. En 7 días, borra la extensión y el esqueleto, con sus documentos estándar, de todos tus equipos y confírmanoslo por escrito. Tu cerebro es tuyo y te lo quedas.`,
     },
   ]
   if (input.subscriptionCanceled) {
@@ -209,8 +241,65 @@ export function refundEmail(input: { locale: Locale; company: string; amount: nu
         : 'También hemos cancelado tu mensual, sin más cobros: sin la licencia ya no tiene sentido.',
     })
   }
-  blocks.push({ text: en ? 'The corrective invoice arrives in a separate email.' : 'La factura rectificativa te llega en un correo aparte.' })
+  if (input.creditNote ?? true) blocks.push({ text: en ? 'The corrective invoice arrives in a separate email.' : 'La factura rectificativa te llega en un correo aparte.' })
   return { subject: en ? `Refund of your ${BRAND.en}` : `Devolución de tu ${BRAND.es}`, ...layout(blocks, input.locale) }
+}
+
+/**
+ * Un cobro del mensual sin pagar (clausula 4: impagada, se suspende tras avisar con 15 dias): si el
+ * dia suspendFrom sigue sin pagarse, sin mantenimiento ni soporte; hasta entonces siguen, con las
+ * versiones nuevas, si la licencia vigente lo cubre (versionsUntilSuspension: cada licencia con
+ * mantenimiento cubre 15 dias mas que lo pagado). La licencia y lo instalado siguen siempre.
+ */
+export function paymentFailedEmail(input: {
+  locale: Locale
+  company: string
+  product: string | null
+  amount: number
+  currency: string
+  /** El cobro lleva IVA espanol (sin el, a una empresa de la UE o de fuera, no se dice «IVA incluido»). */
+  vatIncluded?: boolean
+  suspendFrom: string
+  versionsUntilSuspension?: boolean
+  /**
+   * El ultimo dia que cubre la licencia vigente, si es antes de suspendFrom (el primer cobro tras los
+   * meses incluidos: la prueba acaba el dia siguiente a lo incluido): lo que promete el correo.
+   */
+  versionsUntil?: string
+  /** El enlace de Stripe para pagar esa factura (hosted_invoice_url), si lo hay. */
+  payUrl: string | null
+  zoneUrl: string
+}): RenderedMail {
+  const en = input.locale === 'en'
+  const plan = input.product ? productName(input.product, input.locale) : en ? `${BRAND.en} monthly plan` : `mensual del ${BRAND.es}`
+  const amount = `${formatMoney(input.amount, input.currency, input.locale)}${(input.vatIncluded ?? true) ? (en ? ', VAT included' : ', IVA incluido') : ''}`
+  const date = formatDate(input.suspendFrom, input.locale)
+  const until = input.versionsUntil && input.versionsUntil < input.suspendFrom ? formatDate(input.versionsUntil, input.locale) : date
+  const blocks: Block[] = [
+    { text: en ? `Hello ${input.company},` : `Hola, ${input.company}:` },
+    {
+      text: en
+        ? `We could not charge the payment of your ${plan} (${amount}). Stripe will try again over the next few days with the card you have on file.`
+        : `No hemos podido cobrar el pago de tu ${plan} (${amount}). Stripe lo vuelve a intentar estos días con la tarjeta que tienes puesta.`,
+    },
+    {
+      text: en
+        ? 'Check or change the card in the Stripe portal, from the Monthly page of your member area.'
+        : 'Revisa la tarjeta, o cámbiala, en el portal de Stripe, desde la página Mensual de tu zona de socio.',
+      link: { href: `${input.zoneUrl}/mensual`, label: en ? 'Monthly plan' : 'Mensual' },
+    },
+  ]
+  if (input.payUrl) blocks.push({ text: en ? 'Or pay it now:' : 'O págalo ya:', link: { href: input.payUrl, label: en ? 'Pay the charge' : 'Pagar el cobro' } })
+  blocks.push({
+    text: input.versionsUntilSuspension === false
+      ? en
+        ? `As the terms say (clause 4), if it is still unpaid on ${date}, maintenance and support are suspended. What is new in the versions released in the meantime switches on once it is paid. Your license and what you have installed keep working, and security fixes still reach you.`
+        : `Como dicen las condiciones (cláusula 4), si el ${date} sigue sin pagarse, se suspenden el mantenimiento y el soporte. Lo nuevo de las versiones que salgan mientras tanto se enciende cuando se pague. Tu licencia y lo que tienes instalado siguen funcionando, y las correcciones de seguridad te siguen llegando.`
+      : en
+        ? `As the terms say (clause 4), until ${until} you keep maintenance and support, new versions included; if it is still unpaid by then, they are suspended: no new features in later versions and no support. Your license and what you have installed keep working, and security fixes still reach you.`
+        : `Como dicen las condiciones (cláusula 4), hasta el ${until} sigues teniendo el mantenimiento y el soporte, versiones nuevas incluidas; si para entonces sigue sin pagarse, se suspenden: sin lo nuevo de las versiones que salgan después ni soporte. Tu licencia y lo que tienes instalado siguen funcionando, y las correcciones de seguridad te siguen llegando.`,
+  })
+  return { subject: en ? `We could not charge your ${BRAND.en} monthly plan` : `No hemos podido cobrar tu mensual del ${BRAND.es}`, ...layout(blocks, input.locale) }
 }
 
 export function versionEmail(input: { locale: Locale; company: string; version: string; notes: string; zoneUrl: string }): RenderedMail {
@@ -247,7 +336,8 @@ export function teamInviteEmail(input: { locale: Locale; company: string; zoneUr
 
 /**
  * A los titulares de una empresa cliente: alguien ha comprado con su NIF desde otro correo. No se le
- * da acceso a nada hasta que PymaticLabs lo compruebe (el correo de quien compro no se dice).
+ * da acceso a nada hasta que PymaticLabs lo compruebe (el correo de quien compro no se dice). En
+ * castellano, «identificacion fiscal»: la empresa puede ser de fuera de Espana, sin NIF.
  */
 export function companyAlertEmail(input: { locale: Locale; company: string; product: string; date: string }): RenderedMail {
   const en = input.locale === 'en'
@@ -256,7 +346,7 @@ export function companyAlertEmail(input: { locale: Locale; company: string; prod
     {
       text: en
         ? `On ${formatDate(input.date, 'en')} someone bought ${productName(input.product, 'en')} with your company's tax ID, from an email address that is not one of the people who bought for you. We have not given them access to your member area, your invoices or your licenses: we will check it with you first.`
-        : `El ${formatDate(input.date, 'es')} alguien ha comprado ${productName(input.product, 'es')} con el NIF de vuestra empresa desde un correo que no es de quien compró para vosotros. No le hemos dado acceso a vuestra zona de socio, ni a vuestras facturas ni licencias: lo comprobamos antes con vosotros.`,
+        : `El ${formatDate(input.date, 'es')} alguien ha comprado ${productName(input.product, 'es')} con la identificación fiscal de vuestra empresa desde un correo que no es de quien compró para vosotros. No le hemos dado acceso a vuestra zona de socio, ni a vuestras facturas ni licencias: lo comprobamos antes con vosotros.`,
     },
     {
       text: en
@@ -264,7 +354,7 @@ export function companyAlertEmail(input: { locale: Locale; company: string; prod
         : 'Si ha sido alguien de vuestra empresa, contesta a este correo y nos lo dices. Si no, contesta también y lo devolvemos.',
     },
   ]
-  return { subject: en ? `A purchase with your tax ID (${BRAND.en})` : `Una compra con vuestro NIF (${BRAND.es})`, ...layout(blocks, input.locale) }
+  return { subject: en ? `A purchase with your tax ID (${BRAND.en})` : `Una compra con vuestra identificación fiscal (${BRAND.es})`, ...layout(blocks, input.locale) }
 }
 
 // --- Internos ------------------------------------------------------------------------------------
@@ -318,6 +408,10 @@ export function licenseRequestEmail(input: {
       equipo: String(input.equipo),
       emitida: `${input.emitida} (la fecha del pago)`,
       soporte_hasta: input.soporteHasta,
+      Margen:
+        input.soporteHasta > input.emitida
+          ? `soporte_hasta lleva 15 días más que lo pagado o incluido (hasta el ${paidUntil(input)}), el margen de un cobro fallido del mensual: firmarla tal cual`
+          : null,
       Plazas: input.equipo ? `${input.seats} personas (equipo: true)` : '1 persona (equipo: false)',
       'Campos (JSON)': JSON.stringify(fields),
       Subirla: upload,

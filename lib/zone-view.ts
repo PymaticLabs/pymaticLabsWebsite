@@ -70,12 +70,17 @@ export type MonthlyState =
 /**
  * El mantenimiento y soporte: con el mensual contratado; con meses incluidos en la compra que aun
  * no han acabado; o sin el (la licencia sigue valiendo y las correcciones de seguridad llegan igual).
+ * Una licencia sin meses (Hazlo tu sin equipo: soporte_hasta es el dia de la compra) no incluye nada,
+ * tampoco ese dia: como en la pagina de la licencia (clausula 3). supportUntil es lo pagado o
+ * incluido (paidUntil): la licencia cubre 15 dias mas, el margen de un cobro fallido, y el mensual
+ * contratado se cobra desde el dia siguiente a lo incluido.
  */
 export function monthlyState(o: ZoneOverview, now: Date): MonthlyState {
-  const supportUntil = currentLicense(o.licenses)?.soporteHasta ?? null
+  const current = currentLicense(o.licenses)
+  const supportUntil = current?.paidUntil ?? null
   const status = o.company.subscription.status
   if (status && SUBSCRIBED.includes(status)) return { kind: 'subscribed', product: o.company.subscription.plan, status, supportUntil }
-  if (supportUntil && supportUntil >= madridDate(now)) return { kind: 'included', supportUntil }
+  if (current && current.paidUntil > current.emitida && current.paidUntil >= madridDate(now)) return { kind: 'included', supportUntil: current.paidUntil }
   return { kind: 'none', supportUntil }
 }
 

@@ -20,16 +20,20 @@ const CLIENT_NAMESPACES = ['nav', 'contact'] as const
 const JS_MARK = "document.documentElement.classList.add('js');"
 
 // Inter: limpia y moderna (la mas cercana a la de Apple) y hecha para leerse bien en pantalla. Con su
-// tamano optico, los titulares grandes salen con el corte de titular y el texto, con el de lectura.
+// tamano optico, los titulares grandes salen con el corte de titular y el texto, con el de lectura. Se
+// precarga solo el latin: el castellano y el ingles caben enteros en el. El latin-ext sigue en el CSS y el
+// navegador lo baja solo si una pagina pinta una letra suya (un nombre con «ł» escrito en un campo).
 const sans = Inter({
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin'],
   axes: ['opsz'],
   variable: '--font-inter',
 })
 
 // Atkinson de ancho fijo, para codigos y huellas de la zona de socio: ahi si importa no confundir O y 0.
+// Sin precargar: casi ninguna pagina la usa, y la piden solas las que la pintan.
 const mono = Atkinson_Hyperlegible_Mono({
   subsets: ['latin'],
+  preload: false,
   variable: '--font-atkinson-mono',
 })
 

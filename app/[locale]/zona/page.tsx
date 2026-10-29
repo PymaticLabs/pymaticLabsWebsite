@@ -61,7 +61,7 @@ export default async function ZonaPage({ params, searchParams }: { params: Param
                 {tOffer(`modalities.${license.modalidad}${license.equipo ? '-equipo' : ''}.name`)} ·{' '}
                 {license.equipo ? t('license.team', { seats: data.company.seats }) : t('license.solo')}
               </p>
-              <p>{license.soporteHasta > license.emitida ? t('license.supportUntil', { date: formatDate(license.soporteHasta, loc) }) : t('license.noSupport')}</p>
+              <p>{license.paidUntil > license.emitida ? t('license.supportUntil', { date: formatDate(license.paidUntil, loc) }) : t('license.noSupport')}</p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <ButtonLink href={`/api/zone/licenses/${encodeURIComponent(license.id)}`} download>
                   <Download className="h-5 w-5" aria-hidden="true" />
@@ -85,7 +85,7 @@ export default async function ZonaPage({ params, searchParams }: { params: Param
                   {t('license.onTheWay')}
                 </StatusPill>
               </p>
-              <p>{pending.soporteHasta > pending.emitida ? t('license.supportUntil', { date: formatDate(pending.soporteHasta, loc) }) : t('license.noSupport')}</p>
+              <p>{pending.paidUntil > pending.emitida ? t('license.supportUntil', { date: formatDate(pending.paidUntil, loc) }) : t('license.noSupport')}</p>
               <p>{t('license.pending')}</p>
               <div className="pt-2">
                 <ButtonLink href={link('licencia')} variant="outline" internal>

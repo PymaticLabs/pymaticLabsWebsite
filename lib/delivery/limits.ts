@@ -2,8 +2,9 @@
 // huecos de Cal.com se apartan, por IP y por correo, en ventanas fijas (tabla rate_limits).
 //
 // La IP cuenta por bloque: una IPv4 entera, o su /64 en IPv6 (una sola maquina tiene millones de
-// direcciones en su /64). Ni la IP ni el correo se guardan: la clave lleva su huella con la sal de
-// la web (DELIVERY_IP_SALT).
+// direcciones en su /64); las plazas de lanzamiento, por el /56 (clientIpBucket), y VIES y los huecos
+// de Cal.com, por el /48 (wideIpBucket). Ni la IP ni el correo se guardan: la clave lleva su huella
+// con la sal de la web (DELIVERY_IP_SALT).
 
 import { isIP } from 'node:net'
 import { hmacHex } from './util.ts'
@@ -28,6 +29,29 @@ export function ipBucket(ip: string | null | undefined): string | null {
     .slice(0, 4)
     .map((g) => g.padStart(4, '0'))
     .join(':')}::/64`
+}
+
+/**
+ * El bloque ancho de una IP: para lo que cuesta llamadas a otros (VIES) y los huecos de Cal.com
+ * apartados (que no se gaste el tope de todos). La IPv4 tal cual, o el /48 de una IPv6 (con bloques
+ * /64, una sola casa tiene cientos y multiplicaba el limite).
+ */
+export function wideIpBucket(ip: string | null | undefined): string | null {
+  const bucket = ipBucket(ip)
+  return bucket?.endsWith('::/64') ? `${bucket.split(':').slice(0, 3).join(':')}::/48` : bucket
+}
+
+/**
+ * La conexion de un cliente, para el tope de plazas de lanzamiento por cliente (lib/delivery/launch.ts):
+ * la IPv4 tal cual, o el /56 de una IPv6, lo que un operador suele dar a una casa. El /48 juntaba a
+ * clientes de un mismo operador que no se conocen; con el /64, una casa con un /56 (256 bloques) se
+ * quedaba todas las plazas.
+ */
+export function clientIpBucket(ip: string | null | undefined): string | null {
+  const bucket = ipBucket(ip)
+  if (!bucket?.endsWith('::/64')) return bucket
+  const groups = bucket.split(':')
+  return `${groups.slice(0, 3).join(':')}:${groups[3].slice(0, 2)}00::/56`
 }
 
 /** La huella de una IP o de un correo: lo que se guarda en vez del dato. */

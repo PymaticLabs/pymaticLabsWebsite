@@ -85,7 +85,7 @@ async function seed(d: Delivery): Promise<void> {
   const owner = await buy(d, {
     product: 'acompanado-equipo',
     company: 'Carpintería Muñoz, S.L.',
-    taxId: 'B12345678',
+    taxId: 'B12345674',
     email: DEMO_PEOPLE.titular,
     daysAgo: 6,
     launch: true,
@@ -138,7 +138,7 @@ async function seed(d: Delivery): Promise<void> {
   }
 
   // Solo: Hazlo tu para una persona, sin meses del mensual.
-  const solo = await buy(d, { product: 'hazlo-tu', company: 'Estudio Ruiz Arquitectura, S.L.P.', taxId: 'B87654321', email: DEMO_PEOPLE.solo, daysAgo: 30, launch: false })
+  const solo = await buy(d, { product: 'hazlo-tu', company: 'Estudio Ruiz Arquitectura, S.L.P.', taxId: 'B87654323', email: DEMO_PEOPLE.solo, daysAgo: 30, launch: false })
   await emitDrafts(d, solo.companyId!)
   await runJobs(d, { budgetMs: 10_000 })
 }

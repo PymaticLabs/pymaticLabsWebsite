@@ -26,12 +26,12 @@ const KINDS: { icon: LucideIcon; color: string }[] = [
   { icon: ScanLine, color: '#E79A12' },
 ]
 
-/** Personas del equipo de ejemplo (iniciales) y los tonos de sus circulos. */
+/** Personas del equipo de ejemplo (iniciales) y los tonos de sus circulos: todos, 4,5:1 o mas con el blanco. */
 const TEAM = [
   { initial: 'A', color: '#0463FE' },
-  { initial: 'J', color: '#2F7BFF' },
+  { initial: 'J', color: '#3B6FE8' },
   { initial: 'L', color: '#0350D0' },
-  { initial: 'P', color: '#5B95FF' },
+  { initial: 'P', color: '#1E40AF' },
 ]
 
 // "Se lee todo lo que ya tienes": baldosas grandes, sin bordes, cada una con su dibujo vivo. Al entrar en
@@ -68,7 +68,7 @@ export default function Bento() {
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white sm:h-8 sm:w-8" style={{ background: color }}>
                           <Icon className="h-4 w-4" aria-hidden="true" />
                         </span>
-                        <span className="truncate text-sm font-medium text-ink sm:text-[15px]">{kind}</span>
+                        <span className="min-w-0 break-words hyphens-auto text-sm font-medium text-ink sm:text-[15px]">{kind}</span>
                       </li>
                     )
                   })}
@@ -96,11 +96,11 @@ export default function Bento() {
               <div className="enter mt-3 rounded-2xl bg-surface p-4 shadow-[0_12px_30px_-14px_rgb(4_40_120/0.3)]" style={delay(0.5)}>
                 <p className="flex items-center gap-1.5 text-sm text-muted">
                   <Folder className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span className="truncate">{t('find.path')}</span>
+                  <span className="min-w-0 break-words">{t('find.path')}</span>
                 </p>
                 <p className="mt-1.5 flex items-center gap-2 font-semibold text-ink">
                   <FileText className="h-5 w-5 shrink-0 text-[#E5484D]" aria-hidden="true" />
-                  <span className="truncate">{t('find.file')}</span>
+                  <span className="min-w-0 break-words">{t('find.file')}</span>
                 </p>
               </div>
             </div>

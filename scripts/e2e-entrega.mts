@@ -1,7 +1,17 @@
 // Prueba de punta a punta de la entrega automatica, contra la web de verdad (next start) en modo
-// falso: sin Stripe, Holded, KMS, Supabase, Brevo ni Cal.com. Manda avisos de Stripe firmados con
-// el secreto de prueba, recorre el pago del Acompanado y del equipo por las rutas de la web, entra
-// en la zona con el codigo del buzon, publica una version, devuelve un pago, cobra un mes y concilia.
+// falso: sin Stripe, Holded, KMS, Supabase, Brevo, Cal.com ni VIES. Manda avisos de Stripe firmados
+// con el secreto de prueba y recorre por las rutas de la web (/comprar -> /api/checkout -> pagina de
+// pago de prueba) el IVA de cada caso (se vende a todo el mundo, solo a empresas: los socios,
+// 27-10-2026): Espana peninsular con el 21 %, Canarias sin IVA, una empresa de la UE con NIF-IVA
+// valido en VIES (inversion del sujeto pasivo), una de la UE sin NIF-IVA con el 21 %, una de fuera
+// de la UE sin IVA, Monaco con NIF-IVA frances (como Francia) y un NIF-IVA que VIES da a otro
+// nombre (se entrega; la factura, en borrador); un NIF-IVA que VIES rechaza, VIES caido y un NIF-IVA
+// escrito como identificacion fiscal no abren el pago; la vuelta desde Stripe sin pagar lleva a
+// /comprar con el pais elegido; una direccion de facturacion que no cuadra con lo declarado, un IVA
+// cobrado que no toca o una venta de fuera de la UE con tarjeta espanola va a revisar; con las
+// plazas de lanzamiento apartadas por pagos a medias, launch_busy. Despues entra en la zona con el
+// codigo del buzon, publica una version, cobra el mensual (tambien el de la empresa de la UE, con
+// VIES otra vez), devuelve un pago y concilia.
 //
 //   pnpm build && node scripts/e2e-entrega.mts --start
 //
@@ -24,6 +34,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fakeCharge, fakeCheckoutSession, fakeEvent, fakeInvoice, signPayload } from '../lib/delivery/fake-stripe.ts'
 import { priceCents } from '../lib/delivery/products.ts'
+import { cifWithControl } from '../lib/delivery/checkout-nif.ts'
+import { paidUntil, withUnpaidMargin } from '../lib/delivery/util.ts'
 import { unzip } from '../lib/delivery/zip.ts'
 import { privateKeyFromSeed, rawPublicKey, signLicense, verifyLicense, type LicenseData } from '../lib/license.ts'
 import { LEGAL_VERSIONS } from '../lib/legal-versions.ts'
@@ -49,6 +61,17 @@ const ericSeed =
   })()
 const ericPublic = rawPublicKey(privateKeyFromSeed(ericSeed))
 const ericEmail = 'eric@e2e.test'
+
+// Identificaciones fiscales bien escritas, distintas en cada pasada (companies.tax_id es unico): CIF
+// espanoles con su letra o digito de control, NIF-IVA con la forma de su pais y las de fuera de la UE.
+const run = String(Date.now()).slice(-6)
+// n de 0 a 9; letter, la de la forma de la sociedad (B, limitada; A, anonima).
+const cif = (n: number, letter = 'B') => cifWithControl(`${letter}${n}${run}`)
+
+// Cada comprador desde su IP (X-Forwarded-For, de 203.0.113.0/24, la de documentacion): como en la
+// web de verdad, los limites por IP y las plazas de lanzamiento cuentan por cada uno.
+let ipSeq = 0
+const nextIp = () => `203.0.113.${++ipSeq}`
 
 const servers: ChildProcess[] = []
 // La web a la que hablan las ayudas de abajo: la de siempre y, despues, la de las licencias a mano.
@@ -102,19 +125,23 @@ function uploadScript(args: string[], env: Record<string, string> = {}) {
   return { status: run.status, out: `${run.stdout}${run.stderr}` }
 }
 
-async function state() {
-  const res = await fetch(`${site}/api/dev/state`)
-  assert.equal(res.status, 200, 'la web tiene que correr con DELIVERY_MODE=fake')
-  return (await res.json()) as {
-    db: Record<string, Record<string, any>>
-    publicKey: string
-    mail: { to: string; subject: string; text: string; tags: string[]; attachments: { name: string; base64: string }[] }[]
-    invoicer: { documents: any[] }
-    calendar: { booked: any[] }
-  }
+type State = {
+  db: Record<string, Record<string, any>>
+  publicKey: string
+  mail: { to: string; subject: string; text: string; tags: string[]; attachments: { name: string; base64: string }[] }[]
+  invoicer: { documents: any[] }
+  calendar: { booked: any[] }
+  payments: { sessions: { id: string; params: Record<string, any> }[]; expired: string[] }
+  vies: { down: boolean; checks: { countryCode: string; vatNumber: string }[] }
 }
 
-async function until<T>(what: string, check: (s: Awaited<ReturnType<typeof state>>) => T | null | undefined | false): Promise<T> {
+async function state(): Promise<State> {
+  const res = await fetch(`${site}/api/dev/state`)
+  assert.equal(res.status, 200, 'la web tiene que correr con DELIVERY_MODE=fake')
+  return (await res.json()) as State
+}
+
+async function until<T>(what: string, check: (s: State) => T | null | undefined | false): Promise<T> {
   for (let i = 0; i < 60; i++) {
     const value = check(await state())
     if (value) return value
@@ -140,24 +167,92 @@ async function sendEvent(type: string, object: Record<string, unknown>) {
   return { status: res.status, body: (await res.json()) as Record<string, unknown> }
 }
 
-/** El pago por las rutas de la web: /api/checkout -> pagina de pago de prueba -> /gracias. */
-async function buyThroughWeb(product: string, buyer: { company: string; taxId: string; email: string }, slot?: string) {
-  const form = new URLSearchParams({ product, locale: 'es' })
-  if (slot) form.set('slot', slot)
-  const checkout = await fetch(`${site}/api/checkout`, { method: 'POST', body: form, redirect: 'manual' })
-  assert.equal(checkout.status, 303, `checkout de ${product}`)
-  const payUrl = checkout.headers.get('location')!
-  assert.match(payUrl, /\/api\/dev\/checkout\?id=cs_fake_/)
-  const id = new URL(payUrl).searchParams.get('id')!
-  const pay = await fetch(`${site}/api/dev/checkout`, {
-    method: 'POST',
-    body: new URLSearchParams({ id, company: buyer.company, taxId: buyer.taxId, email: buyer.email, country: 'ES' }),
-    redirect: 'manual',
-  })
-  assert.equal(pay.status, 303)
-  assert.match(pay.headers.get('location')!, /\/gracias\?pago=cs_fake_/)
-  return id
+/** Lo que dice el VIES de mentira (app/api/dev/vies): un NIF-IVA que no vale, VIES caido o el titular que da. */
+async function setVies(body: { vatId?: string; result?: 'valid' | 'invalid' | 'unavailable'; down?: boolean; name?: string; address?: string }) {
+  const res = await fetch(`${site}/api/dev/vies`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  assert.equal(res.status, 200, await res.clone().text())
 }
+
+/**
+ * Quien compra y lo que escribe en /comprar: el pais (sin el, Espana) y, segun el, el territorio y el
+ * NIF espanol, el NIF-IVA o la identificacion fiscal. ip: desde donde (por defecto, una suya).
+ */
+interface Buyer {
+  company: string
+  email: string
+  country?: string
+  territory?: string
+  taxId?: string
+  vatId?: string
+  otherTaxId?: string
+  locale?: 'es' | 'en'
+  ip?: string
+}
+
+/** /comprar -> /api/checkout: el pago abierto en Stripe (su id) o el error con el que se vuelve a /comprar. */
+async function openCheckout(product: string, buyer: Buyer, slot?: string): Promise<{ id: string; error?: undefined; back?: undefined } | { id?: undefined; error: string; back: URL }> {
+  const form = new URLSearchParams({ product, locale: buyer.locale ?? 'es', country: buyer.country ?? 'ES' })
+  for (const key of ['territory', 'taxId', 'vatId', 'otherTaxId'] as const) {
+    const value = buyer[key]
+    if (value !== undefined) form.set(key, value)
+  }
+  if (slot) form.set('slot', slot)
+  buyer.ip ??= nextIp()
+  const res = await fetch(`${site}/api/checkout`, { method: 'POST', body: form, redirect: 'manual', headers: { 'X-Forwarded-For': buyer.ip } })
+  assert.equal(res.status, 303, `checkout de ${product}`)
+  const location = new URL(res.headers.get('location')!, site)
+  if (location.pathname === '/api/dev/checkout') {
+    assert.match(location.searchParams.get('id') ?? '', /^cs_fake_/)
+    return { id: location.searchParams.get('id')! }
+  }
+  return { error: location.searchParams.get('error') ?? '', back: location }
+}
+
+/** La direccion de facturacion en Stripe y el pais de la tarjeta (sin decirlo, sin tarjeta que mirar). */
+type Billing = { country?: string; postalCode?: string; cardCountry?: string }
+
+/**
+ * La pagina de pago de prueba: la razon social, el correo y la direccion de facturacion (por defecto,
+ * la del pais y el territorio declarados). De vuelta a /gracias (o, el mensual, a la zona: back).
+ */
+async function payOnStripe(id: string, buyer: Buyer, billing: Billing = {}, back = /\/gracias\?pago=cs_fake_/) {
+  const fields = new URLSearchParams({ id, company: buyer.company, email: buyer.email })
+  if (billing.country) fields.set('country', billing.country)
+  if (billing.postalCode) fields.set('postalCode', billing.postalCode)
+  if (billing.cardCountry) fields.set('cardCountry', billing.cardCountry)
+  const pay = await fetch(`${site}/api/dev/checkout`, { method: 'POST', body: fields, redirect: 'manual' })
+  assert.equal(pay.status, 303)
+  assert.match(pay.headers.get('location')!, back)
+}
+
+/** El pago entero por las rutas de la web: /comprar -> /api/checkout -> pagina de pago de prueba -> /gracias. */
+async function buyThroughWeb(product: string, buyer: Buyer, options: { slot?: string; billing?: Billing } = {}) {
+  const opened = await openCheckout(product, buyer, options.slot)
+  assert.ok(opened.id, `el pago de ${buyer.company} no se abrio: ${opened.error}`)
+  await payOnStripe(opened.id, buyer, options.billing)
+  return opened.id
+}
+
+/**
+ * La vuelta desde Stripe sin pagar, por la cancel_url de ese pago, desde la IP de quien lo abrio: lo
+ * cierra y suelta su plaza. Devuelve a donde lleva (/comprar con el pais y el territorio elegidos).
+ */
+async function cancelOnStripe(id: string, buyer: Buyer) {
+  const url = String(sessionParams(await state(), id).cancel_url).replace('{CHECKOUT_SESSION_ID}', id)
+  const res = await fetch(url, { redirect: 'manual', headers: { 'X-Forwarded-For': buyer.ip ?? '' } })
+  assert.equal(res.status, 303)
+  return new URL(res.headers.get('location')!, site)
+}
+
+const sessionParams = (s: State, id: string) => s.payments.sessions.find((x) => x.id === id)!.params
+const purchaseOfSession = (s: State, id: string) => Object.values(s.db.purchases).find((p) => p.stripeCheckoutSessionId === id)
+const companyOf = (s: State, purchase: { companyId: string | null }) => Object.values(s.db.companies).find((x) => x.id === purchase.companyId)
+const invoiceOf = (s: State, purchase: { paymentRef: string }) => s.invoicer.documents.find((x) => x.kind === 'invoice' && String(x.draft.reference).endsWith(purchase.paymentRef))
+const taxRatesOf = (params: Record<string, any>) => params.line_items[0].tax_rates ?? []
+/** El 21 % de la base tras el cupon, como lo cobra Stripe. */
+const vat21 = (p: { amountSubtotal: number; amountDiscount: number }) => Math.round(((p.amountSubtotal - p.amountDiscount) * 21) / 100)
+/** Las plazas de lanzamiento que quedan: ni gastadas ni apartadas por un pago abierto. */
+const launchFree = (s: State) => 10 - Object.values(s.db.launchSlots).filter((x) => x.status === 'used' || (x.status === 'reserved' && x.expiresAt > new Date().toISOString())).length
 
 async function zoneLogin(email: string) {
   const before = (await state()).mail.filter((m) => m.tags.includes('zona-codigo') && m.to === email).length
@@ -174,15 +269,18 @@ async function zoneLogin(email: string) {
   return (url: string, init: RequestInit = {}) => fetch(`${site}${url}`, { ...init, redirect: 'manual', headers: { ...(init.headers as Record<string, string>), Cookie: cookie } })
 }
 
+/** Lo declarado de una empresa de Espana peninsular, como lo escribe /api/checkout en los metadatos del pago. */
+const spainMetadata = (taxId: string) => ({ tax_country: 'ES', tax_territory: 'peninsula', tax_id: taxId, tax_id_type: 'es_cif', tax_treatment: 'standard' })
+
 async function main() {
   console.log(`Entrega automatica, de punta a punta contra ${base} (modo falso)`)
   if (start) await startServer(base, port, { DELIVERY_FAKE_DIR: fakeDir })
   const ts = Date.now().toString(36)
 
   // 1. Un aviso firmado de Hazlo tu, repetido, y el trabajador protegido.
-  const a = { company: `Taller Uno ${ts} SL`, taxId: `B1${ts.slice(-7).toUpperCase()}`, email: `uno-${ts}@e2e.test` }
+  const a = { company: `Taller Uno ${ts} SL`, taxId: cif(1), email: `uno-${ts}@e2e.test` }
   const prices = priceCents('hazlo-tu')
-  const session = fakeCheckoutSession({ product: 'hazlo-tu', buyer: a, amountSubtotal: prices.list, metadata: { locale: 'es', terms_version: LEGAL_VERSIONS.condiciones } })
+  const session = fakeCheckoutSession({ product: 'hazlo-tu', buyer: a, amountSubtotal: prices.list, metadata: { locale: 'es', ...spainMetadata(a.taxId), terms_version: LEGAL_VERSIONS.condiciones } })
   const first = await sendEvent('checkout.session.completed', session)
   assert.deepEqual([first.status, first.body.outcome], [200, 'purchase'])
   const bad = await fetch(`${base}/api/stripe/webhook`, { method: 'POST', headers: { 'Stripe-Signature': 't=1,v1=00' }, body: '{}' })
@@ -202,21 +300,277 @@ async function main() {
   assert.ok(welcomeA.attachments.some((x) => x.name.startsWith('condiciones-')))
   log(`bienvenida con la licencia ${licenseA.id} (verifica) y las condiciones; el aviso repetido no duplica`)
 
-  // 2. Acompanado por la web: elegir hueco, pagar, sesion reservada.
+  // 2. La pagina de compra pide el pais y la identificacion que toca (sin JavaScript, todos los
+  //    campos), y lo mal escrito vuelve a /comprar con su error, con el pais elegido, sin abrir el pago.
   const page = await (await fetch(`${base}/comprar/acompanado`)).text()
   const slot = /name="slot" value="([^"]+)"/.exec(page)?.[1]
   assert.ok(slot, 'la pagina de compra ensena huecos')
-  const b = { company: `Gestoria Dos ${ts} SL`, taxId: `B2${ts.slice(-7).toUpperCase()}`, email: `dos-${ts}@e2e.test` }
-  await buyThroughWeb('acompanado', b, slot.replace(/&amp;/g, '&'))
+  for (const field of ['country', 'territory', 'taxId', 'vatId', 'otherTaxId']) assert.ok(page.includes(`name="${field}"`), `la pagina de compra lleva el campo ${field}`)
+  assert.match(page, /<option value="ES" selected="">/, 'Espana, elegida por defecto')
+  // Se vende a cualquier pais (los socios, 29-10-2026): en la lista estan todos, Rusia tambien.
+  assert.ok(page.includes('<option value="RU">'), 'la lista de paises lleva todos')
+  const sessionsBefore = (await state()).payments.sessions.length
+  const tryCheckout = async (fields: Record<string, string>) => {
+    const res = await fetch(`${base}/api/checkout`, { method: 'POST', body: new URLSearchParams({ product: 'hazlo-tu', locale: 'es', ...fields }), redirect: 'manual', headers: { 'X-Forwarded-For': '198.51.100.1' } })
+    assert.equal(res.status, 303)
+    return new URL(res.headers.get('location')!, base)
+  }
+  // Sin pais ni NIF (el boton Comprar de /precios), a /comprar, que los pide.
+  assert.equal((await tryCheckout({})).pathname, '/comprar/hazlo-tu')
+  const errors: [Record<string, string>, string][] = [
+    [{ taxId: 'B12345678' }, '?error=tax_id_invalid'],
+    [{ country: 'ES', taxId: 'DE123456789' }, '?error=tax_id_invalid&pais=ES'],
+    [{ country: 'ES', territory: 'marte', taxId: a.taxId }, '?error=territory_invalid&pais=ES'],
+    [{ country: 'ES', territory: 'peninsula', taxId: a.taxId, currency: 'usd' }, '?error=currency&pais=ES&territorio=peninsula'],
+    [{ country: 'XX', otherTaxId: '12-3456789' }, '?error=country_invalid'],
+    [{ country: 'DE', vatId: 'DE12' }, '?error=vat_id_invalid&pais=DE'],
+    [{ country: 'IT', vatId: '', otherTaxId: '' }, '?error=eu_tax_id_required&pais=IT'],
+    [{ country: 'US', otherTaxId: '' }, '?error=other_tax_id_required&pais=US'],
+    [{ country: 'US', otherTaxId: '#?' }, '?error=other_tax_id_invalid&pais=US'],
+  ]
+  for (const [fields, search] of errors) assert.equal((await tryCheckout(fields)).search, search, JSON.stringify(fields))
+  const errorPage = await (await fetch(`${base}/comprar/hazlo-tu?error=vat_id_invalid&pais=DE`)).text()
+  assert.ok(errorPage.includes('no tiene la forma de los del país que has elegido'), 'la pagina dice el error')
+  assert.match(errorPage, /<option value="DE" selected="">/, 'y vuelve con el pais elegido')
+  assert.equal((await state()).payments.sessions.length, sessionsBefore, 'ningun pago abierto')
+  log('/comprar: todos los paises; mal escrito, en dolares o con un pais que no existe, de vuelta con su error y el pais elegido, sin abrir el pago')
+
+  // 3. Espana peninsular (el Acompanado, con su hueco): el NIF espanol y el 21 % del tipo fijo de Stripe.
+  const b: Buyer = { company: `Gestoria Dos ${ts} SL`, taxId: cif(2), email: `dos-${ts}@e2e.test` }
+  const bId = await buyThroughWeb('acompanado', b, { slot: slot.replace(/&amp;/g, '&') })
   const welcomeB = await until('bienvenida del Acompanado', (s) => s.mail.find((m) => m.to === b.email && m.tags.includes('bienvenida')))
   assert.match(welcomeB.text, /primera sesión de montaje está reservada/)
+  assert.match(welcomeB.text, /\(hora de Madrid\)/)
   // El mismo hueco ya no se ofrece.
   const page2 = await (await fetch(`${base}/comprar/acompanado`)).text()
   assert.ok(!page2.includes(`value="${slot}"`))
-  log('Acompanado: hueco elegido antes de pagar, pago de prueba, sesion reservada y en la bienvenida')
+  const sB = await until('factura del Acompanado', (s) => {
+    const p = purchaseOfSession(s, bId)
+    return p && invoiceOf(s, p) ? s : null
+  })
+  const paramsB = sessionParams(sB, bId)
+  assert.deepEqual(taxRatesOf(paramsB), ['txr_fake_iva_21'])
+  for (const metadata of [paramsB.metadata, paramsB.payment_intent_data.metadata]) assert.deepEqual({ ...metadata, ...spainMetadata(b.taxId!) }, metadata, 'lo declarado, en la sesion y en el pago')
+  const purchaseB = purchaseOfSession(sB, bId)!
+  assert.deepEqual([purchaseB.status, purchaseB.taxTreatment, purchaseB.amountTax, purchaseB.launch], ['paid', 'standard', vat21(purchaseB), true])
+  const companyB = companyOf(sB, purchaseB)!
+  assert.deepEqual([companyB.taxId, companyB.taxIdType, companyB.country], [b.taxId, 'es_cif', 'ES'])
+  assert.deepEqual([invoiceOf(sB, purchaseB).draft.taxTreatment, invoiceOf(sB, purchaseB).draft.body], ['standard', null])
+  log(`Espana peninsular: NIF espanol y el 21 % (${purchaseB.amountTax / 100} € sobre el precio de lanzamiento), hueco elegido antes de pagar, sesion reservada y en la bienvenida`)
 
-  // 3. Equipo por la web, y la zona: codigo, licencia, equipo.
-  const c = { company: `Asesoria Tres ${ts} SL`, taxId: `B3${ts.slice(-7).toUpperCase()}`, email: `tres-${ts}@e2e.test` }
+  // 4. El IVA de cada caso, por las rutas de la web: lo declarado va en los metadatos del pago, el
+  //    tipo del 21 % solo donde toca, y la factura con su mencion.
+  const sale = async (buyer: Buyer, billing?: Billing) => {
+    const id = await buyThroughWeb('hazlo-tu', buyer, { billing })
+    await until(`bienvenida de ${buyer.company}`, (s) => s.mail.find((m) => m.to === buyer.email && m.tags.includes('bienvenida')))
+    const s = await until(`aviso de la venta de ${buyer.company}`, (s) => (s.mail.some((m) => m.subject.startsWith('Venta:') && m.subject.includes(buyer.company)) ? s : null))
+    const purchase = purchaseOfSession(s, id)!
+    return { s, id, params: sessionParams(s, id), purchase, company: companyOf(s, purchase)!, invoice: invoiceOf(s, purchase), notice: s.mail.find((m) => m.subject.startsWith('Venta:') && m.subject.includes(buyer.company))! }
+  }
+
+  // 4a. Canarias: NIF espanol y sin IVA espanol (fuera del territorio del IVA).
+  const ic: Buyer = { company: `Plataneras Tres ${ts} SL`, territory: 'canarias', taxId: cif(7), email: `canarias-${ts}@e2e.test` }
+  const icSale = await sale(ic)
+  assert.deepEqual(taxRatesOf(icSale.params), [])
+  assert.deepEqual([icSale.params.metadata.tax_territory, icSale.params.metadata.tax_treatment], ['canarias', 'export'])
+  assert.deepEqual([icSale.purchase.status, icSale.purchase.taxTreatment, icSale.purchase.amountTax], ['paid', 'export', 0])
+  assert.equal(icSale.company.address.postal_code, '35001')
+  assert.equal(icSale.invoice.draft.taxTreatment, 'export')
+  assert.ok(icSale.invoice.draft.body.includes('Operación no sujeta a IVA por reglas de localización (art. 69.Uno.1.º de la Ley 37/1992 del IVA).'))
+  log('Canarias: NIF espanol, sin IVA (sin el tipo del 21 %) y la factura con la no sujecion por localizacion')
+
+  // 4b. Una empresa de otro pais de la UE con NIF-IVA valido en VIES, en ingles: inversion del sujeto
+  //     pasivo; VIES se pregunta antes de abrir el pago y su numero de consulta va con el pedido.
+  const de: Buyer = { company: `Werkstatt Vier ${ts} GmbH`, country: 'DE', vatId: `DE ${run}123`, email: `de-${ts}@e2e.test`, locale: 'en' }
+  const deVat = `DE${run}123`
+  const checksBefore = (await state()).vies.checks.length
+  const deSale = await sale(de)
+  assert.deepEqual(deSale.s.vies.checks.slice(checksBefore)[0], { countryCode: 'DE', vatNumber: `${run}123` })
+  assert.deepEqual(taxRatesOf(deSale.params), [])
+  assert.deepEqual([deSale.params.metadata.tax_id, deSale.params.metadata.tax_id_type, deSale.params.metadata.tax_treatment], [deVat, 'eu_vat', 'reverse_charge'])
+  assert.match(deSale.params.metadata.vies_request, /^WAPIFALSO\d+$/)
+  assert.ok(Date.parse(deSale.params.metadata.vies_checked_at) > Date.now() - 600_000, 'la consulta, de justo antes del pago')
+  assert.equal(deSale.params.payment_intent_data.metadata.vies_request, deSale.params.metadata.vies_request)
+  assert.match(deSale.params.custom_text.submit.message, /^No VAT: reverse charge, with VAT number DE\d{9} checked in VIES\./)
+  assert.deepEqual([deSale.purchase.status, deSale.purchase.taxTreatment, deSale.purchase.amountTax, deSale.purchase.locale], ['paid', 'reverse_charge', 0, 'en'])
+  assert.deepEqual([deSale.company.taxId, deSale.company.taxIdType, deSale.company.country], [deVat, 'eu_vat', 'DE'])
+  const deBody = String(deSale.invoice.draft.body)
+  assert.ok(deBody.startsWith('Reverse charge.') && deBody.includes('Inversión del sujeto pasivo.') && deBody.includes(`Customer VAT number: ${deVat}`), deBody)
+  assert.ok(String(deSale.invoice.draft.notes).includes(`VIES ${deSale.params.metadata.vies_request}`))
+  assert.match(deSale.notice.text, /IVA: sin IVA: inversión del sujeto pasivo; va al modelo 349/)
+  log(`UE con NIF-IVA (${deVat}): VIES antes de pagar (${deSale.params.metadata.vies_request}), sin IVA, factura con la inversion del sujeto pasivo y aviso del modelo 349`)
+
+  // 4c. Una empresa de otro pais de la UE sin NIF-IVA: como un particular, con el 21 %, y su
+  //     identificacion fiscal con el pais delante; el aviso lleva la cuenta del limite de 10.000 euros.
+  const it: Buyer = { company: `Officina Cinque ${ts} SRL`, country: 'IT', vatId: '', otherTaxId: `rssmra ${run} h501u`, email: `it-${ts}@e2e.test` }
+  const itSale = await sale(it)
+  assert.deepEqual(taxRatesOf(itSale.params), ['txr_fake_iva_21'])
+  assert.deepEqual([itSale.params.metadata.tax_id, itSale.params.metadata.tax_id_type, itSale.params.metadata.tax_treatment], [`ITRSSMRA${run}H501U`, 'other', 'standard'])
+  assert.deepEqual([itSale.purchase.taxTreatment, itSale.purchase.amountTax], ['standard', vat21(itSale.purchase)])
+  assert.deepEqual([itSale.company.taxIdType, itSale.company.country], ['other', 'IT'])
+  assert.deepEqual([itSale.invoice.draft.taxTreatment, itSale.invoice.draft.body], ['standard', null])
+  assert.match(itSale.notice.text, /Ventas a la UE sin NIF-IVA: .* este año \(límite: 10\.000,00\s€ al año\)/)
+  log('UE sin NIF-IVA: con el 21 % de IVA espanol, su identificacion fiscal y la cuenta del limite de 10.000 € en el aviso')
+
+  // 4d. Fuera de la UE: sin IVA espanol, con su identificacion fiscal.
+  const us: Buyer = { company: `Workshop Six ${ts} LLC`, country: 'US', otherTaxId: `${run.slice(0, 2)}-${run}9`, email: `us-${ts}@e2e.test` }
+  const usSale = await sale(us)
+  assert.deepEqual(taxRatesOf(usSale.params), [])
+  assert.deepEqual([usSale.params.metadata.tax_id, usSale.params.metadata.tax_treatment], [`US${run.slice(0, 2)}-${run}9`, 'export'])
+  assert.deepEqual([usSale.purchase.taxTreatment, usSale.purchase.amountTax, usSale.company.country], ['export', 0, 'US'])
+  assert.ok(String(usSale.invoice.draft.body).includes('Operación no sujeta a IVA por localización en destino (art. 69 de la Ley 37/1992 del IVA).'))
+  log('fuera de la UE: sin IVA, su identificacion fiscal y la factura con la no sujecion en destino')
+
+  // 4e. Monaco va como Francia en el IVA: con su NIF-IVA frances (FR), que se pregunta al VIES de
+  //     Francia, sin IVA (inversion del sujeto pasivo) y al modelo 349, con la direccion en Monaco.
+  const mc: Buyer = { company: `Riviera Neuf ${ts} SAM`, country: 'MC', vatId: `FR 45 ${run} 321`, email: `mc-${ts}@e2e.test` }
+  const mcVat = `FR45${run}321`
+  const checksMc = (await state()).vies.checks.length
+  const mcSale = await sale(mc)
+  assert.deepEqual(mcSale.s.vies.checks.slice(checksMc)[0], { countryCode: 'FR', vatNumber: `45${run}321` })
+  assert.deepEqual(taxRatesOf(mcSale.params), [])
+  assert.deepEqual([mcSale.params.metadata.tax_country, mcSale.params.metadata.tax_id, mcSale.params.metadata.tax_id_type, mcSale.params.metadata.tax_treatment], ['MC', mcVat, 'eu_vat', 'reverse_charge'])
+  assert.deepEqual([mcSale.purchase.status, mcSale.purchase.taxTreatment, mcSale.purchase.amountTax], ['paid', 'reverse_charge', 0])
+  assert.deepEqual([mcSale.company.taxId, mcSale.company.taxIdType, mcSale.company.country], [mcVat, 'eu_vat', 'MC'])
+  const mcBody = String(mcSale.invoice.draft.body)
+  assert.ok(mcBody.startsWith('Inversión del sujeto pasivo.') && mcBody.includes(`NIF-IVA del destinatario: ${mcVat}`), mcBody)
+  assert.match(mcSale.notice.text, /IVA: sin IVA: inversión del sujeto pasivo; va al modelo 349/)
+  log(`Monaco con NIF-IVA frances (${mcVat}): VIES de Francia antes de pagar, sin IVA, inversion del sujeto pasivo y modelo 349`)
+
+  // 4f. VIES da por valido el NIF-IVA, pero a nombre de otra empresa: la venta sale igual (licencia,
+  //     bienvenida y zona); la factura queda en borrador con ese nombre en sus notas, y el aviso lo dice.
+  const at: Buyer = { company: `Werkstatt Elf ${ts} GmbH`, country: 'AT', vatId: `ATU${run}12`, email: `at-${ts}@e2e.test` }
+  await setVies({ vatId: at.vatId!, name: 'ALPENBLICK HANDELS GMBH', address: 'Ringstraße 1\n1010 Wien' })
+  const atSale = await sale(at)
+  assert.deepEqual([atSale.params.metadata.vies_name, atSale.params.metadata.vies_address], ['ALPENBLICK HANDELS GMBH', 'Ringstraße 1, 1010 Wien'])
+  assert.deepEqual([atSale.purchase.status, atSale.purchase.taxTreatment], ['paid', 'reverse_charge'])
+  assert.ok(Object.values(atSale.s.db.licenses).some((l) => l.purchaseId === atSale.purchase.id), 'con su licencia')
+  assert.ok(Object.values(atSale.s.db.members).some((m) => m.email === at.email), 'y su zona')
+  const atInvoice = Object.values(atSale.s.db.invoices).find((x) => x.purchaseId === atSale.purchase.id)!
+  assert.deepEqual([atInvoice.status, atSale.invoice.approved], ['draft', false])
+  assert.match(atInvoice.holdReason, new RegExp(`^VIES da el NIF-IVA ATU${run}12 a nombre de «ALPENBLICK HANDELS GMBH» \\(Ringstraße 1, 1010 Wien\\), que no se parece a «${at.company}»`))
+  assert.match(String(atSale.invoice.draft.notes), /a nombre de «ALPENBLICK HANDELS GMBH» · Antes de emitirla, comprobar que el NIF-IVA es de la empresa \(el nombre de VIES no se parece a la razón social\) y quitar esta frase$/)
+  assert.match(atSale.notice.text, /VIES: consulta WAPIFALSO\d+, a nombre de «ALPENBLICK HANDELS GMBH», que no se parece a la razón social \(ver Qué hacer\)/)
+  log('NIF-IVA valido en VIES a nombre de otra empresa: se entrega igual; la factura, en borrador con el nombre en sus notas, y el aviso lo dice')
+
+  // 5. VIES dice que el NIF-IVA no vale: de vuelta a /comprar sin pago; sin el NIF-IVA, con el 21 %.
+  const fr: Buyer = { company: `Atelier Sept ${ts} SARL`, country: 'FR', vatId: `FR12${run}789`, email: `fr-${ts}@e2e.test` }
+  await setVies({ vatId: fr.vatId!, result: 'invalid' })
+  const sessionsFr = (await state()).payments.sessions.length
+  const rejected = await openCheckout('hazlo-tu', fr)
+  assert.equal(rejected.back?.search, '?error=vat_invalid&pais=FR')
+  assert.equal((await state()).payments.sessions.length, sessionsFr, 'sin pago abierto')
+  const frPage = await (await fetch(rejected.back!)).text()
+  assert.ok(frPage.includes('VIES, el registro europeo, dice que ese NIF-IVA no es válido'))
+  const frOpened = await openCheckout('hazlo-tu', { ...fr, vatId: '', otherTaxId: `${run}789` })
+  assert.ok(frOpened.id)
+  const frParams = sessionParams(await state(), frOpened.id)
+  assert.deepEqual([taxRatesOf(frParams), frParams.metadata.tax_treatment, frParams.metadata.tax_id_type], [['txr_fake_iva_21'], 'standard', 'other'])
+  // La vuelta desde Stripe sin pagar: cierra el pago y lleva a /comprar con el pais elegido.
+  const frBack = await cancelOnStripe(frOpened.id, fr)
+  assert.ok((await state()).payments.expired.includes(frOpened.id), 'el pago a medias, cerrado al volver de Stripe')
+  assert.equal(`${frBack.pathname}${frBack.search}`, '/comprar/hazlo-tu?pais=FR')
+  assert.match(await (await fetch(frBack)).text(), /<option value="FR" selected="">/, 'de vuelta con Francia elegida')
+  log('NIF-IVA que VIES rechaza: no se abre el pago y /comprar lo dice; sin el NIF-IVA, el pago con el 21 %, y al volver sin pagar, /comprar con su pais')
+
+  // 5b. Una empresa de la UE que escribe su NIF-IVA en «Identificacion fiscal» (en Italia, la partita
+  //     IVA es el mismo numero): VIES lo da por valido y /comprar le pide escribirlo como NIF-IVA, sin
+  //     abrir el pago; escrito como NIF-IVA, sin IVA.
+  const itVat: Buyer = { company: `Studio Dodici ${ts} SRL`, country: 'IT', vatId: '', otherTaxId: `${run}12345`, email: `it-iva-${ts}@e2e.test` }
+  const before5b = await state()
+  const asOther = await openCheckout('hazlo-tu', itVat)
+  assert.equal(asOther.back?.search, '?error=other_tax_id_is_vat&pais=IT')
+  const after5b = await state()
+  assert.equal(after5b.payments.sessions.length, before5b.payments.sessions.length, 'sin pago abierto')
+  assert.equal(launchFree(after5b), launchFree(before5b), 'ni plaza apartada')
+  assert.deepEqual(after5b.vies.checks.at(-1), { countryCode: 'IT', vatNumber: `${run}12345` })
+  assert.ok((await (await fetch(asOther.back!)).text()).includes('Escríbelo en el campo del NIF-IVA'), '/comprar dice que lo escriba como NIF-IVA')
+  const asVat = await openCheckout('hazlo-tu', { ...itVat, vatId: `IT${run}12345`, otherTaxId: '' })
+  assert.ok(asVat.id)
+  assert.equal(sessionParams(await state(), asVat.id).metadata.tax_treatment, 'reverse_charge')
+  await cancelOnStripe(asVat.id, itVat)
+  log('UE con su NIF-IVA en «Identificacion fiscal»: VIES lo da por valido y /comprar pide escribirlo como NIF-IVA, sin abrir el pago; como NIF-IVA, sin IVA')
+
+  // 6. VIES caido: no se vende a 0 %; ni pago ni plaza apartada, que pruebe en unos minutos.
+  await setVies({ down: true })
+  const before = await state()
+  const nl: Buyer = { company: `Werkplaats Acht ${ts} BV`, country: 'NL', vatId: `NL${run}123B01`, email: `nl-${ts}@e2e.test` }
+  const down = await openCheckout('hazlo-tu', nl)
+  assert.equal(down.back?.search, '?error=vat_unavailable&pais=NL')
+  const after = await state()
+  assert.deepEqual([after.payments.sessions.length, launchFree(after)], [before.payments.sessions.length, launchFree(before)])
+  assert.deepEqual(after.vies.checks.at(-1), { countryCode: 'NL', vatNumber: `${run}123B01` })
+  await setVies({ down: false })
+  log('VIES caido: ni pago ni plaza de lanzamiento apartada, de vuelta a /comprar con «inténtalo en unos minutos»')
+
+  // 7. Lo que no cuadra va a revisar, sin empresa, licencia, factura ni zona: una direccion de
+  //    facturacion en Canarias habiendo declarado la peninsula, un IVA cobrado que no toca y un pago
+  //    de antes (sin lo declarado) con la direccion en Francia.
+  const reviewed = async (what: string, paymentRef: string) => {
+    await until(`aviso de ${what}`, (s) => s.mail.find((x) => /Venta a revisar/.test(x.subject) && x.text.includes(paymentRef)))
+    const s = await state()
+    return { s, purchase: Object.values(s.db.purchases).find((p) => p.paymentRef === paymentRef)! }
+  }
+  const moved: Buyer = { company: `Islas Nueve ${ts} SL`, taxId: cif(6), email: `islas-${ts}@e2e.test` }
+  const movedId = await buyThroughWeb('hazlo-tu', moved, { billing: { postalCode: '35001' } })
+  const movedRef = purchaseOfSession(await state(), movedId)!.paymentRef
+  const movedReview = await reviewed('la venta que no cuadra', movedRef)
+  assert.deepEqual([movedReview.purchase.status, movedReview.purchase.reviewData.reason], ['needs_review', 'country_mismatch'])
+  assert.match(movedReview.purchase.reviewData.problems.join(), /dirección en Canarias y antes de pagar se declaró península y Baleares/)
+  assert.ok(!Object.values(movedReview.s.db.companies).some((x) => x.taxId === moved.taxId), 'sin empresa')
+  const usMetadata = { tax_country: 'US', tax_id: `US${run}77`, tax_id_type: 'other', tax_treatment: 'export' }
+  const chargedEmail = `cobrado-${ts}@e2e.test`
+  const charged = fakeCheckoutSession({ product: 'hazlo-tu', buyer: { company: `Charged Ten ${ts} Inc`, taxId: '', email: chargedEmail }, amountSubtotal: prices.list, taxRate: 21, metadata: { locale: 'en', ...usMetadata, terms_version: LEGAL_VERSIONS.condiciones } })
+  assert.equal((await sendEvent('checkout.session.completed', charged)).body.outcome, 'needs-review')
+  assert.equal((await reviewed('el IVA que no toca', String(charged.payment_intent))).purchase.reviewData.reason, 'vat_mismatch')
+  const old = { company: `Societe Quatre ${ts} SARL`, taxId: cif(5), email: `vieja-${ts}@e2e.test` }
+  const oldSession = fakeCheckoutSession({ product: 'hazlo-tu', buyer: { ...old, country: 'FR' }, amountSubtotal: prices.list, metadata: { locale: 'es', tax_id: old.taxId, terms_version: LEGAL_VERSIONS.condiciones } })
+  assert.equal((await sendEvent('checkout.session.completed', oldSession)).body.outcome, 'needs-review')
+  const oldReview = await reviewed('el pago de antes', String(oldSession.payment_intent))
+  assert.deepEqual([oldReview.purchase.reviewData.reason, oldReview.purchase.reviewData.declared.legacy], ['country_mismatch', true])
+  // Una venta sin IVA de fuera de la UE pagada con una tarjeta espanola (la segunda prueba del pais):
+  // a revisar, sin rechazar la tarjeta.
+  const carded: Buyer = { company: `Card Thirteen ${ts} LLC`, country: 'US', otherTaxId: `${run}-13`, email: `tarjeta-${ts}@e2e.test` }
+  const cardedId = await buyThroughWeb('hazlo-tu', carded, { billing: { cardCountry: 'ES' } })
+  const cardedReview = await reviewed('la tarjeta espanola', purchaseOfSession(await state(), cardedId)!.paymentRef)
+  assert.deepEqual([cardedReview.purchase.status, cardedReview.purchase.reviewData.reason, cardedReview.purchase.companyId], ['needs_review', 'card_country', null])
+  assert.match(cardedReview.purchase.reviewData.problems.join(), /tarjeta emitida en ES y venta sin IVA a US, fuera de la UE/)
+  assert.ok(!Object.values(cardedReview.s.db.licenses).some((l) => l.purchaseId === cardedReview.purchase.id), 'sin licencia')
+  for (const who of [moved.email, chargedEmail, old.email, carded.email]) {
+    assert.ok(!cardedReview.s.mail.some((x) => x.to === who), `a ${who} no le llega ni la bienvenida ni la licencia`)
+    assert.ok(!Object.values(cardedReview.s.db.members).some((x) => x.email === who), `${who} no entra en la zona`)
+  }
+  log('a revisar, con aviso y sin entregar: direccion en Canarias declarada la peninsula (country_mismatch), 21 % a una venta sin IVA (vat_mismatch), un pago de antes desde Francia y una venta de EE. UU. con tarjeta espanola (card_country)')
+
+  // 8. Las plazas de lanzamiento que quedan, apartadas por pagos a medias de otros: el siguiente no
+  //    paga el de lista, launch_busy (que pruebe en media hora); al soltarse una, se la lleva.
+  const free = launchFree(await state())
+  assert.ok(free > 0 && free < 10, `quedan ${free} plazas`)
+  const holders: { buyer: Buyer; id: string }[] = []
+  for (let i = 0; i < free; i++) {
+    // El primero, de Canarias: al volver sin pagar, /comprar con el pais y el territorio.
+    const holder: Buyer = { company: `A Medias ${i} ${ts} SL`, territory: i === 0 ? 'canarias' : undefined, taxId: cif(i, 'A'), email: `medias-${i}-${ts}@e2e.test` }
+    const opened = await openCheckout('hazlo-tu', holder)
+    assert.ok(opened.id, `pago a medias ${i}`)
+    assert.ok(sessionParams(await state(), opened.id).discounts, 'con el precio de lanzamiento')
+    holders.push({ buyer: holder, id: opened.id })
+  }
+  const late: Buyer = { company: `Llega Tarde ${ts} SL`, taxId: cif(9, 'A'), email: `tarde-${ts}@e2e.test` }
+  const busy = await openCheckout('hazlo-tu', late)
+  assert.equal(busy.back?.search, '?error=launch_busy&pais=ES')
+  assert.ok((await (await fetch(busy.back!)).text()).includes('Vuelve a probar en media hora'))
+  const canariasBack = await cancelOnStripe(holders[0].id, holders[0].buyer)
+  assert.equal(`${canariasBack.pathname}${canariasBack.search}`, '/comprar/hazlo-tu?pais=ES&territorio=canarias')
+  assert.match(await (await fetch(canariasBack)).text(), /<option value="canarias" selected="">/, 'de vuelta con Canarias elegida')
+  const retried = await openCheckout('hazlo-tu', late)
+  assert.ok(retried.id && sessionParams(await state(), retried.id).discounts, 'con una plaza suelta, el precio de lanzamiento')
+  for (const held of [...holders.slice(1), { buyer: late, id: retried.id }]) await cancelOnStripe(held.id, held.buyer)
+  assert.equal(launchFree(await state()), free, 'cerrados los pagos a medias, sus plazas vuelven a estar libres')
+  const held = free === 1 ? 'la plaza que queda apartada por un pago a medias' : `las ${free} plazas que quedan apartadas por pagos a medias`
+  log(`launch_busy: con ${held}, el siguiente espera; al cerrarse uno (vuelta a /comprar con Canarias), paga el de lanzamiento`)
+
+  // 9. Equipo por la web, y la zona: codigo, licencia, equipo.
+  const c: Buyer = { company: `Asesoria Tres ${ts} SL`, taxId: cif(3), email: `tres-${ts}@e2e.test` }
   await buyThroughWeb('hazlo-tu-equipo', c)
   await until('bienvenida del equipo', (s) => s.mail.find((m) => m.to === c.email && m.tags.includes('bienvenida')))
   const zone = await zoneLogin(c.email)
@@ -234,7 +588,7 @@ async function main() {
   assert.deepEqual(await (await zone('/api/zone/me?perfil=1')).json(), { available: true, user: { email: c.email, companies: [{ name: me.company.name, role: 'owner' }] } })
   log('zona: codigo por correo, sesion, licencia para volver a bajar, alta en el equipo y el perfil de la barra de arriba')
 
-  // 4. Version nueva: ficheros en el almacen, aviso a todos, descarga con enlace firmado.
+  // 10. Version nueva: ficheros en el almacen, aviso a todos, descarga con enlace firmado.
   const version = `9.${Number.parseInt(ts.slice(-4), 36) % 1000}.0`
   const names = [`cerebro-digital-${version}.mcpb`, `cerebro-digital-${version}-windows.mcpb`, `cerebro-registro-${version}-windows.zip`]
   for (const name of names) {
@@ -262,7 +616,7 @@ async function main() {
   assert.equal(await download.text(), `contenido de ${files[0].fileName}`)
   log(`version ${version}: aviso por correo y descarga por enlace firmado que caduca`)
 
-  // 4b. Las paginas de la zona, pintadas en el servidor con la sesion: sin ella, a entrar.
+  // 10b. Las paginas de la zona, pintadas en el servidor con la sesion: sin ella, a entrar.
   const anonymous = await fetch(`${base}/zona/licencia`, { redirect: 'manual' })
   assert.ok([302, 303, 307].includes(anonymous.status), `sin sesion, /zona/licencia redirige (${anonymous.status})`)
   assert.match(anonymous.headers.get('location') ?? '', /\/zona\/entrar\?volver=%2Fzona%2Flicencia$/)
@@ -280,7 +634,7 @@ async function main() {
   assert.ok((await zonePage('/en/zona/facturas')).includes('Invoices'))
   log('zona: las paginas se pintan con la sesion (inicio, licencia, descargas, equipo, facturas) y sin ella llevan a entrar')
 
-  // 5. Mensual: un cobro da factura y licencia nueva.
+  // 11. Mensual: un cobro da factura y licencia nueva.
   const s2 = await state()
   const companyC = Object.values(s2.db.companies).find((x) => x.taxId === c.taxId)!
   const periodEnd = Math.floor(Date.now() / 1000) + 200 * 86400
@@ -291,9 +645,45 @@ async function main() {
   assert.equal(renewed.length, 2)
   log(`mensual: cobro con licencia nueva hasta el ${renewed.map((l) => l.soporteHasta).sort().pop()}`)
 
-  // 5b. Otra compra con el NIF de la empresa del equipo, desde otro correo: a revisar, sin acceso, y aviso a su titular.
-  const intruder = { company: 'Otra Cosa SL', taxId: c.taxId, email: `otro-${ts}@e2e.test` }
-  const intruderSession = fakeCheckoutSession({ product: 'hazlo-tu', buyer: intruder, amountSubtotal: prices.list, metadata: { locale: 'es', terms_version: LEGAL_VERSIONS.condiciones } })
+  // 11a. Pasa a pagarlo por ano adelantado: el precio de 10 meses (cerebro-plan-pro-anual) y licencia
+  //      de un ano, que cubre 15 dias mas (el margen de un cobro fallido: siguen las versiones nuevas).
+  const yearEnd = periodEnd + 365 * 86400
+  const yearly = await sendEvent('invoice.paid', fakeInvoice({ customer: companyC.stripeCustomerId, amount: priceCents('plan-pro', 'year').list, periodEnd: yearEnd, metadata: { product: 'plan-pro', period: 'year', company_id: companyC.id } }))
+  assert.equal(yearly.body.outcome, 'renewal')
+  const yearlyLicenses = await until('licencia del pago anual', (s) => {
+    const all = Object.values(s.db.licenses).filter((l) => l.companyId === companyC.id)
+    return all.length === 3 ? all : null
+  })
+  const yearUntil = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date(yearEnd * 1000))
+  const latest = yearlyLicenses.sort((x, y) => (x.soporteHasta < y.soporteHasta ? -1 : 1)).at(-1)!
+  assert.deepEqual([latest.soporteHasta, paidUntil(latest)], [withUnpaidMargin(yearUntil), yearUntil])
+  log(`mensual al ano: ${priceCents('plan-pro', 'year').list / 100} € sin IVA, pagado hasta el ${yearUntil} y la licencia con los 15 dias de margen (${latest.soporteHasta})`)
+
+  // 11b. La empresa de la UE contrata el mensual desde la zona: sin IVA, con VIES otra vez antes de
+  //      abrir el pago y en cada cobro, y cada factura con la inversion del sujeto pasivo.
+  const companyDe = deSale.company
+  const zoneDe = await zoneLogin(de.email)
+  const viesBefore = (await state()).vies.checks.length
+  const planRes = await zoneDe('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': de.ip! }, body: JSON.stringify({ product: 'plan-esencial', locale: 'en', company: companyDe.id, period: 'month' }) })
+  assert.equal(planRes.status, 200, await planRes.clone().text())
+  const planId = new URL((await planRes.json()).url).searchParams.get('id')!
+  const planParams = sessionParams(await state(), planId)
+  assert.equal(planParams.subscription_data.default_tax_rates, undefined, 'sin el tipo del 21 %')
+  assert.deepEqual([planParams.subscription_data.metadata.tax_treatment, planParams.subscription_data.metadata.tax_id], ['reverse_charge', deVat])
+  assert.match(planParams.subscription_data.metadata.vies_request, /^WAPIFALSO\d+$/)
+  await payOnStripe(planId, de, {}, /\/en\/zona\?mensual=ok$/)
+  const deRenewal = await until('factura del mensual de la UE', (s) => {
+    const p = Object.values(s.db.purchases).find((x) => x.kind === 'renewal' && x.companyId === companyDe.id)
+    return p && invoiceOf(s, p) ? { s, p } : null
+  })
+  assert.deepEqual([deRenewal.p.status, deRenewal.p.taxTreatment, deRenewal.p.amountTax, deRenewal.p.product], ['paid', 'reverse_charge', 0, 'plan-esencial'])
+  assert.ok(String(invoiceOf(deRenewal.s, deRenewal.p).draft.body).includes(`Customer VAT number: ${deVat}`))
+  assert.equal(deRenewal.s.vies.checks.slice(viesBefore).filter((q) => q.vatNumber === `${run}123`).length, 2, 'VIES al contratar y en el cobro')
+  log('mensual de la empresa de la UE desde la zona: sin IVA, VIES al contratar y en el cobro, factura con la inversion del sujeto pasivo')
+
+  // 11c. Otra compra con el NIF de la empresa del equipo, desde otro correo: a revisar, sin acceso, y aviso a su titular.
+  const intruder = { company: 'Otra Cosa SL', taxId: c.taxId!, email: `otro-${ts}@e2e.test` }
+  const intruderSession = fakeCheckoutSession({ product: 'hazlo-tu', buyer: intruder, amountSubtotal: prices.list, metadata: { locale: 'es', ...spainMetadata(intruder.taxId), terms_version: LEGAL_VERSIONS.condiciones } })
   assert.equal((await sendEvent('checkout.session.completed', intruderSession)).body.outcome, 'needs-review')
   await until('aviso a la titular del NIF', (s) => s.mail.find((m) => m.to === c.email && m.tags.includes('aviso-nif')))
   const s3 = await state()
@@ -304,7 +694,7 @@ async function main() {
   assert.ok(!portal.includes('otra.example'))
   log('compra con el NIF de otro cliente desde otro correo: a revisar, sin acceso y con aviso a su titular')
 
-  // 6. Devolucion del primero: licencia anulada y zona cerrada.
+  // 12. Devolucion del primero: licencia anulada y zona cerrada.
   const purchaseA = Object.values(s2.db.purchases).find((p) => p.paymentRef === session.payment_intent)!
   const refund = await sendEvent('charge.refunded', fakeCharge({ paymentIntent: String(session.payment_intent), amount: purchaseA.amountTotal, refunded: purchaseA.amountTotal }))
   assert.equal(refund.body.outcome, 'refund')
@@ -314,13 +704,13 @@ async function main() {
   assert.ok(revocations.licencias.some((l: { id: string }) => l.id === licenseA.id))
   log('devolucion: licencia anulada (en la lista de anuladas), zona cerrada y correo al cliente')
 
-  // 7. Conciliacion: todas las licencias con su pago; ningun paso parado.
+  // 13. Conciliacion: todas las licencias con su pago; ningun paso parado.
   const report = await (await fetch(`${base}/api/jobs/reconcile`, { method: 'POST', headers: { Authorization: `Bearer ${secrets.JOBS_SECRET}` } })).json()
   assert.deepEqual(report.orphans, [])
   assert.equal(report.deadJobs, 0)
   log(`conciliacion: ${report.checkedLicenses} licencias, todas con su pago cobrado`)
 
-  // 8. La zona de muestra (para verla y sacar capturas sin Supabase): entra como la titular.
+  // 14. La zona de muestra (para verla y sacar capturas sin Supabase): entra como la titular.
   const demo = await fetch(`${base}/api/dev/zona-demo`, { redirect: 'manual' })
   assert.equal(demo.status, 303)
   const demoCookie = demo.headers.getSetCookie().map((x) => x.split(';')[0]).join('; ')
@@ -351,8 +741,8 @@ async function manualLicenses(ts: string) {
   }
   site = manualBase
 
-  // 9. Compra con equipo: la licencia se pide a Eric y la bienvenida sale sin ella.
-  const m = { company: `Despacho Manual ${ts} SL`, taxId: `B4${ts.slice(-7).toUpperCase()}`, email: `manual-${ts}@e2e.test` }
+  // 15. Compra con equipo: la licencia se pide a Eric y la bienvenida sale sin ella.
+  const m: Buyer = { company: `Despacho Manual ${ts} SL`, taxId: cif(4), email: `manual-${ts}@e2e.test` }
   await buyThroughWeb('hazlo-tu-equipo', m)
   const welcome = await until('bienvenida a mano', (s) => s.mail.find((x) => x.to === m.email && x.tags.includes('bienvenida')))
   assert.match(welcome.text, /Tu licencia te llega en unas horas/)
@@ -360,15 +750,17 @@ async function manualLicenses(ts: string) {
   const ask = await until('la licencia pedida a Eric', (s) => s.mail.find((x) => x.to === ericEmail && /Licencia a firmar: Despacho Manual/.test(x.subject)))
   const { purchaseId, fields } = askedFields(ask.text)
   assert.deepEqual([fields.cliente, fields.nif, fields.modalidad, fields.equipo], [m.company, m.taxId, 'hazlo-tu', true])
+  // Los meses incluidos y los 15 dias de margen de un cobro fallido: el correo a Eric lo explica.
+  assert.match(ask.text, /^Margen: /m)
   assert.ok(ask.text.includes(`scripts/subir-licencia.mts --web ${manualBase} --compra ${purchaseId}`))
   const zone = await zoneLogin(m.email)
   const me = await (await zone('/api/zone/me')).json()
   assert.deepEqual([me.licenses.length, me.pendingLicenses.length], [0, 1])
   const pendingPage = await (await zone('/zona/licencia')).text()
-  assert.ok(pendingPage.includes('Tu licencia está en camino'), 'la zona la ensena en camino')
+  assert.ok(pendingPage.includes('Tu licencia, en camino'), 'la zona la ensena en camino')
   log('a mano: la compra pide la licencia a Eric con los campos, la bienvenida sale sin ella y la zona dice que esta en camino')
 
-  // 10. Eric la firma (aqui, con la clave de prueba) y la sube con el script: una que no cuadra, no.
+  // 16. Eric la firma (aqui, con la clave de prueba) y la sube con el script: una que no cuadra, no.
   const file = path.join(manualDir, `licencia-${ts}.cerebro-licencia`)
   const id = `PML-LIC-${fields.emitida.slice(0, 4)}-0042`
   fs.writeFileSync(file, signLicense({ id, ...fields, nif: 'B00000000' }, ericSeed, ericPublic).text)
@@ -382,7 +774,7 @@ async function manualLicenses(ts: string) {
   assert.match(good.out, new RegExp(`OK: licencia ${id} guardada`))
   log(`a mano: subir-licencia.mts rechaza una que no cuadra (NIF) y sube la buena (${id}) contra la web`)
 
-  // 11. El cliente la recibe en .zip y la baja de la zona; no queda ninguna sin firmar.
+  // 17. El cliente la recibe en .zip y la baja de la zona; no queda ninguna sin firmar.
   const mail = await until('la licencia al cliente', (s) => s.mail.find((x) => x.to === m.email && x.tags.includes('licencia')))
   assert.equal(unzip(Buffer.from(mail.attachments.find((x) => x.name.endsWith('.zip'))!.base64, 'base64'))[0].content.toString('utf-8'), text)
   const download = await zone(`/api/zone/licenses/${id}`)
@@ -401,7 +793,7 @@ async function manualLicenses(ts: string) {
   assert.equal((await state()).mail.filter((x) => x.to === m.email && x.tags.includes('licencia')).length, 1, 'sin correos de mas')
   log('a mano: el cliente recibe la licencia en .zip, la baja de la zona y no queda ninguna sin firmar')
 
-  // 12. Un cobro del mensual: su licencia nueva se pide igual; firmada de prueba, sale el correo del mensual.
+  // 18. Un cobro del mensual: su licencia nueva se pide igual; firmada de prueba, sale el correo del mensual.
   const company = Object.values((await state()).db.companies).find((x) => x.taxId === m.taxId)!
   const periodEnd = Math.floor(Date.now() / 1000) + 120 * 86400
   const invoice = fakeInvoice({ customer: company.stripeCustomerId, amount: 9900, periodEnd, metadata: { product: 'plan-esencial', company_id: company.id } })
@@ -413,7 +805,7 @@ async function manualLicenses(ts: string) {
   assert.ok(monthly.attachments.some((x) => x.name.endsWith('.zip')))
   log('a mano: el cobro del mensual pide su licencia y, firmada con --firmar-prueba, sale el correo del mensual con ella')
 
-  // 13. La comprobacion de produccion por la web: con secreto; en modo falso, no esta lista.
+  // 19. La comprobacion de produccion por la web: con secreto; en modo falso, no esta lista.
   assert.equal((await fetch(`${site}/api/admin/health`)).status, 401)
   const health = await (await fetch(`${site}/api/admin/health`, { headers: admin })).json()
   assert.equal(health.ready, false)

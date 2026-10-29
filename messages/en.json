@@ -10,7 +10,8 @@
     "securityTitle": "Security and privacy",
     "securityDescription": "Your brain lives on your computers. Our privacy promise, what is behind it and the Digital Brain vulnerability policy.",
     "contactTitle": "Contact",
-    "contactDescription": "Tell us what your company does and we will tell you which Digital Brain option fits."
+    "contactDescription": "Tell us what your company does and we will tell you which Digital Brain option fits.",
+    "pricingDescriptionList": "One-off payment and a perpetual license per company. Do it yourself from {price}, excluding VAT."
   },
   "nav": {
     "home": "Digital Brain, by Pymatic Labs: home",
@@ -21,7 +22,7 @@
     "contacto": "Contact",
     "cta": "See pricing",
     "langSwitch": "ES",
-    "langLabel": "Leer en castellano",
+    "langLabel": "ES, leer en castellano",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "themeDark": "Switch to dark mode",
@@ -74,7 +75,7 @@
       "steps": [
         {
           "title": "Ask it as you would a colleague.",
-          "text": "No menus or buttons: in your own words, as you would say it at the office."
+          "text": "No menus or buttons: in your own words."
         },
         {
           "title": "It does it with your data and your logo.",
@@ -82,7 +83,7 @@
         },
         {
           "title": "And before saving anything, it asks for your yes.",
-          "text": "Nothing changes behind your back: it shows you what it will do and waits for your permission."
+          "text": "Nothing changes behind your back: it shows you what it will do."
         },
         {
           "title": "Teach it once, and it knows.",
@@ -107,7 +108,7 @@
     "bento": {
       "eyebrow": "Your documents",
       "title": "It reads everything you already have.",
-      "text": "PDF, Word, Excel, emails, drawings and scans. Nothing to sort, rename or upload. And your originals are never touched.",
+      "text": "PDF, Word, Excel, emails, drawings and scans. Nothing to sort, rename or upload.",
       "read": {
         "title": "Give it your folder and it reads all of it.",
         "kinds": [
@@ -148,7 +149,7 @@
       },
       "mobile": {
         "title": "From your phone, too.",
-        "text": "With the brain’s computer switched on.",
+        "text": "With the brain’s computer switched on and Claude open.",
         "q": "What time does the warehouse open on Saturday?",
         "a": "From 9:00 to 13:00."
       }
@@ -175,8 +176,8 @@
         },
         {
           "icon": "health",
-          "title": "Sensitive files stay closed",
-          "text": "Health records, never. Payslips or IDs, only if you allow it."
+          "title": "Health files, not even opened",
+          "text": "And payslips or IDs, only if you allow it."
         }
       ],
       "claude": "To answer you, Claude looks up only what it needs. During setup we show you how to turn off its training and its memory.",
@@ -196,7 +197,7 @@
         },
         {
           "title": "Ask it",
-          "text": "In your own words, as you would a colleague. And if it does not know a task, teach it once."
+          "text": "In your own words, as you would a colleague."
         }
       ],
       "needs": "You need a Windows or Mac computer and a paid Claude account, the AI assistant you talk to.",
@@ -221,7 +222,7 @@
         },
         {
           "value": "14 days",
-          "text": "Of guarantee if the product fails."
+          "text": "Of setup guarantee, if a product fault prevents setup."
         },
         {
           "value": "No fees",
@@ -245,11 +246,11 @@
         },
         {
           "q": "Do my documents leave my computer?",
-          "a": "Your brain and your documents stay on your computers, and Pymatic Labs never receives them. To answer you, Claude looks up only what it needs; during setup we show you how to turn off its training and its memory."
+          "a": "Your brain and your documents are kept on your computers, and Pymatic Labs never receives them. But what Claude reads to answer you does leave: it goes to Anthropic, the company behind Claude, and stays in your Claude history until you delete it. During setup we show you how to turn off its training and its memory."
         },
         {
           "q": "What if it gets something wrong?",
-          "a": "It tells you which document each answer comes from, so you can check. If something has changed, tell it and it offers to correct it. And if it does not know, it says so: it never makes things up."
+          "a": "It tells you which document each answer comes from, so you can check. If something has changed, tell it and it offers to correct it. And if it does not know, it says so."
         },
         {
           "q": "Do I have to pay every month?",
@@ -284,7 +285,7 @@
           {
             "icon": "unknown",
             "title": "If it does not know, it says so",
-            "text": "It does not make things up. It notes the question so you can document it."
+            "text": "It notes the question so you can document it."
           },
           {
             "icon": "history",
@@ -309,7 +310,7 @@
           {
             "icon": "learn",
             "title": "Learns new tasks",
-            "text": "Explain it once and it is saved."
+            "text": "Explain them once and they are saved."
           },
           {
             "icon": "excel",
@@ -319,7 +320,7 @@
           {
             "icon": "pdf",
             "title": "PDFs with your logo",
-            "text": "Quotes and work reports with your look."
+            "text": "Quotes and work reports."
           },
           {
             "icon": "connect",
@@ -374,7 +375,7 @@
           {
             "icon": "mobile",
             "title": "From your phone",
-            "text": "While the brain’s computer is on."
+            "text": "While the brain’s computer is on and Claude is open."
           }
         ]
       },
@@ -399,7 +400,7 @@
           {
             "icon": "health",
             "title": "Health files, not even opened",
-            "text": "Payslips or IDs, only if you allow it."
+            "text": "And payslips or IDs, only if you allow it."
           },
           {
             "icon": "backup",
@@ -426,7 +427,7 @@
       ],
       [
         "Setup",
-        "A Claude extension: a double click and three questions. No terminal."
+        "A Claude extension: a double click and three questions."
       ],
       [
         "People",
@@ -446,7 +447,7 @@
       ],
       [
         "Internet",
-        "To talk to Claude. Your documents stay on your computers."
+        "To talk to Claude. What it reads to answer you goes to Anthropic, the company behind Claude."
       ],
       [
         "License",
@@ -462,7 +463,7 @@
   "promise": {
     "eyebrow": "Privacy promise",
     "title": "Your information is yours",
-    "quote": "Your information is yours. Your brain lives on your computers and procedures run on them. When the assistant needs something, it looks up only what it needs, answers you and that is it: it is not used to train any model and it does not stay in Claude's memory. The only thing left is your conversation, in your Claude account, and you delete it whenever you want. To make it so, during setup we show you how to turn off Claude's training and memory; with Claude Team, training is off by contract and memory comes off by default.",
+    "quote": "Your information is yours. Your brain lives on your computers and procedures run on them. When the assistant needs something, it looks up only what it needs, answers you and that is it: it is not used to train any model and it does not stay in Claude’s memory. The only thing left is your conversation, in your Claude account, and you delete it whenever you want. To make it so, during setup we show you how to turn off Claude’s training and memory; with Claude Team, training is off by contract and memory comes off by default.",
     "footnote": "Our promise, word for word.",
     "link": "See security and privacy"
   },
@@ -507,29 +508,26 @@
     "included": [
       "License for good",
       "The extension and the guides to set it up",
-      "14-day guarantee if the product fails",
-      "Free security fixes"
+      "14-day setup guarantee",
+      "Free security fixes during your version’s support period"
     ],
     "extras": {
       "hazlo-tu": [
-        "1 person",
-        "You set it up, with the guides"
+        "At your own pace, no sessions"
       ],
       "hazlo-tu-equipo": [
-        "Up to 10 people",
         "Locked areas",
         "3 months of Pro included"
       ],
       "acompanado": [
-        "1 person",
-        "We set it up: 2 one-hour sessions",
+        "2 one-hour sessions",
         "Automation ideas for your company",
         "1 month of Essential included"
       ],
       "acompanado-equipo": [
-        "Up to 10 people",
-        "We set it up: 2 one-hour sessions",
-        "Team and locked areas ready",
+        "2 one-hour sessions",
+        "Automation ideas for your company",
+        "Locked areas ready",
         "3 months of Pro included"
       ]
     },
@@ -544,7 +542,7 @@
     "sessions": {
       "title": "Setup and guarantee",
       "items": [
-        "With Guided we set it up for you: two 1-hour video calls, with Eric or Sergio, 18:00 to 22:00 or Saturdays 10:00 to 14:00 (Spanish peninsular time). You pick the first one when you buy.",
+        "With Guided we set it up for you: two 1-hour video calls, with Eric or Sergio, Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00 (Madrid time). You pick the first one when you buy. In person, only at weekends and with a surcharge: travel at cost plus 50% of the one-off payment.",
         "If the brain cannot be set up because of a product fault, we refund you. Ask in writing within 14 days of purchase.",
         "It is not a satisfaction guarantee. A missed session is lost.",
         "Setting it up yourself and want help? Move to Guided by paying the difference."
@@ -581,7 +579,7 @@
           ]
         },
         {
-          "label": "Email support within 48 h",
+          "label": "Email support within 48 h",
           "values": [
             true,
             false,
@@ -589,7 +587,7 @@
           ]
         },
         {
-          "label": "Priority support within 24 h",
+          "label": "Priority support within 24 h",
           "values": [
             false,
             true,
@@ -597,7 +595,7 @@
           ]
         },
         {
-          "label": "Packs kept up to date with regulations",
+          "label": "Packs kept up to date with regulations (in preparation)",
           "values": [
             false,
             true,
@@ -638,26 +636,27 @@
         }
       ],
       "premiumNote": "The monthly session is for reviewing what has changed in the company and spotting automation opportunities. If a candidate is identified in the session that fits within the scope of the existing corpus and is classed as simple, it is implemented within the plan. Those of medium or higher complexity, or that require new systems or integrations, are quoted separately. At most one implemented per month, not cumulative.",
-      "securityNote": "Security fixes are free for everyone, with or without a monthly plan.",
-      "included": "With a team, 3 months of Pro included. Guided without a team, 1 month of Essential."
+      "securityNote": "Security fixes are free during your version’s support period, with or without a monthly plan.",
+      "included": "With a team, 3 months of Pro included. Guided without a team, 1 month of Essential.",
+      "perYear": "or {price} a year",
+      "yes": "Included",
+      "no": "Not included",
+      "annualNote": "Prefer to pay yearly? A year, paid in advance, costs the same as 10 months. You choose it when you subscribe from your member area, and you can switch between monthly and yearly payment there.",
+      "securityUntil": "Each version receives them for five years from its release: the one on sale now, {version}, until {date}.",
+      "securityPeriod": "Each version receives them for five years from its release."
     },
     "apart": {
       "title": "Separately",
-      "packEspana": {
-        "name": "Spain Pack",
-        "text": "Spanish tax, employment and health & safety tasks, and links to Spanish software.",
-        "badge": "In preparation"
-      },
       "custom": {
         "name": "Custom",
         "from": "from",
-        "text": "We set up the brain for you, with the Spain Pack and the Essential plan.",
+        "text": "We set up the brain for you, with the Essential plan.",
         "cta": "Talk to us"
       },
       "moreThan10": "More than 10 people? We quote it as a custom project."
     },
-    "markets": "Prices for Spain and the rest of Europe. In North America, the same numbers in US dollars (USD).",
-    "b2b": "Sold only to businesses and professionals.",
+    "markets": "21% VAT is added in Spain (mainland and Balearic Islands) and from other EU countries without a valid VAT number. No Spanish VAT for EU businesses with a valid VAT number, or for businesses in the Canary Islands, Ceuta, Melilla or outside the EU.",
+    "b2b": "Sold to businesses and professionals in any country, in euros.",
     "faqTitle": "Questions about buying",
     "faq": [
       {
@@ -674,17 +673,19 @@
       },
       {
         "q": "Can I start alone and upgrade to a team?",
-        "a": "Yes. Write to us and we will send you a new license."
+        "a": "Yes. Write to us: you pay the difference between the team price at that time and what you paid, and we send you a new license."
       },
       {
         "q": "What if I drop the monthly plan?",
-        "a": "The brain keeps working. You lose support, not the use."
+        "a": "The brain keeps working. You lose maintenance and support: what is new in upcoming versions does not switch on. Security fixes still reach you for free during your version’s support period."
       },
       {
         "q": "Do prices include VAT?",
-        "a": "No. The invoice includes whatever VAT applies."
+        "a": "No. VAT is determined before you pay, from your company’s country and tax ID; an EU VAT number is checked in VIES. The invoice shows the VAT separately or, without Spanish VAT, carries the note that explains why."
       }
-    ]
+    ],
+    "launchOver": "The 10 launch-price places have been taken: list prices apply.",
+    "modalitiesTitle": "The four options"
   },
   "security": {
     "eyebrow": "Security and privacy",
@@ -693,12 +694,12 @@
     "promiseTitle": "Our promise",
     "behindTitle": "What is behind it",
     "behind": [
-      "The brain's content and the passwords live on your computers. Pymatic Labs does not receive them.",
+      "The brain’s content and the passwords live on your computers. Pymatic Labs does not receive them.",
       "What the assistant reads travels to Anthropic, the company behind Claude, and stays in your Claude history until you delete it.",
-      "With Claude Team or Enterprise, Anthropic does not train on that data, by contract, and Claude's memory comes off.",
-      "With Claude Pro or Max, memory comes on and training is decided in Claude's privacy settings. That is why during setup we show you how to turn both off."
+      "With Claude Team or Enterprise, Anthropic does not train on that data, by contract, and Claude’s memory comes off.",
+      "With Claude Pro or Max, memory comes on and training is decided in Claude’s privacy settings. That is why during setup we show you how to turn both off."
     ],
-    "behindNote": "Setup cannot check those Claude settings: it shows you how to set them. Anthropic also sets two exceptions: response ratings you send it and whatever its safety filters flag.",
+    "behindNote": "Setup cannot check those Claude settings. Anthropic also sets two exceptions: response ratings you send it and whatever its safety filters flag.",
     "privacyLink": "Read the Digital Brain privacy policy",
     "alsoTitle": "Also",
     "also": [
@@ -706,13 +707,13 @@
       "Nothing is installed or connected without your permission.",
       "The license is checked on your computer, offline: there is no remote kill switch.",
       "Updates are only accepted if they are signed by Pymatic Labs.",
-      "Security fixes are free during your version's support period, with or without a monthly plan."
+      "Security fixes are free during your version’s support period, five years from its release, with or without a monthly plan."
     ],
     "policyTitle": "Vulnerability policy",
     "draftBadge": "Draft",
-    "draftNote": "Draft pending legal review. It may change before its final version.",
+    "draftNote": "Pending legal review. It may change before its final version.",
     "reportTitle": "Found a security flaw?",
-    "reportText": "Write to info@pymaticlabs.com with \"Security\" in the subject.",
+    "reportText": "Write to info@pymaticlabs.com with “Security” in the subject.",
     "reportCta": "Email security"
   },
   "thanks": {
@@ -727,7 +728,7 @@
     "subtitleManual": "In a few minutes you will get a welcome email with access to your member area. Your license follows in another email within a few hours.",
     "stepsManual": [
       "The link to your member area, with the downloads for Mac and Windows and, as soon as they are ready, your license and your invoices.",
-      "Your license, in another email within a few hours (and in your member area). Keep it: setup will ask you for it.",
+      "Your license, in another email within a few hours. Keep it: setup will ask you for it.",
       "The terms you accepted and, with Guided, your first session appointment.",
       "The invoice, in a separate email."
     ],
@@ -736,14 +737,14 @@
   },
   "purchase": {
     "metaTitle": "Buy the Digital Brain",
-    "metaDescription": "Payment with Stripe for businesses and professionals. The license and the member area arrive right away.",
-    "metaDescriptionManual": "Payment with Stripe for businesses and professionals. Access to the member area arrives right away and the license within a few hours.",
+    "metaDescription": "Payment with Stripe for businesses and professionals in any country. The license and the member area arrive right away.",
+    "metaDescriptionManual": "Payment with Stripe for businesses and professionals in any country. Access to the member area arrives right away and the license within a few hours.",
     "title": "Buy {product}",
-    "subtitle": "You pay on Stripe, with your tax ID or EU VAT number. Your license and access to your member area arrive by email right away; the invoice, separately.",
-    "subtitleManual": "You pay on Stripe, with your tax ID or EU VAT number. Access to your member area arrives by email right away; the license within a few hours, and the invoice separately.",
-    "price": "List price: {list}. The first 10 customers pay {launch}: it is applied at payment while places last. VAT not included.",
+    "subtitle": "Enter your company’s tax details and pay on Stripe. Your license and access to your member area arrive by email right away; the invoice, separately.",
+    "subtitleManual": "Enter your company’s tax details and pay on Stripe. Access to your member area arrives by email right away; the license within a few hours, and the invoice separately.",
+    "price": "List price: {list}. The first 10 customers pay {launch}: it is applied at payment while places last. VAT not included: 21% is added in Spain (mainland and Balearic Islands) and from other EU countries without a valid VAT number; otherwise, no Spanish VAT is added.",
     "chooseTitle": "Choose your first setup session",
-    "chooseText": "One hour by video call, with Eric or with Sergio. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Spanish peninsular time. You book the second one from your member area.",
+    "chooseText": "One hour by video call, with Eric or with Sergio. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Madrid time. You book the second one from your member area. In person, only at weekends and with a surcharge: travel at cost plus 50% of the one-off payment.",
     "thirdWeek": "The next two weeks are full: these are the slots of the third one.",
     "noSlots": "There are no free slots right now. Write to us and we will find one for you.",
     "slotsError": "We could not load the free slots. Try again in a moment or write to us.",
@@ -761,17 +762,72 @@
       "company_required": "Sign in to your member area to subscribe.",
       "already_subscribed": "You already have the monthly plan: change it from your member area.",
       "rate_limited": "Too many attempts in a row. Wait a few minutes and try again.",
-      "busy": "There are many payments with a session open right now. Try again in a few minutes or write to info@pymaticlabs.com."
+      "busy": "There are many payments with a session open right now. Try again in a few minutes or write to info@pymaticlabs.com.",
+      "tax_id_required": "Enter your company’s tax ID to go to payment.",
+      "tax_id_invalid": "That is not a valid Spanish tax ID: check the letters and numbers (CIF, DNI or NIE). If your company is not in Spain, choose its country.",
+      "currency": "We only sell in euros.",
+      "launch_busy": "There is no launch-price place for you right now: the remaining ones are held by payments in progress, or two are already open from your connection (an office one, for example). Try again in half an hour: if one is not completed, its place becomes free.",
+      "country_invalid": "Choose your company’s country from the list.",
+      "territory_invalid": "Choose where in Spain your company is: mainland and Balearic Islands, Canary Islands, Ceuta or Melilla.",
+      "vat_id_invalid": "That VAT number does not match the format of the country you chose. Check it or, to pay with 21% Spanish VAT, leave it empty and enter your company’s tax ID.",
+      "eu_tax_id_required": "Enter your company’s VAT number or, if it has none, its tax ID.",
+      "other_tax_id_required": "Enter your company’s tax ID to go to payment.",
+      "other_tax_id_invalid": "That tax ID is not valid: use letters, digits and hyphens, 4 to 30 characters.",
+      "vat_invalid": "VIES, the EU register, says that VAT number is not valid. Check it or, to pay with 21% Spanish VAT, leave it empty and enter your company’s tax ID.",
+      "vat_unavailable": "We could not check your VAT number in VIES, the EU register, which is not responding right now. Try again in a few minutes.",
+      "other_tax_id_is_vat": "That number is a valid VAT number in VIES, the EU register. Enter it in the VAT number field and no VAT is charged."
+    },
+    "taxId": {
+      "label": "Company tax ID (Spanish NIF)",
+      "placeholder": "CIF, DNI or NIE",
+      "hint": "It goes on the invoice and on the license.",
+      "required": "Enter your company’s tax ID.",
+      "invalid": "That is not a valid Spanish tax ID: check the letters and numbers (CIF, DNI or NIE)."
+    },
+    "priceList": "Price: {list}. The 10 launch-price places have been taken. VAT not included: 21% is added in Spain (mainland and Balearic Islands) and from other EU countries without a valid VAT number; otherwise, no Spanish VAT is added.",
+    "securityUntil": "Free security fixes until {date}, with or without a monthly plan: each version receives them for five years from its release, and the one on sale now is {version}.",
+    "securityPeriod": "Free security fixes, with or without a monthly plan, for five years from each version’s release. The end date, with month and year, is in each version’s release notes.",
+    "country": {
+      "label": "Company country",
+      "hint": "Where it is established.",
+      "scope": {
+        "spain": "If your company is in Spain:",
+        "eu": "If it is in another European Union country or in Monaco:",
+        "other": "If it is outside the EU, or in the EU without a VAT number:"
+      }
+    },
+    "territory": {
+      "label": "Territory",
+      "peninsula": "Mainland Spain and the Balearic Islands",
+      "canarias": "Canary Islands",
+      "ceuta": "Ceuta",
+      "melilla": "Melilla"
+    },
+    "vatId": {
+      "label": "Company VAT number (optional)",
+      "placeholder": "{prefix} and the number",
+      "placeholderAny": "Country prefix and the number",
+      "hint": "The intra-EU one, registered in VIES.",
+      "invalid": "That VAT number does not match that country’s format: check the prefix and the digits."
+    },
+    "otherTaxId": {
+      "label": "Company tax ID",
+      "placeholder": "Its tax number in its country",
+      "hint": "It goes on the invoice and on the license.",
+      "required": "Enter your company’s tax ID.",
+      "requiredEu": "Enter its VAT number or, if it has none, its tax ID.",
+      "invalid": "Use letters, digits and hyphens: 4 to 30 characters.",
+      "hintEu": "Only if it has no VAT number. It goes on the invoice and on the license."
     }
   },
   "contact": {
-    "title": "Let's talk",
+    "title": "Let’s talk",
     "subtitle": "Tell us what your company does and we will tell you which option fits.",
-    "name": "Name",
-    "email": "Email",
-    "company": "Company",
+    "name": "Name (required)",
+    "email": "Email (required)",
+    "company": "Company (optional)",
     "phone": "Phone (optional)",
-    "interest": "What are you interested in?",
+    "interest": "What are you interested in? (optional)",
     "interestOptions": {
       "hazlo-tu": "Do it yourself",
       "hazlo-tu-equipo": "Do it yourself, team",
@@ -780,22 +836,26 @@
       "a-medida": "Custom",
       "no-lo-se": "Not sure yet"
     },
-    "message": "Message",
+    "message": "Message (required)",
     "submit": "Send",
-    "sending": "Sending...",
+    "sending": "Sending…",
     "successTitle": "Received!",
     "successMsg": "We will reply within 24 hours.",
     "errorMsg": "It could not be sent. Write to us at info@pymaticlabs.com.",
-    "privacyNote": "Controller: Pymatic Labs. We only use your data to reply to you, because you asked us to. Our website and email providers (Vercel, Resend and Google) process it. You can see, correct or delete it by writing to info@pymaticlabs.com.",
+    "privacyNote": "Controller: Pymatic Labs. We only use your data to reply to you, because you asked us to. Our website, email and database providers (Vercel, Resend, Google and Supabase) process it. You can see, correct or delete it by writing to info@pymaticlabs.com.",
     "privacyLink": "Privacy policy",
     "orSchedule": "Prefer a video call?",
-    "scheduleCta": "Book a call",
+    "scheduleCta": "Book a video call",
     "emailLabel": "Email:",
     "locationLabel": "Where:",
-    "locationValue": "Castellón de la Plana, Spain"
+    "locationValue": "Castellón de la Plana, Spain",
+    "interestPlaceholder": "Choose an option",
+    "messageHint": "At least 20 characters.",
+    "honeypot": "Leave this field empty",
+    "tooManyMsg": "You have sent several messages in a row. Please wait a while or write to us at info@pymaticlabs.com."
   },
   "footer": {
-    "tagline": "Digital Brain: your company's memory, with AI.",
+    "tagline": "Digital Brain: your company’s memory, with AI.",
     "product": "Product",
     "legal": "Legal",
     "contact": "Contact",
@@ -813,7 +873,7 @@
       "condiciones": "Terms of use and sale",
       "privacidadProducto": "Digital Brain privacy"
     },
-    "b2b": "Sold only to businesses and professionals.",
+    "b2b": "Sold to businesses and professionals in any country.",
     "copyright": "PYMATICLABS, S.L. All rights reserved."
   },
   "legal": {
@@ -827,14 +887,14 @@
     "descriptions": {
       "aviso-legal": "Details of PYMATICLABS, S.L., owner of pymaticlabs.com, and terms of use of the website.",
       "politica-privacidad": "Which personal data we process when you visit pymaticlabs.com or write to us from it.",
-      "politica-cookies": "pymaticlabs.com only uses technical cookies: the theme one, if you ask for it, and the member area session one, if you sign in.",
+      "politica-cookies": "pymaticlabs.com only stores technical things in your browser: the theme cookie, if you ask for it, and, if you sign in to the member area, the session cookie and a hint with no data about you.",
       "condiciones": "Terms of use and sale of the Digital Brain, for businesses and professionals.",
       "privacidad-producto": "Which personal data Pymatic Labs processes when selling the Digital Brain and providing support, and which it does not."
     },
     "lastUpdated": "Version of {date}",
     "draftBadge": "Draft",
-    "draftNote": "Draft pending legal review. It may change before its final version.",
-    "fallbackNote": "The English version of this text is in preparation. Below is the Spanish version, which is the one that applies."
+    "draftNote": "Pending legal review. It may change before its final version.",
+    "fallbackNote": "This text is only available in Spanish, and the Spanish version is the only one that applies. It is shown below and also on <link>its Spanish page</link>."
   },
   "zone": {
     "meta": {
@@ -873,7 +933,7 @@
     "login": {
       "title": "Sign in to your member area",
       "unavailable": "The member area opens when the Digital Brain goes on sale. If you are already a customer and need anything, write to info@pymaticlabs.com.",
-      "intro": "With the email you bought with, or the one your company added you with. We send you a one-time code: there are no passwords.",
+      "intro": "With the email you bought with, or the one your company added you with. We send you a one-time code.",
       "emailLabel": "Your email",
       "send": "Send me the code",
       "sending": "Sending…",
@@ -901,7 +961,7 @@
     },
     "home": {
       "title": "Your Digital Brain",
-      "intro": "Everything about your purchase in one place: the license, the downloads of the latest version and, depending on what you have, your sessions, your team, the monthly plan and the invoices.",
+      "intro": "Everything about your purchase in one place.",
       "monthlyOk": "Monthly plan subscribed. You will see it here in a few minutes, and the invoice for each charge arrives by email.",
       "license": {
         "title": "Your license",
@@ -925,7 +985,7 @@
         "subscribed": "You have Monthly {plan}.",
         "included": "Included in your purchase until {date}.",
         "none": "You have no maintenance or support right now.",
-        "security": "Security fixes reach you for free, with or without the monthly plan.",
+        "security": "Security fixes reach you for free during your version’s support period, with or without the monthly plan.",
         "go": "See the monthly plan"
       },
       "team": {
@@ -938,11 +998,11 @@
         "count": "{count, plural, =0 {No invoices issued yet} one {# invoice} other {# invoices}}",
         "go": "See the invoices"
       },
-      "introMember": "What you need to use your company’s Digital Brain: the license, the downloads of the latest version and, if there are any, the setup sessions."
+      "introMember": "What you need to use your company’s Digital Brain."
     },
     "license": {
       "title": "Your license",
-      "intro": "The license file proves the Digital Brain belongs to your company, and the setup asks for it. Keep it; if you lose it, download it here again.",
+      "intro": "The license file proves the Digital Brain belongs to your company, and the setup asks for it. If you lose it, download it here again.",
       "current": "The license that is valid now",
       "team": "up to {seats} people",
       "solo": "one person",
@@ -952,10 +1012,10 @@
       "download": "Download the license",
       "downloadShort": "Download",
       "preparing": "Your license is being prepared. In a few minutes it will be here and in your email.",
-      "pending": "Your license is on its way: we sign it and it reaches you by email within a few hours. As soon as it is ready, it is here too.",
+      "pending": "We sign it and it reaches you by email within a few hours. As soon as it is ready, it is here too.",
       "pendingTitle": "Your license, on its way",
       "onTheWay": "On its way",
-      "introPending": "The license file proves the Digital Brain belongs to your company, and the setup asks for it. It reaches you by email as soon as we sign it and, from then on, it is here too.",
+      "introPending": "The license file proves the Digital Brain belongs to your company, and the setup asks for it.",
       "pendingRenewal": "Your new monthly license is on its way: it reaches you by email within a few hours and will appear here. Meanwhile, the one below is still valid.",
       "fields": {
         "id": "Number",
@@ -968,8 +1028,8 @@
       "howTitle": "Good to know",
       "how": {
         "keep": "Keep the file with your backups. If it is modified, it stops being valid.",
-        "support": "The maintenance and support date does not limit use: the Digital Brain keeps working after it. What is new in each version switches on if that date covers the version date.",
-        "security": "Security fixes reach you for free even after that date.",
+        "support": "The maintenance and support date does not limit use: the Digital Brain keeps working after it. What is new in each version switches on if it is released by that date and, with maintenance, also within the 15 days after it, in case a monthly charge fails (the license file already includes those 15 days).",
+        "security": "Security fixes reach you for free even after that date: each version receives them for five years from its release.",
         "team": "With a team, the license is valid for everyone you add, up to the limit of your purchase."
       },
       "others": "Earlier licenses",
@@ -996,8 +1056,8 @@
         },
         "registry": {
           "title": "Registry installer (team)",
-          "text": "To install the extension in one go on your team’s Windows computers. If you do not know how to use it, hand it to your support person.",
-          "short": "your team’s Windows"
+          "text": "To install the team brain’s registry on the office server. It does not go on each person’s computer: hand it to your support person.",
+          "short": "the office server"
         },
         "extra": {
           "title": "For your technical person",
@@ -1016,7 +1076,7 @@
     },
     "invoices": {
       "title": "Invoices",
-      "intro": "The invoices for your purchases and for each monthly charge, and the terms you accepted with each purchase. Each invoice also reaches you by email when it is issued.",
+      "intro": "The invoices for your purchases and for each monthly charge. Each invoice also reaches you by email when it is issued.",
       "pending": "{count, plural, one {# invoice is being prepared: it reaches you by email as soon as it is issued and shows up here.} other {# invoices are being prepared: they reach you by email as soon as they are issued and show up here.}}",
       "listTitle": "Issued invoices",
       "empty": "No invoices issued yet.",
@@ -1037,7 +1097,7 @@
         "dispute_lost": "charged back"
       },
       "terms": "Terms of {version}",
-      "taxNote": "VAT is calculated by Stripe at payment, based on your country and your VAT number. If your tax details are not correct, write to us at info@pymaticlabs.com."
+      "taxNote": "The VAT on each invoice is the one determined at payment, from your company’s tax details. If they are not correct, write to us at info@pymaticlabs.com."
     },
     "monthly": {
       "title": "Monthly",
@@ -1048,40 +1108,46 @@
         "already_subscribed": "You already have the monthly plan: you change it from the Stripe portal.",
         "unavailable": "We could not open the payment. Please try again in a moment.",
         "product": "That plan does not exist.",
-        "rate_limited": "Too many attempts in a row. Wait a few minutes and try again."
+        "rate_limited": "Too many attempts in a row. Wait a few minutes and try again.",
+        "vat_invalid": "VIES, the EU register, no longer confirms your company’s VAT number, and without it we cannot invoice without VAT. Write to info@pymaticlabs.com and we will look into it.",
+        "vat_unavailable": "We could not check your company’s VAT number in VIES, the EU register, which is not responding right now. Try again in a few minutes.",
+        "country_invalid": "We do not have a valid country for your company, and without it we cannot work out the VAT. Write to info@pymaticlabs.com and we will fix it."
       },
       "statusTitle": "Your maintenance and support",
       "subscribed": "You have Monthly {plan}.",
       "statuses": {
-        "active": "Active: charged monthly in advance and renewed automatically until you cancel.",
+        "active": "Active: charged in advance, monthly or yearly depending on what you chose, and renewed automatically until you cancel.",
         "trialing": "Not charged yet: the first charge comes when the months included in your purchase end.",
-        "past_due": "A charge is pending. Check your card in the Stripe portal.",
-        "unpaid": "Some charges are unpaid. Check your card: if they stay unpaid, it is suspended after 15 days’ notice.",
+        "past_due": "A charge is unpaid: we have emailed you about it. Check your card in the Stripe portal. For 15 days after that email you keep maintenance and support, new versions included; if it is still unpaid by then, they are suspended.",
+        "unpaid": "Some charges are unpaid and maintenance and support are suspended. Pay what is pending or change your card in the Stripe portal to continue; your license and what you installed keep working.",
         "paused": "Paused."
       },
-      "licenseUntil": "Your current license covers until {date}. Each charge brings a new license with the new date, here in the area.",
+      "licenseUntil": "Paid until {date}. Each charge brings a new license with the new date, here in the area.",
       "included": "Your purchase includes maintenance and support until {date}.",
-      "includedNext": "To continue afterwards, subscribe to the monthly plan: nothing is charged until {date}.",
-      "includedNextPlan": "To continue afterwards, subscribe to the monthly plan: with the {plan} plan or a smaller one nothing is charged until {date}; with a bigger one, it is charged from the day you subscribe.",
+      "includedNext": "To continue afterwards, subscribe to the monthly plan: as your included months are ending now, it is charged from the day you subscribe.",
+      "includedNextPlan": "To continue afterwards, subscribe to the monthly plan: with the {plan} plan or a smaller one, paid monthly or yearly, nothing is charged until {date}; with a bigger one, it is charged from the day you subscribe.",
       "none": "You have no maintenance or support right now.",
       "noneText": "Your license is still valid and what you installed keeps working. With the monthly plan you get new versions with what is new switched on again, and support.",
       "portal": "Change card or plan, or cancel",
-      "portalNote": "This opens the Stripe customer portal, which handles the payments. When you are done, you come back here.",
+      "portalNote": "This opens the Stripe customer portal, which handles the payments. There you can also switch between monthly and yearly payment: moving to yearly payment or a bigger plan is charged that day; moving to a smaller plan or back to monthly payment, when the paid period ends. While you have included months left, no change is charged before they end. When you are done, you come back here.",
       "securityTitle": "Security does not depend on the monthly plan",
-      "security": "Security fixes reach every customer for free during their version’s support period, with or without the monthly plan.",
+      "security": "Security fixes reach every customer for free during their version’s support period: five years from its release.",
       "plansTitle": "Monthly plans",
-      "plansText": "Pressing a button takes you to the Stripe payment, with your company already filled in.",
+      "plansText": "Monthly, or yearly in advance for the price of 10 months. Pressing a button takes you to the Stripe payment, with your company already filled in.",
       "plansClosed": "Online subscription opens soon. In the meantime, write to us at info@pymaticlabs.com.",
       "planName": "Monthly {plan}",
       "perMonth": "per month, excl. VAT",
-      "subscribe": "Subscribe to {plan}"
+      "subscribe": "Subscribe to {plan}",
+      "yearly": "or {price} a year, excl. VAT: the price of 10 months",
+      "subscribeMonth": "Subscribe to {plan}, monthly",
+      "subscribeYear": "Subscribe to {plan}, yearly"
     },
     "team": {
       "title": "Your team",
       "intro": "With your team license, up to {seats} people can sign in, including you. Each one signs in with their email and a code, like you, and downloads the extension. They do not see the invoices or the team.",
       "count": "{count} of {seats} people added",
       "memberNote": "The person who bought manages the team. If someone else needs to sign in, ask them.",
-      "solo": "Your license is for one person. For more people to use it, you move to the team license: write to us at info@pymaticlabs.com.",
+      "solo": "Your license is for one person. For more people to use it, you move to the team license by paying the difference: write to us at info@pymaticlabs.com.",
       "how": "When you add someone, they get an email with the link to the area. When you remove them, they can no longer sign in, straight away.",
       "errors": {
         "email": "Type a full email, for example name@yourcompany.com.",
@@ -1103,7 +1169,7 @@
       "removeLabel": "Remove {email}",
       "remove": "Remove",
       "addTitle": "Add a person",
-      "addText": "Type their work email. They get an email to sign in.",
+      "addText": "Type their work email.",
       "fullText": "Your license’s {seats} people are already added. To add another, remove someone first. For more than {seats}, write to us.",
       "emailLabel": "The person’s email",
       "adding": "Adding…",
@@ -1111,7 +1177,7 @@
     },
     "sessions": {
       "title": "Setup sessions",
-      "intro": "Two one-hour sessions by video call, with Eric or with Sergio, to get your Digital Brain set up. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Spanish peninsular time.",
+      "intro": "Two one-hour sessions by video call, with Eric or with Sergio, to get your Digital Brain set up. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Madrid time.",
       "notGuided": "Setup sessions come with the Guided option. To get them, move to Guided by paying the difference: write to us at info@pymaticlabs.com.",
       "bookedTitle": "Your sessions",
       "noneBooked": "You have no sessions booked yet.",
@@ -1146,5 +1212,14 @@
       "noSlotsHost": "That person has no free slots in these weeks. Try the other one or write to us.",
       "bookedNotice": "Session booked. The confirmation reaches you by email, with the video call link."
     }
+  },
+  "notFound": {
+    "metaTitle": "Page not found",
+    "eyebrow": "Error 404",
+    "title": "This page does not exist",
+    "text": "The link may be mistyped, or the page may no longer exist. From here you can go back to the home page, see pricing or write to us.",
+    "home": "Back to home",
+    "pricing": "See pricing",
+    "contact": "Write to us"
   }
 }

@@ -2,23 +2,45 @@
 // tras un fallo, o un trabajador que murio a mitad), continua donde se quedo sin duplicar nada.
 //
 // Pago unico: invoice, license, account, booking (Acompanado) -> welcome -> notice.
-// Mensual (cada cobro): invoice, license -> renewal_email -> notice.
+// Mensual (cada cobro): invoice, license -> renewal_email -> notice. Un cobro sin pagar:
+// payment_failed_email (el aviso de la clausula 4, con la fecha a partir de la que se suspende).
 // Con LICENSE_MODE=manual, license no firma: pide la licencia a Eric (license_reminder si tarda) y
 // la bienvenida sale sin ella; al subirla, license_email (o renewal_email en un cobro del mensual).
 // Devolucion o contracargo: revoke (y, sin pago unico vigente, cancel_subscription), rectify (tras
-// invoice), refund_email, notice; contracargo ganado: reinstate. Devolucion entera o contracargo
-// perdido del Acompanado: cancel_bookings (sus sesiones que aun no han llegado, en Cal.com).
+// invoice, si no esta parado), refund_email, notice; contracargo ganado: reinstate. Devolucion
+// entera o contracargo perdido del Acompanado: cancel_bookings (sus sesiones que aun no han llegado,
+// en Cal.com).
 // Version nueva: announce (uno por persona). Alta en el equipo: team_invite. Compra con el NIF de
 // otra empresa cliente: company_alert (a sus titulares).
+//
+// La factura lleva el IVA que se comprobo al llegar el pago (lib/delivery/tax-check.ts): el 21 %, o
+// sin IVA con su mencion (inversion del sujeto pasivo a la UE, con la consulta de VIES en las notas;
+// Canarias, Ceuta, Melilla y fuera de la UE, no sujeta). Cada licencia con mantenimiento y soporte
+// cubre 15 dias mas que lo pagado o incluido: el margen de un cobro del mensual que falla (clausula 4).
 
 import { addMonths, formatLicenseId, type LicenseModality } from '../license.ts'
-import { companyAlertEmail, formatDate, formatDateTime, internalEmail, licenseReadyEmail, refundEmail, renewalEmail, teamInviteEmail, versionEmail, welcomeEmail, zoneUrl } from './emails.ts'
+import {
+  companyAlertEmail,
+  formatDate,
+  formatDateTime,
+  internalEmail,
+  licenseReadyEmail,
+  paymentFailedEmail,
+  refundEmail,
+  renewalEmail,
+  teamInviteEmail,
+  versionEmail,
+  welcomeEmail,
+  zoneUrl,
+} from './emails.ts'
 import { issueLicense } from './license-issue.ts'
 import { cancelLicenseRequests, requestManualLicense, restoreLicenseRequests, sendOverdueNotice } from './manual-license.ts'
 import { hostName, isGuided, isOneTimeProduct, licenseTermsFor, productName, priceCents } from './products.ts'
-import { decideTax } from './tax.ts'
+import { parseEuVatId, viesText } from './checkout-tax.ts'
+import { EU_DISTANCE_SALES_LIMIT, SPAIN_VAT_RATE, decideTax, viesNameMismatch, type TaxDecision } from './tax.ts'
+import { TREATMENT_NAMES, isEuNoVatSale, taxMention, treatmentLine } from './tax-check.ts'
 import { termsAttachment } from './terms.ts'
-import { formatMoney, madridDate } from './util.ts'
+import { addDays, formatMoney, madridDate, paidUntil, withUnpaidMargin } from './util.ts'
 import { zip } from './zip.ts'
 import type { Delivery } from './container.ts'
 import {
@@ -88,20 +110,6 @@ export async function validBases(d: Delivery, companyId: string, exclude: string
 
 // --- Factura ---------------------------------------------------------------------------------------
 
-function taxNote(purchase: Purchase, locale: Locale): string | null {
-  if (purchase.taxTreatment === 'reverse_charge') {
-    return locale === 'en'
-      ? 'Reverse charge: VAT to be accounted for by the customer (Article 196, Directive 2006/112/EC; Article 69, Spanish VAT Law 37/1992).'
-      : 'Inversión del sujeto pasivo: el IVA lo liquida el cliente (art. 196 de la Directiva 2006/112/CE; art. 69 de la Ley 37/1992 del IVA).'
-  }
-  if (purchase.taxTreatment === 'export') {
-    return locale === 'en'
-      ? 'Not subject to Spanish VAT (Article 69, Spanish VAT Law 37/1992).'
-      : 'Operación no sujeta al IVA español (art. 69 de la Ley 37/1992 del IVA).'
-  }
-  return null
-}
-
 function lineDescription(purchase: Purchase): string | null {
   const en = purchase.locale === 'en'
   if (purchase.kind === 'renewal' && purchase.supportUntil) {
@@ -114,7 +122,29 @@ function lineDescription(purchase: Purchase): string | null {
   return null
 }
 
-function invoiceDraft(purchase: Purchase, contactId: string, reference: string, net: number, body: string | null): InvoiceDraft {
+/**
+ * La consulta de VIES que da por valido el NIF-IVA de una factura con inversion del sujeto pasivo:
+ * su numero, cuando y, si los dio, el nombre y la direccion de ese NIF-IVA (muchos paises no los dan).
+ */
+export interface ViesEvidence {
+  request: string
+  checkedAt: string
+  name?: string | null
+  address?: string | null
+}
+
+/**
+ * Lo de VIES en las notas de la factura: la consulta y, si VIES lo da a otro nombre, ese nombre y
+ * que hay que comprobarlo. Quien emite el borrador lo ve en Holded y quita esa frase.
+ */
+function viesNote(vies: ViesEvidence, otherName: boolean): string {
+  const note = `VIES ${vies.request} (${vies.checkedAt})`
+  return otherName && vies.name
+    ? `${note}, a nombre de «${vies.name}» · Antes de emitirla, comprobar que el NIF-IVA es de la empresa (el nombre de VIES no se parece a la razón social) y quitar esta frase`
+    : note
+}
+
+function invoiceDraft(purchase: Purchase, contactId: string, reference: string, net: number, body: string | null, vies: string | null = null): InvoiceDraft {
   return {
     contactId,
     reference,
@@ -125,7 +155,7 @@ function invoiceDraft(purchase: Purchase, contactId: string, reference: string, 
     taxRate: purchase.taxRate,
     lines: [{ name: productName(purchase.product, purchase.locale), description: lineDescription(purchase), units: 1, price: net / 100 }],
     body,
-    notes: `Stripe ${purchase.paymentRef} · compra ${purchase.id}`,
+    notes: [`Stripe ${purchase.paymentRef} · compra ${purchase.id}`, vies].filter(Boolean).join(' · '),
   }
 }
 
@@ -156,6 +186,24 @@ async function finishDocument(d: Delivery, invoice: InvoiceRecord, purchase: Pur
   return { status: invoice.status, number: invoice.number, invoiceId: invoice.id }
 }
 
+/**
+ * Una factura que la web tiene en borrador y que en Holded ya se emitio a mano (con HOLDED_INVOICE_MODE=draft,
+ * la conciliacion solo la ve de madrugada): se pone al dia como lo haria la conciliacion, con su PDF
+ * para la zona y que Holded se la mande al cliente. Si sigue en borrador (o ya no esta), tal cual.
+ */
+async function refreshDraftInvoice(d: Delivery, invoice: InvoiceRecord, purchase: Purchase): Promise<InvoiceRecord> {
+  if (invoice.status !== 'draft' || !invoice.providerId || invoice.provider !== d.invoicer.name) return invoice
+  const providerId = invoice.providerId
+  const doc = await d.invoicer.getDocument(invoice.kind, providerId).catch((error) => {
+    if ((error as { status?: number }).status === 404) return null
+    throw error
+  })
+  if (!doc?.approved) return invoice
+  if (!invoice.storagePath) await storeInvoicePdf(d, { ...invoice, number: doc.number }, invoice.kind)
+  await d.invoicer.sendDocument(invoice.kind, providerId, purchase.email, purchase.locale)
+  return d.repo.updateInvoice(invoice.id, { status: 'sent', number: doc.number, approvedAt: now(d), sentAt: now(d) })
+}
+
 export async function storeInvoicePdf(d: Delivery, invoice: InvoiceRecord, kind: InvoiceKind): Promise<InvoiceRecord> {
   const pdf = await d.invoicer.getPdf(kind, invoice.providerId!)
   const name = (invoice.number ?? invoice.id).replace(/[^A-Za-z0-9._-]+/g, '-')
@@ -176,51 +224,125 @@ async function totalsMismatch(d: Delivery, kind: InvoiceKind, providerId: string
   return null
 }
 
-async function holdNotice(d: Delivery, job: Job, purchase: Purchase, company: Company, what: string, reason: string) {
+/**
+ * Una factura que no se emite sola. created: hay borrador en Holded y, al verlo emitido, la
+ * conciliacion se la manda al cliente; si no (ni se creo), la web no la conoce y se le manda a mano.
+ */
+async function holdNotice(d: Delivery, job: Job, purchase: Purchase, company: Company, what: string, reason: string, created: boolean) {
   const mail = internalEmail(`${what}: ${company.name}`, {
-    'Qué hacer': `Revisarla en Holded y emitirla a mano. ${reason}`,
+    'Qué hacer': created
+      ? `Revisarla en Holded y emitirla a mano: al verla emitida, la web se la manda al cliente y la deja en su zona (conciliación diaria). ${reason}`
+      : `Hacerla a mano en Holded (Verifactu) y enviársela al cliente desde Holded: la web no la conoce. ${reason}`,
     Empresa: company.name,
     NIF: company.taxId,
     País: company.country,
+    IVA: TREATMENT_NAMES[purchase.taxTreatment],
     Importe: `${formatMoney(purchase.amountTotal, purchase.currency, 'es')} (IVA ${formatMoney(purchase.amountTax, purchase.currency, 'es')})`,
     Pago: purchase.paymentRef,
   })
   await d.mailer.send({ to: d.config.internalEmail, ...mail, idempotencyKey: `${job.key}:retenida`, tags: ['interno'] })
 }
 
-/** Intentos esperando a que VIES conteste (con la espera de la cola, un par de minutos). */
-const VAT_PENDING_ATTEMPTS = 3
+/** Intentos esperando a que VIES conteste (con la espera de la cola, unos minutos) antes de dejarla en borrador. */
+const VIES_ATTEMPTS = 3
+
+/**
+ * La consulta de VIES de una factura con inversion del sujeto pasivo: la de antes de pagar (pago
+ * unico, en el paso) o una nueva en cada cobro del mensual, con el NIF-IVA de PymaticLabs como
+ * solicitante (el adaptador de VIES). Si el NIF-IVA ya no vale, ni se crea: ese cobro tenia que
+ * llevar el 21 %. Si VIES no contesta, se reintenta y, al final, en borrador.
+ */
+async function viesEvidence(d: Delivery, job: Job, purchase: Purchase, company: Company): Promise<{ vies: ViesEvidence | null; hold: TaxDecision['hold'] }> {
+  if (purchase.kind === 'one_time') {
+    const vies = job.payload.vies as Partial<ViesEvidence> | undefined
+    if (typeof vies?.request === 'string' && vies.request && typeof vies.checkedAt === 'string') {
+      const name = typeof vies.name === 'string' && vies.name ? vies.name : null
+      const address = typeof vies.address === 'string' && vies.address ? vies.address : null
+      return { vies: { request: vies.request, checkedAt: vies.checkedAt, name, address }, hold: null }
+    }
+    return {
+      vies: null,
+      hold: { reason: 'sin la consulta de VIES de antes del pago (una compra entregada a mano): comprobar el NIF-IVA en VIES y poner su número de consulta en las notas antes de emitirla', mode: 'draft' },
+    }
+  }
+  const query = company.country ? parseEuVatId(company.country, company.taxId) : null
+  if (!query) return { vies: null, hold: { reason: `el NIF-IVA ${company.taxId} no tiene la forma de los de ${company.country ?? 'ningún país'}: no se puede preguntar a VIES`, mode: 'manual' } }
+  // El adaptador no lanza: lo que no es un si o un no claros es unavailable.
+  const answer = await d.vies.check({ countryCode: query.viesCountry, vatNumber: query.number })
+  if (answer.status === 'unavailable') {
+    if (job.attempts < VIES_ATTEMPTS) throw new RetryableError(`VIES no contesta: ${answer.reason}`)
+    return { vies: null, hold: { reason: `VIES no contestó (${answer.reason}): comprobar el NIF-IVA ${company.taxId} antes de emitirla y poner su número de consulta en las notas`, mode: 'draft' } }
+  }
+  if (answer.status === 'invalid') {
+    return {
+      vies: null,
+      hold: {
+        reason: `el NIF-IVA ${company.taxId} ya no es válido en VIES${answer.reason ? ` (${answer.reason})` : ''}: este cobro tenía que llevar el 21 % de IVA. Hablar con la empresa y con Manel: cobrar la diferencia o facturarlo con el IVA dentro, y pasar su mensual al 21 % (el tipo de IVA de la suscripción y sus metadatos tax_*) mientras no vuelva a valer`,
+        mode: 'manual',
+      },
+    }
+  }
+  // El nombre y la direccion, limpios como los del pago unico (en una linea, sin «---»).
+  return { vies: { request: answer.requestIdentifier, checkedAt: answer.requestDate, name: viesText(answer.name), address: viesText(answer.address) }, hold: null }
+}
+
+/**
+ * VIES da el NIF-IVA a un nombre que no se parece a la razon social (viesNameMismatch): puede ser el
+ * de otra empresa. No frena la venta (la licencia, la bienvenida y la zona salen); la factura queda
+ * en borrador con el motivo y el nombre de VIES va en sus notas. Si no es suyo, el motivo dice todo lo
+ * que hay que deshacer: el IVA, la empresa (eu_vat con un NIF-IVA ajeno), la licencia y el mensual.
+ */
+function viesNameHold(vies: ViesEvidence, company: Company): NonNullable<TaxDecision['hold']> {
+  return {
+    reason: `VIES da el NIF-IVA ${company.taxId} a nombre de «${vies.name}»${vies.address ? ` (${vies.address})` : ''}, que no se parece a «${company.name}»: comprobar con la empresa que es suyo antes de emitirla (y quitar de sus notas la frase que lo pide); si no lo es, le tocaba el ${SPAIN_VAT_RATE} % (cobrar la diferencia o devolver el pago, y la factura, a mano); corregir tax_id y tax_id_type de la empresa en companies, pedir una licencia nueva con la identificación buena y, si tiene el mensual, pasarlo al ${SPAIN_VAT_RATE} % (el tipo de IVA de la suscripción y sus metadatos tax_*)`,
+    mode: 'draft',
+  }
+}
 
 const invoice: StepHandler = async (d, job) => {
   let purchase = await purchaseOf(d, job)
   const company = await companyOf(d, purchase)
   const ref = `invoice:${purchase.id}`
   let record = await d.repo.getInvoiceByRef(ref)
+  let vies: ViesEvidence | null = null
+  let otherName = false
   if (!record) {
-    // El IVA, por lo que dice Stripe Tax (y la verificacion del NIF-IVA), no adivinado.
+    // El IVA que se comprobo al llegar el pago (lib/delivery/tax-check.ts), con lo que cobro Stripe:
+    // solo se factura sola si cuadra; lo demas, a mano.
     const decision = decideTax(
       purchase,
       company,
       await d.payments.taxDetails({ checkoutSessionId: purchase.stripeCheckoutSessionId, invoiceId: purchase.stripeInvoiceId, customerId: purchase.stripeCustomerId })
     )
-    // Stripe pregunta a VIES por el NIF-IVA justo despues del pago: unos intentos de espera antes de
-    // dejarla en borrador por no verificado (sin llegar al aviso de paso fallando).
-    if (decision.vatPending && job.attempts < VAT_PENDING_ATTEMPTS) throw new RetryableError('NIF-IVA pendiente de verificar en VIES')
     if (decision.treatment !== purchase.taxTreatment || decision.rate !== purchase.taxRate) {
       purchase = await d.repo.updatePurchase(purchase.id, { taxTreatment: decision.treatment, taxRate: decision.rate })
     }
-    if (decision.hold?.mode === 'manual') {
-      // Ni se crea: con un IVA dudoso, la factura la hace una persona.
-      await holdNotice(d, job, purchase, company, 'Facturar a mano', decision.hold.reason)
-      return { status: 'held', hold: decision.hold.reason }
+    const holds = decision.hold ? [decision.hold] : []
+    // Sin IVA a una empresa de la UE, solo con el NIF-IVA valido en VIES (y su numero de consulta en la factura).
+    if (decision.treatment === 'reverse_charge' && decision.hold?.mode !== 'manual') {
+      const evidence = await viesEvidence(d, job, purchase, company)
+      vies = evidence.vies
+      if (evidence.hold) holds.push(evidence.hold)
+      otherName = Boolean(vies && viesNameMismatch(vies.name, company.name))
+      if (vies && otherName) holds.push(viesNameHold(vies, company))
     }
-    let hold = decision.hold?.reason ?? null
+    const held = holds.length ? { reason: holds.map((h) => h.reason).join('. '), mode: holds.some((h) => h.mode === 'manual') ? ('manual' as const) : ('draft' as const) } : null
+    if (held?.mode === 'manual') {
+      // Ni se crea: con un IVA dudoso, la factura la hace una persona.
+      await holdNotice(d, job, purchase, company, 'Facturar a mano', held.reason, false)
+      return { status: 'held', hold: held.reason }
+    }
+    let hold = held?.reason ?? null
     const contactId = await contactOf(d, company)
     const reference = `${productName(purchase.product, purchase.locale)} · ${purchase.paymentRef}`
     // Un intento anterior pudo crearla en Holded y cortarse antes de apuntarla: se busca primero.
     const found = job.attempts > 1 ? await d.invoicer.findDocument('invoice', contactId, purchase.paymentRef) : null
     const doc =
-      found ?? (await d.invoicer.createDocument('invoice', invoiceDraft(purchase, contactId, reference, purchase.amountSubtotal - purchase.amountDiscount, taxNote(purchase, purchase.locale))))
+      found ??
+      (await d.invoicer.createDocument(
+        'invoice',
+        invoiceDraft(purchase, contactId, reference, purchase.amountSubtotal - purchase.amountDiscount, taxMention(purchase.taxTreatment, company, purchase.locale), vies && viesNote(vies, otherName))
+      ))
     // Antes de emitir sola, Holded tiene que dar el mismo total y el mismo IVA que cobro Stripe.
     if (!hold && !doc.approved && d.config.invoiceMode === 'emit') hold = await totalsMismatch(d, 'invoice', doc.id, purchase)
     record = await d.repo.saveInvoice({
@@ -240,15 +362,21 @@ const invoice: StepHandler = async (d, job) => {
     })
   }
   // Retenida: en borrador hasta que una persona la mire, tambien en los reintentos (va en la factura).
-  if (record.holdReason && record.status === 'draft') await holdNotice(d, job, purchase, company, 'Factura en borrador, sin emitir', record.holdReason)
+  if (record.holdReason && record.status === 'draft') await holdNotice(d, job, purchase, company, 'Factura en borrador, sin emitir', record.holdReason, true)
   const result = await finishDocument(d, record, purchase, 'invoice', d.config.invoiceMode === 'emit' && !record.holdReason)
-  return { ...result, ...(record.holdReason ? { hold: record.holdReason } : {}) }
+  // Para el aviso de la venta: la consulta y, si VIES lo dio, a nombre de quien esta el NIF-IVA.
+  const viesResult = vies ? { vies: vies.request, ...(vies.name ? { viesName: vies.name } : {}), ...(otherName ? { viesOtherName: true } : {}) } : {}
+  return { ...result, ...(record.holdReason ? { hold: record.holdReason } : {}), ...viesResult }
 }
 
 const rectify: StepHandler = async (d, job) => {
   const purchase = await purchaseOf(d, job)
-  // Una compra que se quedo a revisar (y se devuelve) no tuvo factura: nada que rectificar.
+  // Una compra que se quedo a revisar (y se devuelve) no tuvo factura: nada que rectificar. Tampoco un
+  // cobro del mensual a revisar: tiene empresa, pero nunca tuvo el paso de la factura. Una retenida
+  // para facturar a mano o una entregada a mano (deliver) si lo tienen.
   if (!purchase.companyId) return { status: 'sin factura' }
+  const invoiceJob = await d.repo.getJobByKey(`invoice:${purchase.id}`)
+  if (!invoiceJob && !(await d.repo.getInvoiceByRef(`invoice:${purchase.id}`))) return { status: 'sin factura' }
   const company = await companyOf(d, purchase)
   const amount = Number(job.payload.amount)
   const ref = text(job, 'ref')
@@ -266,11 +394,23 @@ const rectify: StepHandler = async (d, job) => {
     await d.mailer.send({ to: d.config.internalEmail, ...mail, idempotencyKey: job.key, tags: ['interno'] })
     return { status: 'manual' }
   }
-  const original = await d.repo.getInvoiceByRef(`invoice:${purchase.id}`)
-  // La factura se retuvo para hacerla a mano (IVA dudoso): la rectificativa, tambien a mano.
-  if (!original) return manual('La factura no se hizo sola (estaba retenida): rectificarla a mano en Holded')
-  // La factura sigue en borrador (emision a mano): se anula o se rectifica a mano en Holded.
-  if (original.status === 'draft') return manual('La factura sigue en borrador en Holded: anularla, o emitirla y rectificarla')
+  let original = await d.repo.getInvoiceByRef(`invoice:${purchase.id}`)
+  // El paso de la factura esta parado (la devolucion no lo espera): ni factura ni rectificativa.
+  if (!original && invoiceJob?.status === 'dead') {
+    return manual('La factura no llegó a hacerse (el paso invoice está parado): la factura y su rectificativa, a mano en Holded, y enviárselas al cliente desde Holded (si se reintenta ese paso, la web hace la factura, pero la rectificativa sigue siendo a mano)')
+  }
+  // La factura se retuvo para hacerla a mano (IVA dudoso): la rectificativa, tambien a mano (y la web
+  // no la conoce: se manda desde Holded).
+  if (!original) return manual('La factura no se hizo sola (estaba retenida): rectificarla a mano en Holded y enviarle la rectificativa al cliente desde Holded')
+  // El borrador guardado puede ir un dia por detras de Holded (la conciliacion lo pone al dia de
+  // madrugada): si ya se emitio a mano, se pone al dia ahora y se rectifica como una emitida.
+  if (original.status === 'draft') original = await refreshDraftInvoice(d, original, purchase)
+  // La factura sigue en borrador (emision a mano): el cliente no la recibio y el correo de la
+  // devolucion no le promete rectificativa. Si se emite, la conciliacion se la manda; la rectificativa
+  // hecha a mano, no.
+  if (original.status === 'draft') {
+    return manual('La factura sigue en borrador en Holded: anularla; o emitirla (la web se la manda al cliente al verla emitida), rectificarla a mano y enviarle la rectificativa desde Holded')
+  }
 
   // Nunca mas abonado que lo cobrado, aunque lleguen avisos raros.
   const credited = (await d.repo.listInvoicesByCompany(company.id))
@@ -292,7 +432,12 @@ const rectify: StepHandler = async (d, job) => {
         ? `Corrects invoice ${original.number}. Reason: ${job.payload.reason === 'dispute' ? 'chargeback' : 'refund'}.`
         : `Rectifica la factura ${original.number}. Motivo: ${motive}.`
     const found = job.attempts > 1 ? await d.invoicer.findDocument('credit_note', contactId, ref) : null
-    const doc = found ?? (await d.invoicer.createDocument('credit_note', { ...invoiceDraft(purchase, contactId, reference, sign * base, [body, taxNote(purchase, purchase.locale)].filter(Boolean).join('\n')), date: madridDate(d.clock()) }))
+    const doc =
+      found ??
+      (await d.invoicer.createDocument('credit_note', {
+        ...invoiceDraft(purchase, contactId, reference, sign * base, [body, taxMention(purchase.taxTreatment, company, purchase.locale)].filter(Boolean).join('\n')),
+        date: madridDate(d.clock()),
+      }))
     record = await d.repo.saveInvoice({
       companyId: company.id,
       purchaseId: purchase.id,
@@ -314,7 +459,7 @@ const rectify: StepHandler = async (d, job) => {
   const emit = d.config.invoiceMode === 'emit' && d.config.creditNoteMode === 'emit'
   if (record.status === 'draft' && !emit) {
     const mail = internalEmail(`Emitir la rectificativa a mano: ${company.name}`, {
-      'Qué hacer': `En Holded, la rectificativa en borrador: enlazarla a la factura ${original.number ?? original.ref} (tipo R1 si es una devolución), revisar el signo de los importes y emitirla`,
+      'Qué hacer': `En Holded, la rectificativa en borrador: enlazarla a la factura ${original.number ?? original.ref} (tipo R1 si es una devolución), revisar el signo de los importes y emitirla. Al verla emitida, la web se la manda al cliente y la deja en su zona (conciliación diaria)`,
       Empresa: company.name,
       Importe: formatMoney(amount, purchase.currency, 'es'),
       Pago: purchase.paymentRef,
@@ -342,10 +487,14 @@ const license: StepHandler = async (d, job) => {
   }
   const emitida = madridDate(new Date(purchase.paidAt))
 
+  // Con mantenimiento y soporte (meses incluidos o un cobro del mensual), la licencia cubre 15 dias
+  // mas que lo pagado o incluido: si el cobro siguiente falla, siguen llegando las versiones nuevas
+  // durante el aviso de la clausula 4 (socios, 27-10-2026); si no se paga, dejan de llegar.
   let terms: { modalidad: LicenseModality; equipo: boolean; soporte_hasta: string }
   if (purchase.kind === 'one_time') {
     if (!isOneTimeProduct(purchase.product)) throw new PermanentError(`producto desconocido: ${purchase.product}`)
-    terms = licenseTermsFor(purchase.product, emitida)
+    const product = licenseTermsFor(purchase.product, emitida)
+    terms = { ...product, soporte_hasta: product.soporte_hasta > emitida ? withUnpaidMargin(product.soporte_hasta) : product.soporte_hasta }
   } else {
     // Cada cobro del mensual: la licencia del pago unico vigente con el soporte_hasta nuevo, nunca
     // menos del que ya tiene (ni del de otro cobro que se este entregando a la vez). Sin pago unico
@@ -360,11 +509,11 @@ const license: StepHandler = async (d, job) => {
     if (!base) throw new PermanentError(`${company.name} cobra el mensual sin licencia de pago unico`)
     const paid = (await d.repo.listPurchasesByCompany(company.id)).filter((p) => p.kind === 'renewal' && p.status === 'paid' && p.supportUntil)
     const best = [
-      purchase.supportUntil ?? addMonths(emitida, 1),
+      withUnpaidMargin(purchase.supportUntil ?? addMonths(emitida, 1)),
       emitida,
       ...licenses.map((l) => l.soporteHasta),
       ...pending.map((r) => r.soporteHasta),
-      ...paid.map((p) => p.supportUntil!),
+      ...paid.map((p) => withUnpaidMargin(p.supportUntil!)),
     ]
       .sort()
       .pop()!
@@ -486,13 +635,15 @@ const welcome: StepHandler = async (d, job) => {
     taxId: company.taxId,
     acceptedAt: purchase.termsAcceptedAt ?? purchase.paidAt,
     paymentRef: purchase.paymentRef,
+    siteUrl: d.config.siteUrl,
   })
   const mail = welcomeEmail({
     locale: purchase.locale,
     company: company.name,
     product: purchase.product,
     licenseId: lic?.id ?? null,
-    supportUntil: lic?.soporteHasta ?? requested!.soporteHasta,
+    // Lo incluido, sin el margen de un cobro fallido (la licencia cubre 15 dias mas).
+    supportUntil: paidUntil(lic ?? requested!),
     emitida: lic?.emitida ?? requested!.emitida,
     zoneUrl: zoneUrl(d.config.siteUrl, purchase.locale),
     guided,
@@ -533,7 +684,7 @@ const licenseMail: StepHandler = async (d, job) => {
     locale: purchase.locale,
     company: company.name,
     licenseId: lic.id,
-    supportUntil: lic.soporteHasta,
+    supportUntil: paidUntil(lic),
     emitida: lic.emitida,
     zoneUrl: zoneUrl(d.config.siteUrl, purchase.locale),
   })
@@ -561,7 +712,7 @@ const renewalMail: StepHandler = async (d, job) => {
     locale: purchase.locale,
     company: company.name,
     licenseId: lic.id,
-    supportUntil: lic.soporteHasta,
+    supportUntil: paidUntil(lic),
     zoneUrl: zoneUrl(d.config.siteUrl, purchase.locale),
     plan: purchase.product,
   })
@@ -576,15 +727,69 @@ const refundMail: StepHandler = async (d, job) => {
   if (!purchase.companyId) return { sent: false, reason: 'compra sin entregar' }
   const company = await companyOf(d, purchase)
   const revoked = (await d.repo.getJobByKey(`revoke:${purchase.id}:refund`))?.result
+  // Con otro pago unico vigente, la zona sigue (revoke no la cerro): no se le pide que borre nada.
+  const accessRevoked = revoked?.accessRevoked !== false
+  // Pero si quien compro esta era otra persona (entregada a mano), revoke la saco de la zona.
+  const ownAccessClosed = Array.isArray(revoked?.dropped) && (revoked.dropped as unknown[]).includes(purchase.email)
+  // La rectificativa solo se promete si la factura ya se emitio: un borrador no le llego al cliente
+  // (el aviso pide anularlo o emitirlo y rectificarlo a mano). Este paso espera a rectify, que pone
+  // al dia una factura emitida a mano en Holded ese mismo dia.
+  const original = await d.repo.getInvoiceByRef(`invoice:${purchase.id}`)
   const mail = refundEmail({
     locale: purchase.locale,
     company: company.name,
     amount: Number(job.payload.amount) || purchase.amountRefunded,
     currency: purchase.currency,
     subscriptionCanceled: Boolean(revoked?.subscriptionCanceled),
+    accessRevoked,
+    ownAccessClosed,
+    licenseId: typeof revoked?.licenseId === 'string' ? revoked.licenseId : null,
+    product: purchase.product,
+    creditNote: Boolean(original && original.status !== 'draft'),
   })
   await d.mailer.send({ to: purchase.email, ...mail, idempotencyKey: job.key, tags: ['devolucion'] })
-  return { sent: true }
+  return { sent: true, accessRevoked, ownAccessClosed }
+}
+
+/**
+ * Clausula 4: un cobro del mensual sin pagar. A los titulares, con la fecha a partir de la que se
+ * suspende el mantenimiento y soporte (15 dias despues del primer fallo) y el enlace para pagarlo.
+ */
+const paymentFailedMail: StepHandler = async (d, job) => {
+  const company = await d.repo.getCompany(text(job, 'companyId'))
+  if (!company) throw new PermanentError('payment_failed_email: no existe la empresa')
+  // Un reintento de Stripe pudo cobrarla antes de que corriera este paso: ya no hay nada que avisar.
+  if (await d.repo.getPurchaseByPaymentRef(text(job, 'invoiceId'))) return { sent: 0, reason: 'ya cobrada' }
+  const payUrl = typeof job.payload.payUrl === 'string' && job.payload.payUrl.startsWith('https://') ? job.payload.payUrl : null
+  const suspendFrom = text(job, 'suspendFrom')
+  // Las versiones nuevas siguen durante el aviso si la licencia vigente llega hasta entonces (cada
+  // licencia con mantenimiento cubre 15 dias mas que lo pagado): solo entonces el correo lo promete.
+  const covered = [
+    ...(await d.repo.listLicensesByCompany(company.id)).filter((l) => !l.revokedAt).map((l) => l.soporteHasta),
+    ...(await d.repo.listLicenseRequests({ companyId: company.id, status: 'pending' })).map((r) => r.soporteHasta),
+  ]
+    .sort()
+    .pop()
+  const mail = paymentFailedEmail({
+    locale: company.locale,
+    company: company.name,
+    product: typeof job.payload.product === 'string' ? job.payload.product : null,
+    amount: Number(job.payload.amount) || 0,
+    currency: typeof job.payload.currency === 'string' ? job.payload.currency : company.currency,
+    vatIncluded: job.payload.vatIncluded !== false,
+    suspendFrom,
+    versionsUntilSuspension: Boolean(covered && covered >= addDays(suspendFrom, -1)),
+    // Tras los meses incluidos, la prueba acaba el dia siguiente a lo incluido y la licencia cubre un
+    // dia menos que el aviso: el correo promete hasta donde cubre.
+    versionsUntil: covered,
+    payUrl,
+    zoneUrl: zoneUrl(d.config.siteUrl, company.locale),
+  })
+  const to = await ownerEmails(d, company)
+  for (const [i, email] of to.entries()) {
+    await d.mailer.send({ to: email, ...mail, idempotencyKey: `${job.key}:${i}`, tags: ['mensual-impagado'] })
+  }
+  return { sent: to.length, suspendFrom: job.payload.suspendFrom }
 }
 
 const announce: StepHandler = async (d, job) => {
@@ -614,13 +819,46 @@ const teamInvite: StepHandler = async (d, job) => {
   return { sent: true }
 }
 
+/**
+ * Las ventas con IVA espanol a empresas de otro pais de la UE sin NIF-IVA (como a particulares) del
+ * ano natural de esa venta y del anterior, en Madrid: en centimos, sin IVA y descontado lo devuelto.
+ * El limite de 10.000 euros de los arts. 70.Uno.8.o y 73 LIVA cuenta los dos (pasado uno, OSS), como
+ * la comprobacion de produccion. Solo las de vivo o las de prueba, como esa venta.
+ */
+async function euNoVatSales(d: Delivery, sale: Purchase): Promise<{ year: number; previous: number }> {
+  const year = Number(madridDate(new Date(sale.paidAt)).slice(0, 4))
+  const totals = { year: 0, previous: 0 }
+  for (const company of await d.repo.listActiveCompanies()) {
+    if (!company.country || company.country === 'ES') continue
+    for (const p of await d.repo.listPurchasesByCompany(company.id)) {
+      if (!isEuNoVatSale(p, company) || p.livemode !== sale.livemode || !['paid', 'partially_refunded', 'disputed'].includes(p.status)) continue
+      const at = Number(madridDate(new Date(p.paidAt)).slice(0, 4))
+      if (at !== year && at !== year - 1) continue
+      const net = p.amountSubtotal - p.amountDiscount
+      const refunded = p.amountTotal > 0 ? Math.round((p.amountRefunded * net) / p.amountTotal) : 0
+      totals[at === year ? 'year' : 'previous'] += Math.max(0, net - refunded)
+    }
+  }
+  return totals
+}
+
+/** El soporte_hasta de una licencia en un aviso interno: con mantenimiento, lo pagado y el margen que firma. */
+function supportLine(l: { emitida: string; soporteHasta: string }): string {
+  return l.soporteHasta > l.emitida ? `soporte hasta ${paidUntil(l)}; firmada hasta ${l.soporteHasta}, con los 15 días de margen` : 'sin mantenimiento ni soporte'
+}
+
+/** Los correos de los titulares de la empresa (o el de su primera compra, si no queda ninguno). */
+async function ownerEmails(d: Delivery, company: Company): Promise<string[]> {
+  const owners = (await d.repo.listMembers(company.id)).filter((m) => m.role === 'owner').map((m) => m.email)
+  return [...new Set(owners.length ? owners : [company.email])]
+}
+
 /** A los titulares de la empresa: alguien compro con su NIF desde otro correo (la compra, a revisar). */
 const companyAlert: StepHandler = async (d, job) => {
   const purchase = await purchaseOf(d, job)
   const company = await d.repo.getCompany(text(job, 'companyId'))
   if (!company) throw new PermanentError('company_alert: no existe la empresa')
-  const owners = (await d.repo.listMembers(company.id)).filter((m) => m.role === 'owner').map((m) => m.email)
-  const to = [...new Set(owners.length ? owners : [company.email])]
+  const to = await ownerEmails(d, company)
   const mail = companyAlertEmail({ locale: company.locale, company: company.name, product: purchase.product, date: madridDate(new Date(purchase.paidAt)) })
   for (const [i, email] of to.entries()) {
     await d.mailer.send({ to: email, ...mail, replyTo: d.config.internalEmail, idempotencyKey: `${job.key}:${i}`, tags: ['aviso-nif'] })
@@ -774,10 +1012,32 @@ async function cancelledSessions(d: Delivery, key: string): Promise<string | nul
 
 // --- Avisos a PymaticLabs ----------------------------------------------------------------------------
 
-const REVIEW_TODO: Record<string, string> = {
-  missing_data: 'Pedir al cliente la razón social y el NIF, completar la compra y emitir la licencia y la factura a mano',
+/** Entregar a mano una compra a revisar ya aclarada (sin empresa ni status paid, la llamada da 409). */
+const DELIVER_BY_HAND =
+  'crear su fila en companies con los datos buenos (país, dirección, tax_id y tax_id_type; si el NIF ya es de una empresa cliente, comprobarlo antes con sus titulares), poner company_id, tax_treatment y status \'paid\' en la compra, y entonces POST /api/admin/jobs {"action":"deliver","purchaseId":"<id>"}'
+
+/** La plaza de lanzamiento de una compra a revisar queda gastada. */
+const LAUNCH_NOTE =
+  'Si pagó el precio de lanzamiento, su plaza queda gastada, en la web y en Stripe (el uso del cupón): no liberarla en la web sin subir a la vez max_redemptions del cupón de esa modalidad, o Stripe no dejaría abrir el pago de la plaza 10'
+
+export const REVIEW_TODO: Record<string, string> = {
+  missing_data:
+    'Pedir al cliente la razón social y el NIF. Si el NIF ya es de una empresa cliente, comprobarlo antes con sus titulares; si no, crear su fila en companies. Después, poner company_id y status \'paid\' en la compra, y entonces POST /api/admin/jobs {"action":"deliver","purchaseId":"<id>"}',
+  country_mismatch: `Lo declarado antes de pagar no vale, o no cuadra con la dirección de facturación de Stripe (otro país o, en España, otro territorio: la península o Baleares, Canarias, Ceuta o Melilla), y el IVA cobrado puede no ser el que toca (los problemas, en Datos): ni licencia, ni factura, ni zona. Aclararlo con el cliente. Si vale lo declarado (un dato mal puesto en Stripe), ${DELIVER_BY_HAND}. Si no, devolver el pago (no hay factura que rectificar) y que vuelva a comprar con sus datos. ${LAUNCH_NOTE}`,
+  country_mismatch_renewal:
+    'Un cobro del mensual con los datos fiscales de la suscripción (sus metadatos tax_*) que no valen, o con la dirección de facturación cambiada (en el portal o en el pago) a otro país u otro territorio que los de la empresa: ni licencia ni factura de este cobro; la zona y la licencia del pago único siguen. Hablar con la empresa: si un dato está mal puesto, corregirlo en Stripe y entregarlo a mano; si de verdad se ha mudado, devolver el cobro (o cobrar la diferencia) y poner al día el tipo de IVA de la suscripción y sus metadatos tax_* en Stripe, y su país y su dirección en companies',
+  vat_mismatch: `El IVA cobrado no es el que toca a lo declarado (el 21 % de la base tras el cupón en la península y Baleares o en la UE sin NIF-IVA; nada en los demás), o no se cobró en euros: ni licencia, ni factura, ni zona. Revisar el tipo de IVA de Stripe (scripts/stripe-setup.mts, comprobación de producción). Si se cobró IVA de más, devolver solo el IVA (devolución parcial en Stripe); si faltó, cobrar la diferencia o devolver el pago. Después, para entregarla a mano: ${DELIVER_BY_HAND}; con el IVA de más devuelto, su factura sale como «Facturar a mano» (hacerla en Holded sin IVA). ${LAUNCH_NOTE}`,
+  card_country: `Una venta sin IVA español fuera de la UE pagada con una tarjeta de España o de otro país de la UE (los problemas, en Datos): ni licencia, ni factura, ni zona. Puede ser una empresa de fuera con la tarjeta de un banco europeo, o una de España o de la UE que tenía que pagar con IVA. Pedirle una prueba de que está establecida en el país declarado: un certificado de su administración tributaria o su inscripción en el registro mercantil de allí (art. 18.3 del Reglamento de Ejecución (UE) 282/2011). Si lo está, ${DELIVER_BY_HAND}. Si no, devolver el pago y que vuelva a comprar con su país. La tarjeta no se rechaza nunca por su país (Reglamento (UE) 2018/302). ${LAUNCH_NOTE}`,
+  vat_mismatch_renewal:
+    'Un cobro del mensual sin el IVA que le toca a la empresa (el 21 %, o nada sin IVA español), o no en euros: ni licencia ni factura de este cobro; la zona y la licencia del pago único siguen. Revisar el tipo de IVA de la suscripción en Stripe (default_tax_rates). Si se cobró IVA de más, devolver solo el IVA (devolución parcial en Stripe); si faltó, cobrar la diferencia o devolver el cobro. Después, para entregarlo a mano: status \'paid\' en la compra y POST /api/admin/jobs {"action":"deliver","purchaseId":"<id>"}; con el IVA de más devuelto, su factura sale como «Facturar a mano» (hacerla en Holded sin IVA)',
+  // De cuando solo se vendia en Espana (compras de antes en la base de datos).
+  outside_spain: `Venta de cuando solo se vendía en España, con la dirección de facturación en otro sitio o sin un NIF español válido: ni licencia, ni factura, ni zona. Devolver el pago en Stripe, o, si es una empresa española con la dirección o el NIF mal puestos, ${DELIVER_BY_HAND}. ${LAUNCH_NOTE}`,
+  outside_spain_renewal:
+    'Un cobro del mensual con la dirección de facturación cambiada a otro país o territorio (en el portal o en el pago): ni licencia ni factura de este cobro; la zona y la licencia del pago único siguen. Hablar con la empresa y devolver el cobro o entregarlo a mano',
+  vat_not_21:
+    'No se cobró el 21 % de IVA en euros: ni licencia ni factura. Revisar el tipo de IVA de Stripe (scripts/stripe-setup.mts, comprobación de producción) y devolver el pago o cobrar la diferencia antes de entregarla a mano',
   nif_conflict:
-    'Alguien ha comprado con el NIF de una empresa que ya es cliente, desde un correo que no es de sus titulares (ya avisados). Comprobarlo con ellos antes de dar nada: si es de la empresa, poner company_id y status paid en la compra y entregarla (POST /api/admin/jobs {"action":"deliver"}); si no, devolver el pago',
+    'Alguien ha comprado con el NIF de una empresa que ya es cliente, desde un correo que no es de sus titulares (ya avisados). Comprobarlo con ellos antes de dar nada: si es de la empresa, poner company_id y status paid en la compra y entregarla (POST /api/admin/jobs {"action":"deliver","purchaseId":"<id>"}); si no, devolver el pago',
   unknown_company: 'Un cobro del mensual de un cliente de Stripe que la web no conoce: buscar la empresa y entregarlo a mano',
   no_base: 'Un cobro del mensual de una empresa sin pago único vigente (devuelto o con contracargo): no se firma licencia. Cancelar la suscripción en Stripe y devolver el cobro si toca',
   tax_id_changed: 'El NIF de la factura de Stripe no es el de la empresa (se cambió en el portal o en el pago): comprobarlo antes de facturar y firmar',
@@ -798,7 +1058,7 @@ const notice: StepHandler = async (d, job) => {
   if (requested?.status === 'pending') todo.push(`Firmar la licencia a mano y subirla (pedida a ${d.config.licenseRequestEmail})`)
   const held = inv?.holdReason ?? (typeof invoiceJob?.result?.hold === 'string' ? invoiceJob.result.hold : null)
   if (held) todo.push(`Factura retenida: ${held}`)
-  else if (inv?.status === 'draft') todo.push('Emitir la factura en Holded (Verifactu) y enviarla')
+  else if (inv?.status === 'draft') todo.push('Emitir la factura en Holded (Verifactu): al verla emitida, la web se la manda al cliente y la deja en su zona (conciliación diaria)')
   if (first?.status === 'failed') {
     todo.push(first.note === 'calendario' ? 'Cal.com no respondió: reservar a mano la primera sesión que eligió y confirmársela' : 'El hueco de la primera sesion se ocupo: ofrecer otro')
   }
@@ -813,42 +1073,98 @@ const notice: StepHandler = async (d, job) => {
   let mail
   switch (event) {
     case 'sale':
-    case 'renewal':
-      mail = internalEmail(`${event === 'sale' ? 'Venta' : 'Cobro del mensual'}: ${lic?.id ?? (requested ? 'licencia a mano' : 'sin licencia')} · ${company?.name ?? ''}`, {
+    case 'renewal': {
+      // Las ventas con IVA espanol a otro pais de la UE sin NIF-IVA (como a particulares): pasados
+      // 10.000 euros en el ano (o en el anterior), el IVA del pais del cliente por la ventanilla unica (OSS).
+      const euNoVat = purchase && company && isEuNoVatSale(purchase, company) ? await euNoVatSales(d, purchase) : null
+      const euTop = euNoVat ? Math.max(euNoVat.year, euNoVat.previous) : 0
+      const euSummary = euNoVat ? `${money(euNoVat.year)} este año${euNoVat.previous ? ` y ${money(euNoVat.previous)} el anterior` : ''}` : ''
+      if (euTop > EU_DISTANCE_SALES_LIMIT) {
+        todo.push(`Las ventas con IVA español a la UE sin NIF-IVA ya van por ${euSummary}, más de ${money(EU_DISTANCE_SALES_LIMIT)}: con Manel, alta en la ventanilla única (OSS, modelo 035) y cobrar el IVA del país del cliente a las de la UE sin NIF-IVA`)
+      } else if (euTop > EU_DISTANCE_SALES_LIMIT * 0.8) {
+        todo.push(`Las ventas con IVA español a la UE sin NIF-IVA van por ${euSummary}: al pasar de ${money(EU_DISTANCE_SALES_LIMIT)}, ventanilla única (OSS) con Manel`)
+      }
+      const vies = typeof invoiceJob?.result?.vies === 'string' ? invoiceJob.result.vies : null
+      const viesName = typeof invoiceJob?.result?.viesName === 'string' ? invoiceJob.result.viesName : null
+      const viesOther = invoiceJob?.result?.viesOtherName === true ? ', que no se parece a la razón social (ver Qué hacer)' : ''
+      mail = internalEmail(`${euTop > EU_DISTANCE_SALES_LIMIT ? 'URGENTE · ' : ''}${event === 'sale' ? 'Venta' : 'Cobro del mensual'}: ${lic?.id ?? (requested ? 'licencia a mano' : 'sin licencia')} · ${company?.name ?? ''}`, {
         'Qué hacer': todo.join('. ') || 'Nada: entregada sola',
         ...base,
+        País: company?.country,
         Licencia: lic
-          ? `${lic.id} (soporte hasta ${lic.soporteHasta})`
+          ? `${lic.id} (${supportLine(lic)})`
           : requested
-            ? `a mano: ${requested.status === 'pending' ? 'pedida, sin firmar' : requested.status} (soporte hasta ${requested.soporteHasta})`
+            ? `a mano: ${requested.status === 'pending' ? 'pedida, sin firmar' : requested.status} (${supportLine(requested)})`
             : null,
         Factura: inv ? `${inv.number ?? 'sin número'} (${inv.status})` : held ? 'retenida' : 'pendiente',
-        Importe: purchase ? `${money(purchase.amountTotal)} (IVA ${money(purchase.amountTax)}, ${purchase.taxTreatment})` : null,
+        Importe: purchase ? money(purchase.amountTotal) : null,
+        // Retenida para facturar a mano (un NIF-IVA que ya no vale en VIES, el 21 % a quien no le
+        // tocaba...) o en borrador porque VIES da el NIF-IVA a otro nombre (puede no ser suyo): el
+        // IVA de la factura aun no esta decidido, y no va al 349 hasta aclararlo.
+        IVA: purchase
+          ? (invoiceJob?.result?.status === 'held' || invoiceJob?.result?.viesOtherName === true) && purchase.taxTreatment === 'reverse_charge'
+            ? `${TREATMENT_NAMES[purchase.taxTreatment]}, pendiente: factura retenida (ver Qué hacer); no va al modelo 349 hasta aclararla`
+            : treatmentLine(purchase)
+          : null,
+        VIES: vies ? `consulta ${vies}${viesName ? `, a nombre de «${viesName}»${viesOther}` : ''}` : null,
+        'Ventas a la UE sin NIF-IVA': euNoVat ? `${euSummary} (límite: ${money(EU_DISTANCE_SALES_LIMIT)} al año)` : null,
         Lanzamiento: purchase?.launch ? 'sí' : null,
         Sesión: first ? `${hostName(first.host)}, ${formatDateTime(first.startAt, 'es')} (${first.status})` : null,
         Novedades: purchase?.marketingOptIn ? 'quiere recibirlas' : null,
       })
       break
+    }
     case 'review': {
       const reason = String(job.payload.reason ?? 'missing_data')
       const other = typeof job.payload.companyId === 'string' && reason === 'nif_conflict' ? await d.repo.getCompany(job.payload.companyId) : null
+      // Un cobro del mensual: la zona y la licencia del pago unico siguen (su propio todo).
+      const todoKey = purchase?.kind === 'renewal' && REVIEW_TODO[`${reason}_renewal`] ? `${reason}_renewal` : reason
+      // Con el NIF de otro cliente y ademas sin cuadrar el IVA: que no se entregue sin aclararlo.
+      // Solo eso: el todo del IVA repetiria lo de los titulares y lo de devolver.
+      const data = (purchase?.reviewData ?? null) as { problems?: unknown; todo?: unknown } | null
+      const taxIssue = reason === 'nif_conflict' && Array.isArray(data?.problems) && data.problems.length
+        ? 'Además, no cuadran el IVA o los datos fiscales (los problemas, en Datos): aunque sea de la empresa, no entregarla sin aclararlo antes con ella'
+        : null
+      // Los datos, sin lo que hay que hacer: ya va arriba.
+      const shown = Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => key !== 'todo'))
       mail = internalEmail(`${reason === 'nif_conflict' ? 'URGENTE · Compra con el NIF de otro cliente' : 'Venta a revisar'} (${purchase?.paymentRef})`, {
-        'Qué hacer': REVIEW_TODO[reason] ?? REVIEW_TODO.missing_data,
+        'Qué hacer': [REVIEW_TODO[todoKey] ?? REVIEW_TODO.missing_data, taxIssue].filter(Boolean).join('. '),
         ...base,
         'Empresa del NIF': other ? `${other.name} (${other.taxId})` : null,
-        Datos: purchase?.reviewData ? JSON.stringify(purchase.reviewData).slice(0, 1500) : null,
+        Datos: data ? JSON.stringify(shown).slice(0, 1500) : null,
       })
       break
     }
-    case 'refund':
-      mail = internalEmail(`Devolución${job.payload.full ? '' : ' parcial'}: ${company?.name ?? purchase?.paymentRef}`, {
-        'Qué hacer': job.payload.full ? 'Nada: licencia anulada, zona cerrada y rectificativa en curso' : 'Devolución parcial: la licencia sigue; rectificativa en curso',
+    case 'refund': {
+      // Lo que paso de verdad (el aviso espera a revoke y a rectify): un cobro a revisar no se
+      // entrego; una compra repetida no cierra la zona; con la factura en borrador, la rectificativa va a mano.
+      const full = job.payload.full === true
+      const revoked = full && purchase ? (await d.repo.getJobByKey(`revoke:${purchase.id}:refund`))?.result : null
+      const rectified = purchase && typeof job.payload.refundId === 'string' ? (await d.repo.getJobByKey(`rectify:${purchase.id}:${job.payload.refundId}`))?.result : null
+      const credit = rectified?.status === 'manual' ? 'rectificativa a mano (ver el aviso aparte)' : 'rectificativa en curso'
+      const done = !full
+        ? 'Devolución parcial: la licencia sigue'
+        : purchase?.kind === 'renewal'
+          ? 'licencia de ese cobro del mensual anulada; la zona y la licencia del pago único siguen'
+          : revoked?.accessRevoked === false
+            ? 'licencia de esa compra anulada; la empresa sigue con su otra compra y su zona'
+            : 'licencia anulada, zona cerrada'
+      const what = !purchase?.companyId || rectified?.status === 'sin factura'
+        ? 'Nada: ese cobro no se había entregado (sin licencia ni factura)'
+        : rectified?.status === 'manual'
+          ? `Rectificar a mano (ver el aviso aparte). ${full ? `${done[0].toUpperCase()}${done.slice(1)}` : done}`
+          : full
+            ? `Nada: ${done} y ${credit}`
+            : `${done}; ${credit}`
+      mail = internalEmail(`Devolución${full ? '' : ' parcial'}: ${company?.name ?? purchase?.paymentRef}`, {
+        'Qué hacer': what,
         ...base,
         Devuelto: money(Number(job.payload.amount)),
         Licencia: lic ? `${lic.id}${lic.revokedAt ? ' (anulada)' : ''}` : null,
-        'Sesiones canceladas': job.payload.full && purchase ? await cancelledSessions(d, `cancel_bookings:${purchase.id}:refund`) : null,
+        'Sesiones canceladas': full && purchase ? await cancelledSessions(d, `cancel_bookings:${purchase.id}:refund`) : null,
       })
       break
+    }
     case 'inquiry':
       mail = internalEmail(`Petición de información del banco: ${company?.name ?? purchase?.paymentRef}`, {
         'Qué hacer': 'Responder en Stripe con las pruebas antes del plazo (si no, puede pasar a contracargo). Aún no se anula nada',
@@ -881,7 +1197,7 @@ const notice: StepHandler = async (d, job) => {
     }
     case 'subscription_ended':
       mail = internalEmail(`Deja el mensual: ${company?.name ?? ''}`, {
-        'Qué hacer': 'Nada: su licencia sigue valiendo; pierde mantenimiento y soporte al acabar el periodo pagado',
+        'Qué hacer': 'Nada: su licencia sigue valiendo; pierde mantenimiento y soporte al acabar el periodo pagado (su licencia cubre las versiones 15 días más, el margen de un cobro fallido)',
         Empresa: company?.name,
         Suscripción: String(job.payload.subscriptionId ?? ''),
       })
@@ -919,6 +1235,7 @@ export const HANDLERS: Record<string, StepHandler> = {
   license_reminder: licenseReminder,
   renewal_email: renewalMail,
   refund_email: refundMail,
+  payment_failed_email: paymentFailedMail,
   announce,
   team_invite: teamInvite,
   company_alert: companyAlert,

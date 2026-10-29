@@ -5,7 +5,7 @@ import ContactForm from '@/components/contact-form'
 import SectionHeader from '@/components/section-header'
 import { Button } from '@/components/ui/button'
 import { generatePageMetadata } from '@/lib/metadata'
-import { isContactInterest } from '@/lib/contact'
+import { BOOKING_URL } from './booking'
 
 export async function generateMetadata({
   params,
@@ -22,15 +22,9 @@ export async function generateMetadata({
   })
 }
 
-export default async function ContactoPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>
-  searchParams: Promise<{ interes?: string }>
-}) {
+// Estatica, como las demas: el ?interes= de los precios lo lee el formulario en el navegador.
+export default async function ContactoPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
-  const { interes } = await searchParams
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'contact' })
 
@@ -40,7 +34,7 @@ export default async function ContactoPage({
         <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 max-w-5xl mx-auto">
-          <ContactForm defaultInterest={isContactInterest(interes) ? interes : undefined} />
+          <ContactForm />
 
           <div className="space-y-8">
             <div className="rounded-2xl bg-paper-2 p-6 space-y-4">
@@ -49,7 +43,7 @@ export default async function ContactoPage({
                 {t('orSchedule')}
               </h2>
               <Button variant="outline" size="lg" className="w-full" asChild>
-                <a href="https://cal.com/pymaticlabs" target="_blank" rel="noopener noreferrer">
+                <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
                   {t('scheduleCta')}
                 </a>
               </Button>

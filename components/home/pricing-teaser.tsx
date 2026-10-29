@@ -7,8 +7,8 @@ import { localePath } from '@/lib/i18n'
 
 // Precios en corto, como se comparan dos modelos: las cuatro modalidades caben en dos caminos (lo montas tu
 // o te lo montamos), cada uno para una persona y, debajo, con equipo. Y tres datos grandes. El detalle y la
-// compra, en /precios.
-export default function PricingTeaser() {
+// compra, en /precios. Sin plazas de lanzamiento (launchOpen false, como /precios), solo el precio de lista.
+export default function PricingTeaser({ launchOpen = true }: { launchOpen?: boolean }) {
   const t = useTranslations('home.pricing')
   const tOffer = useTranslations('offer')
   const locale = useLocale()
@@ -23,7 +23,7 @@ export default function PricingTeaser() {
             {t('title')} <span className="text-gradient">{t('titleAccent')}</span>
           </h2>
           <p className="mt-5 text-xl leading-relaxed text-muted sm:text-2xl">{t('subtitle')}</p>
-          <p className="mt-7 inline-flex rounded-full bg-brand-soft px-4 py-1.5 text-sm font-semibold text-brand">{t('launch')}</p>
+          {launchOpen && <p className="mt-7 inline-flex rounded-full bg-brand-soft px-4 py-1.5 text-sm font-semibold text-brand">{t('launch')}</p>}
         </div>
 
         <div className="mx-auto mt-14 grid max-w-4xl gap-5 md:grid-cols-2">
@@ -39,19 +39,24 @@ export default function PricingTeaser() {
                 <h3 className="text-3xl font-bold tracking-[-0.03em] text-ink">{tOffer(`modalities.${modality.id}.name`)}</h3>
                 {/* Siempre el alto de tres lineas, para que los precios de las dos queden a la misma altura */}
                 <p className="mt-3 max-w-sm text-lg leading-snug text-muted md:min-h-[4.75rem]">{t(`texts.${modality.id}`)}</p>
-                <p className="mt-8 text-6xl font-bold tracking-[-0.045em] text-ink">{formatPrice(modality.launchPrice, locale)}</p>
+                <p className="mt-8 text-6xl font-bold tracking-[-0.045em] text-ink">{formatPrice(launchOpen ? modality.launchPrice : modality.listPrice, locale)}</p>
                 {/* Cada dato entero en su linea: en el movil no se parte por la mitad */}
                 <p className="mt-2 text-sm text-muted">
-                  <span className="whitespace-nowrap">
-                    {tOffer('list')}: <s>{formatPrice(modality.listPrice, locale)}</s>
-                  </span>{' '}
-                  · <span className="whitespace-nowrap">{tOffer('oneOff')}</span> ·{' '}
+                  {launchOpen && (
+                    <>
+                      <span className="whitespace-nowrap">
+                        {tOffer('list')}: <s>{formatPrice(modality.listPrice, locale)}</s>
+                      </span>{' '}
+                      ·{' '}
+                    </>
+                  )}
+                  <span className="whitespace-nowrap">{tOffer('oneOff')}</span> ·{' '}
                   <span className="whitespace-nowrap">{tOffer(`modalities.${modality.id}.people`)}</span>
                 </p>
                 {team && (
                   <p className="mt-6 text-base text-ink">
                     <Users className="mr-2 inline h-5 w-5 align-[-4px] text-brand" aria-hidden="true" />
-                    {t('team', { price: formatPrice(team.launchPrice, locale) })}
+                    {t('team', { price: formatPrice(launchOpen ? team.launchPrice : team.listPrice, locale) })}
                   </p>
                 )}
                 <Button size="lg" className="mt-8 h-12 px-8 text-[17px]" asChild>

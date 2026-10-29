@@ -3,10 +3,16 @@
 // Holded la mande por correo, y su PDF para la zona.
 //
 // HOLDED_API_KEY: clave con sales:invoices.read/.write y contacts:contacts.read/.write.
-// Impuestos (los ids de GET /api/v2/taxes de la cuenta): HOLDED_TAX_STANDARD (21 %, por defecto
-// s_iva_21), HOLDED_TAX_REVERSE_CHARGE (UE con NIF-IVA valido), HOLDED_TAX_EXPORT (fuera de la UE)
-// y HOLDED_TAX_EXEMPT. Si falta el que toca, el paso no factura y avisa: un IVA mal puesto en
-// Verifactu no se deshace solo.
+// El contacto va por la identificacion de la compra (code): el NIF espanol sin prefijo, el NIF-IVA
+// de la UE con el suyo (tambien en vat_number) o la de fuera de la UE con el del pais; con el pais
+// y la direccion de facturacion de Stripe.
+// Impuestos (los ids de GET /api/v2/taxes de la cuenta), segun el IVA que se comprobo al pagar
+// (lib/delivery/tax-check.ts): HOLDED_TAX_STANDARD (21 %, por defecto s_iva_21),
+// HOLDED_TAX_REVERSE_CHARGE (UE con NIF-IVA valido en VIES: inversion del sujeto pasivo, no sujeta
+// por reglas de localizacion; N2 en Verifactu) y HOLDED_TAX_EXPORT (Canarias, Ceuta, Melilla y fuera
+// de la UE: no sujeta). HOLDED_TAX_EXEMPT no lo usa ninguna venta. Si falta el que toca, el paso no
+// factura y avisa: un IVA mal puesto en Verifactu no se deshace solo. La mencion de cada uno va en
+// el cuerpo (body) y la consulta de VIES, en las notas.
 //
 // Cuota: Holded limita las llamadas por minuto y por mes segun el plan (Plus, 500 al mes). Cada
 // venta gasta unas 6; para 100 ventas al mes hace falta el plan Basic o superior.
@@ -69,7 +75,7 @@ export class HoldedInvoicer implements Invoicer {
       json: {
         name: company.name,
         code: company.taxId,
-        // El NIF-IVA intracomunitario, si lo es (empieza por el pais).
+        // El NIF-IVA intracomunitario validado en VIES, con su prefijo (EL en Grecia): el de la factura sin IVA.
         vat_number: company.taxIdType === 'eu_vat' ? company.taxId : null,
         is_person: false,
         email: company.email,
@@ -101,7 +107,10 @@ export class HoldedInvoicer implements Invoicer {
       throw new PermanentError(`IVA del ${draft.taxRate} %: no esta previsto (solo el 21 %)`)
     }
     const key = keys[draft.taxTreatment]
-    if (!key) throw new PermanentError(`falta el impuesto de Holded para ${draft.taxTreatment} (HOLDED_TAX_*)`)
+    if (!key) {
+      const variable = { standard: 'HOLDED_TAX_STANDARD', reverse_charge: 'HOLDED_TAX_REVERSE_CHARGE', export: 'HOLDED_TAX_EXPORT', exempt: 'HOLDED_TAX_EXEMPT' }[draft.taxTreatment]
+      throw new PermanentError(`falta el impuesto de Holded para ${draft.taxTreatment} (${variable}, con el id de GET /api/v2/taxes)`)
+    }
     return key
   }
 

@@ -7,7 +7,7 @@ import path from 'node:path'
 import { randomBytes } from 'node:crypto'
 import { readConfig, type DeliveryConfig } from './config.ts'
 import { MemoryRepository, emptyMemoryState } from './adapters/memory-repository.ts'
-import { FakeAuth, FakeCalendar, FakeInvoicer, FakePayments, LocalSigner, LocalStorage, OutboxMailer } from './adapters/fakes.ts'
+import { FakeAuth, FakeCalendar, FakeInvoicer, FakePayments, FakeVies, LocalSigner, LocalStorage, OutboxMailer } from './adapters/fakes.ts'
 import { SupabaseRepository } from './adapters/supabase-repository.ts'
 import { GcpKmsSigner } from './adapters/gcp-kms-signer.ts'
 import { HoldedInvoicer } from './adapters/holded-invoicer.ts'
@@ -16,7 +16,8 @@ import { SupabaseStorage } from './adapters/supabase-storage.ts'
 import { CalcomCalendar } from './adapters/calcom-calendar.ts'
 import { SupabaseAuth } from './adapters/supabase-auth.ts'
 import { StripePayments } from './adapters/stripe-payments.ts'
-import type { Calendar, Invoicer, Mailer, Payments, Repository, Signer, Storage, ZoneAuth } from './types.ts'
+import { ViesChecker } from './adapters/vies-checker.ts'
+import type { Calendar, Invoicer, Mailer, Payments, Repository, Signer, Storage, VatChecker, ZoneAuth } from './types.ts'
 
 export interface Delivery {
   config: DeliveryConfig
@@ -28,6 +29,7 @@ export interface Delivery {
   calendar: Calendar
   auth: ZoneAuth
   payments: Payments
+  vies: VatChecker
   clock: () => Date
 }
 
@@ -41,6 +43,7 @@ export interface FakeParts {
   calendar: FakeCalendar
   auth: FakeAuth
   payments: FakePayments
+  vies: FakeVies
 }
 
 type Env = Record<string, string | undefined>
@@ -75,6 +78,7 @@ export function createDelivery(env: Env = process.env, clock: () => Date = () =>
         ? (fakes.auth = new FakeAuth({ mailer: delivery.mailer, secret: fakeSecret, clock }))
         : new SupabaseAuth(env, async (email) => (await delivery.repo.listMembershipsByEmail(email)).find((m) => m.userId)?.userId ?? null),
     payments: () => (a.payments === 'fake' ? (fakes.payments = new FakePayments(config.siteUrl)) : new StripePayments(env)),
+    vies: () => (a.vies === 'fake' ? (fakes.vies = new FakeVies({ clock })) : new ViesChecker(env, config.vies)),
   }
   for (const key of Object.keys(factories) as (keyof Adapters)[]) {
     Object.defineProperty(delivery, key, {
@@ -110,6 +114,6 @@ export function createFakeDelivery(options: { clock?: () => Date; env?: Env } = 
     options.clock
   )
   // Se crean ya, para que las pruebas tengan a mano cada pieza falsa.
-  for (const key of ['repo', 'mailer', 'signer', 'invoicer', 'storage', 'calendar', 'auth', 'payments'] as const) void delivery[key]
+  for (const key of ['repo', 'mailer', 'signer', 'invoicer', 'storage', 'calendar', 'auth', 'payments', 'vies'] as const) void delivery[key]
   return delivery as Delivery & { fakes: FakeParts }
 }

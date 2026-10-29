@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hasSecret } from '@/lib/api-route'
 import { getDelivery } from '@/lib/delivery/container'
-import { oneTimeJobs, renewalJobs } from '@/lib/delivery/events'
+import { deliverJobs } from '@/lib/delivery/events'
 import { runJobs } from '@/lib/delivery/jobs'
 
 // La cola, para PymaticLabs (Authorization: Bearer <ADMIN_SECRET>).
 // GET ?status=dead: los pasos parados. POST {"action":"retry","id":"..."}: reintentar uno ya
 // arreglado; {"action":"run"}: correr la cola ahora; {"action":"deliver","purchaseId":"..."}:
-// entregar una compra que se reviso a mano.
+// entregar una compra que se reviso a mano (con inversion del sujeto pasivo, con la consulta de VIES
+// de antes del pago que guardo review_data.declared, si vale: deliverJobs).
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Una compra a revisar ya completada a mano (empresa puesta y status paid): se entrega.
     const purchase = await delivery.repo.getPurchase(String(body.purchaseId))
     if (!purchase?.companyId || purchase.status !== 'paid') return NextResponse.json({ error: 'la compra no existe, no tiene empresa o no esta pagada' }, { status: 409 })
-    await delivery.repo.enqueueJobs(purchase.kind === 'one_time' ? oneTimeJobs(purchase) : renewalJobs(purchase, delivery.config.licenseMode === 'manual'), delivery.clock())
+    await delivery.repo.enqueueJobs(await deliverJobs(delivery, purchase), delivery.clock())
     return NextResponse.json({ queued: true, run: await runJobs(delivery, { budgetMs: 40_000 }) })
   }
   return NextResponse.json({ error: 'action: retry, run o deliver' }, { status: 400 })

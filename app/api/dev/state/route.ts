@@ -14,8 +14,8 @@ export async function GET() {
   const delivery = getDelivery()
   if (!devToolsEnabled(delivery.config)) return new NextResponse(null, { status: 404 })
   // Se crean las piezas que aun no se hayan usado, para que salgan todas.
-  for (const key of ['repo', 'mailer', 'signer', 'invoicer', 'calendar', 'payments'] as const) void delivery[key]
-  const { repo, mailer, signer, invoicer, calendar, payments } = delivery.fakes
+  for (const key of ['repo', 'mailer', 'signer', 'invoicer', 'calendar', 'payments', 'vies'] as const) void delivery[key]
+  const { repo, mailer, signer, invoicer, calendar, payments, vies } = delivery.fakes
   return NextResponse.json({
     db: repo?.state ?? null,
     publicKey: signer ? await signer.publicKey() : null,
@@ -28,6 +28,7 @@ export async function GET() {
     })),
     invoicer: invoicer ? { calls: invoicer.calls, documents: [...invoicer.documents.values()] } : null,
     calendar: calendar ? { booked: [...calendar.booked.values()], reservations: [...calendar.reservations.entries()] } : null,
-    payments: payments ? { sessions: [...payments.sessions.values()].map((s) => ({ id: s.id, params: s.params })), known: Object.fromEntries(payments.payments) } : null,
+    payments: payments ? { sessions: [...payments.sessions.values()].map((s) => ({ id: s.id, params: s.params })), known: Object.fromEntries(payments.payments), expired: [...payments.expiredSessions] } : null,
+    vies: vies ? { down: vies.down, results: Object.fromEntries(vies.results), checks: vies.checks } : null,
   })
 }
