@@ -13,7 +13,8 @@ export type LegalDocumentId = 'aviso-legal' | 'politica-privacidad' | 'politica-
 // (socios, 27-10-2026), la identificacion fiscal del Cliente en vez del NIF y las condiciones y la
 // privacidad del producto tambien en ingles. Los cinco cambian respecto a lo publicado (2026-10-21;
 // el aviso legal, 2026-10-09) y se publican el 29-10-2026: las fechas de dias anteriores no llegaron
-// a publicarse ni las acepto nadie. Si se publican otro dia, la fecha de ese dia. La copia guardada
+// a publicarse ni las acepto nadie. Si se publican otro dia, la fecha de ese dia. Las condiciones,
+// 2026-10-30: los nombres de las modalidades (Solista, Banda, Duo y Orquesta; Sergio, 29-10-2026). La copia guardada
 // de cada version e idioma no se rehace: si el texto cambia con una copia ya guardada, el pago falla
 // hasta cambiar la fecha (lib/delivery/terms.ts); las de versiones anteriores se quedan para sus
 // compras. lib/legal.test.mts guarda la huella de cada texto con su fecha: si cambia el texto, falla.
@@ -21,7 +22,7 @@ export const LEGAL_VERSIONS: Record<LegalDocumentId, string> = {
   'aviso-legal': '2026-10-29',
   'politica-privacidad': '2026-10-29',
   'politica-cookies': '2026-10-29',
-  condiciones: '2026-10-29',
+  condiciones: '2026-10-30',
   'privacidad-producto': '2026-10-29',
 }
 

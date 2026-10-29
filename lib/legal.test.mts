@@ -5,6 +5,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { LEGAL_VERSIONS, PENDING_NOTE, type LegalDocumentId } from './legal-versions.ts'
 import { DRAFT_MARK, currentTerms, ensureTermsSnapshot, renderTermsHtml, termsAttachment, termsPath } from './delivery/terms.ts'
+import { shortProductName } from './delivery/products.ts'
+import type { ModalityId } from './offer.ts'
 import type { Storage } from './delivery/types.ts'
 import { PROFILE_HINT_KEY } from './zone-profile.ts'
 import { THEME_COOKIE } from './theme.ts'
@@ -96,11 +98,11 @@ const PUBLISHED: Record<LegalDocumentId, { version: string; es: string; en: stri
   'aviso-legal': { version: '2026-10-29', es: '4172ba7a9a50f873', en: 'd0892172c66fba91' },
   'politica-privacidad': { version: '2026-10-29', es: '9a24005dcc9f5130', en: '409e72666e14ee59' },
   'politica-cookies': { version: '2026-10-29', es: '42d35a04318ba7d2', en: '29abf4b49b077d6e' },
-  condiciones: { version: '2026-10-29', es: '95f65b853a5fe650', en: '2827748dda798816' },
+  condiciones: { version: '2026-10-30', es: '97575b0b0060ed99', en: '0c2d7c3e939c085f' },
   'privacidad-producto': { version: '2026-10-29', es: 'ffa8d41ed8a0bef0', en: '74b1172903057f70' },
 }
 
-test('versiones: la fecha de cada texto va con su texto (el de 2026-10-29, el dia en que se publica)', () => {
+test('versiones: la fecha de cada texto va con su texto (el dia en que se publica)', () => {
   for (const id of IDS) {
     assert.equal(LEGAL_VERSIONS[id], PUBLISHED[id].version, id)
     for (const locale of ['es', 'en'] as const) {
@@ -229,9 +231,39 @@ test('condiciones en ingles: la traduccion del texto castellano, con la marca Di
   assert.equal(en.match(/^#{2,3} /gm)?.length, es.match(/^#{2,3} /gm)?.length)
   assert.deepEqual(numbers(en), numbers(es))
   assert.deepEqual(links(en), links(es).map(inEnglish))
-  // En ingles el producto es Digital Brain, y al final dice que prevalece el castellano.
-  assert.doesNotMatch(en, /Cerebro Digital|Hazlo tú|Acompañado|zona de socio/)
+  // En ingles el producto es Digital Brain (y cada modalidad, su nombre en ingles), y al final dice que
+  // prevalece el castellano.
+  assert.doesNotMatch(en, /Cerebro Digital|Hazlo tú|Acompañado|En solitario|Solista|Banda|Dúo|Orquesta|zona de socio/)
   assert.match(en, /\n\*In case of discrepancy between this English version and the Spanish one, the Spanish version prevails\.\*\n$/)
+})
+
+test('condiciones: cada producto con el nombre de la web, el mismo que llevan el pago y la factura', () => {
+  // Las modalidades, con nombre propio (Sergio, 29-10-2026): En solitario (Solista y Banda) y
+  // Acompanado (Duo y Orquesta). Los nombres, los de lib/delivery/products.ts (Stripe y Holded).
+  const WORDS = {
+    es: { solo: 'En solitario', guided: 'Acompañado', guidedIn: 'En el Acompañado', one: 'para una persona', team: 'con equipo', and: 'y' },
+    en: { solo: 'On your own', guided: 'Guided', guidedIn: 'In Guided', one: 'for one person', team: 'with a team', and: 'and' },
+  } as const
+  for (const locale of ['es', 'en'] as const) {
+    const w = WORDS[locale]
+    const name = (id: ModalityId) => shortProductName(id, locale)
+    const text = published(locale, 'condiciones')
+    // Clausula 3: cada familia, con su modalidad para una persona y la de equipo.
+    const three = clause(text, 3)
+    assert.ok(three.includes(`**${w.solo}: ${name('hazlo-tu')}, ${w.one}, ${w.and} ${name('hazlo-tu-equipo')}, ${w.team}.**`), locale)
+    assert.ok(three.includes(`**${w.guided}: ${name('acompanado')}, ${w.one}, ${w.and} ${name('acompanado-equipo')}, ${w.team}.**`), locale)
+    // Sin meses de Suscripcion, solo la de una persona sin sesiones.
+    assert.ok(three.includes(`${name('hazlo-tu')} ${locale === 'es' ? 'no trae meses de Suscripción' : 'comes with no months of Subscription'}`), locale)
+    // Clausula 5: la garantia de montaje de cada familia, con sus dos modalidades.
+    const five = clause(text, 5)
+    assert.ok(five.includes(`${w.guidedIn} (${name('acompanado')} ${w.and} ${name('acompanado-equipo')}): `), locale)
+    assert.ok(five.includes(` ${w.solo} (${name('hazlo-tu')} ${w.and} ${name('hazlo-tu-equipo')}): `), locale)
+  }
+  // Los nombres de antes, en ningun texto publicado.
+  for (const name of ALL) {
+    assert.doesNotMatch(published('es', name), /Hazlo tú/, `es/${name}`)
+    assert.doesNotMatch(published('en', name), /Do it yourself/i, `en/${name}`)
+  }
 })
 
 test('copia de las condiciones: la del idioma del cliente, con su huella, y con el <base> de la web sus enlaces abren desde el fichero guardado', () => {
@@ -278,24 +310,24 @@ test('copia guardada de las condiciones: una por version e idioma, y si el texto
   await assert.rejects(ensureTermsSnapshot(storage, 'en', 'https://web.example.test'), /cambia la fecha en lib\/legal-versions\.ts/)
 })
 
-test('copias de versiones anteriores: no frenan el pago con la de 2026-10-29 y cada compra recibe la que acepto', async () => {
+test('copias de versiones anteriores: no frenan el pago con la vigente (2026-10-30) y cada compra recibe la que acepto', async () => {
   const storage = memoryStorage()
   // Una copia de 2026-10-28, guardada en una prueba antes de publicar, con otro texto.
   const old = '2026-10-28'
   storage.files.set(`customer-files/${termsPath(old, 'es')}`, Buffer.from('<p>Versión publicada el 2026-10-28. Huella SHA-256 del texto: 0000.</p><!--aceptacion-->', 'utf-8'))
   const terms = await ensureTermsSnapshot(storage, 'es', 'https://web.example.test')
-  assert.equal(terms.version, '2026-10-29')
-  assert.ok(storage.files.has(`customer-files/${termsPath('2026-10-29', 'es')}`))
+  assert.equal(terms.version, '2026-10-30')
+  assert.ok(storage.files.has(`customer-files/${termsPath('2026-10-30', 'es')}`))
   const accepted = (version: string) =>
     termsAttachment(storage, { version, locale: 'es', company: 'Acme SA de CV', taxId: 'MX-ACM010101AB1', acceptedAt: '2026-10-29T10:00:00Z', paymentRef: 'pi_1' })
   const before = await accepted(old)
   assert.equal(before?.version, old)
   assert.match(before!.attachment.content.toString('utf-8'), /Huella SHA-256 del texto: 0000\./)
   const now = await accepted(terms.version)
-  assert.equal(now?.attachment.name, 'condiciones-2026-10-29.html')
+  assert.equal(now?.attachment.name, 'condiciones-2026-10-30.html')
   const html = now!.attachment.content.toString('utf-8')
   assert.ok(html.includes(terms.sha256))
-  assert.match(html, /Versión publicada el 2026-10-29\./)
+  assert.match(html, /Versión publicada el 2026-10-30\./)
   assert.match(html, /Aceptadas por Acme SA de CV \(MX-ACM010101AB1\)/)
   // La que se lleva el cliente, con la marca de borrador de la web.
   assert.match(html, /<span class="badge">Borrador<\/span><\/h1>/)

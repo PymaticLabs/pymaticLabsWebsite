@@ -298,7 +298,9 @@ async function main() {
   assert.equal(licenseA.modalidad, 'hazlo-tu')
   assert.equal(Object.values(s1.db.purchases).filter((p) => p.paymentRef === session.payment_intent).length, 1)
   assert.ok(welcomeA.attachments.some((x) => x.name.startsWith('condiciones-')))
-  log(`bienvenida con la licencia ${licenseA.id} (verifica) y las condiciones; el aviso repetido no duplica`)
+  // El producto, con el nombre de la web (hazlo-tu es Solista; Sergio, 29-10-2026).
+  assert.match(welcomeA.text, /Gracias por comprar Cerebro Digital · Solista\./)
+  log(`bienvenida de Solista con la licencia ${licenseA.id} (verifica) y las condiciones; el aviso repetido no duplica`)
 
   // 2. La pagina de compra pide el pais y la identificacion que toca (sin JavaScript, todos los
   //    campos), y lo mal escrito vuelve a /comprar con su error, con el pais elegido, sin abrir el pago.
@@ -356,6 +358,9 @@ async function main() {
   const companyB = companyOf(sB, purchaseB)!
   assert.deepEqual([companyB.taxId, companyB.taxIdType, companyB.country], [b.taxId, 'es_cif', 'ES'])
   assert.deepEqual([invoiceOf(sB, purchaseB).draft.taxTreatment, invoiceOf(sB, purchaseB).draft.body], ['standard', null])
+  // El cobro en Stripe y la factura, con el nombre de la web: acompanado es Duo.
+  assert.equal(paramsB.payment_intent_data.description, 'Cerebro Digital · Dúo')
+  assert.equal(invoiceOf(sB, purchaseB).draft.lines[0].name, 'Cerebro Digital · Dúo')
   log(`Espana peninsular: NIF espanol y el 21 % (${purchaseB.amountTax / 100} € sobre el precio de lanzamiento), hueco elegido antes de pagar, sesion reservada y en la bienvenida`)
 
   // 4. El IVA de cada caso, por las rutas de la web: lo declarado va en los metadatos del pago, el

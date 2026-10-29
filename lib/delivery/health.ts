@@ -17,7 +17,7 @@ import { requestJson } from './adapters/http.ts'
 import { compareVersions } from './adapters/memory-repository.ts'
 import { isSpainTaxRate } from './adapters/stripe-payments.ts'
 import { readConfig, type DeliveryConfig } from './config.ts'
-import { SESSION_HOSTS, WEBHOOK_EVENTS, launchCouponId, lookupKey, priceCents, type PlanPeriod, type ProductId } from './products.ts'
+import { SESSION_HOSTS, WEBHOOK_EVENTS, launchCouponId, lookupKey, priceCents, productName, type PlanPeriod, type ProductId } from './products.ts'
 import { EU_DISTANCE_SALES_LIMIT, SPAIN_VAT_RATE, TAX_RATE_TAG } from './tax.ts'
 import { SALE_COUNTRIES, isEuCountry } from './checkout-tax.ts'
 import { errorMessage, formatMoney, madridDate } from './util.ts'
@@ -392,7 +392,8 @@ async function checkStripe(env: Env, config: DeliveryConfig, expectLive: boolean
   const keyOf = (w: { product: ProductId; period: PlanPeriod | null }) => lookupKey(w.product, w.period ?? 'month')
   const prices: Stripe.Price[] = []
   for (const group of [wanted.filter((w) => !w.period), wanted.filter((w) => w.period)]) {
-    prices.push(...(await stripe.prices.list({ lookup_keys: group.map(keyOf), active: true, limit: 100 })).data)
+    // Con el producto (expand): su nombre es el que ve el cliente en la pagina de pago.
+    prices.push(...(await stripe.prices.list({ lookup_keys: group.map(keyOf), active: true, limit: 100, expand: ['data.product'] })).data)
   }
   const productOf = (price: Stripe.Price) => (typeof price.product === 'string' ? price.product : price.product?.id)
   for (const w of wanted) {
@@ -408,6 +409,10 @@ async function checkStripe(env: Env, config: DeliveryConfig, expectLive: boolean
         (price.recurring?.interval ?? null) !== w.period ? (w.period ? `no se cobra ${w.period === 'year' ? 'al año' : 'al mes'}` : 'es recurrente') : null,
         price.tax_behavior !== 'exclusive' ? 'con el IVA dentro (tiene que ser exclusive)' : null,
         monthly && productOf(monthly) !== productOf(price) ? 'no es del producto del plan (el del mes): el portal no cambiaría entre los dos' : null,
+        // Lo renombra stripe-setup (los nombres de la web: Solista, Banda, Duo, Orquesta).
+        typeof price.product === 'object' && price.product && 'name' in price.product && price.product.name !== productName(w.product, 'es')
+          ? `el producto se llama «${price.product.name}» y en la web «${productName(w.product, 'es')}» (es el nombre de la página de pago)`
+          : null,
       ].filter(Boolean)
       const ok = `${want / 100} € sin IVA${w.period === 'year' ? ', al año' : w.period ? ', al mes' : ''}`
       add(`Precio ${key}`, wrong.length ? 'falta' : 'ok', wrong.length ? wrong.join('; ') : ok, 'scripts/stripe-setup.mts')
@@ -439,7 +444,8 @@ async function checkStripe(env: Env, config: DeliveryConfig, expectLive: boolean
       add(`Cupón ${id}`, 'falta', `no está (${errorMessage(error)})`, 'scripts/stripe-setup.mts')
     }
   }
-  const portals = await stripe.billingPortal.configurations.list({ limit: 100 })
+  // Los productos del portal solo llegan si se piden (expand), como el applies_to de los cupones.
+  const portals = await stripe.billingPortal.configurations.list({ limit: 100, expand: ['data.features.subscription_update.products'] })
   const portal = portals.data.find((c) => c.metadata?.cerebro === 'portal')
   if (!portal?.active) add('Portal de cliente', 'falta', portal ? 'desactivado' : 'no está', 'scripts/stripe-setup.mts')
   else {
@@ -453,6 +459,10 @@ async function checkStripe(env: Env, config: DeliveryConfig, expectLive: boolean
     const wrong = [
       !update?.enabled ? 'no deja cambiar de plan' : null,
       update?.enabled && missing.length ? `no deja cambiar a ${missing.join(', ')}` : null,
+      // Cada suscripcion es una empresa y un plan: con la cantidad, el cliente pagaria el plan dos veces.
+      update?.enabled && (update.products ?? []).some((p) => p.adjustable_quantity?.enabled)
+        ? 'deja cambiar la cantidad (tiene que ser siempre 1)'
+        : null,
       update?.enabled && !(scheduled.includes('decreasing_item_amount') && scheduled.includes('shortening_interval'))
         ? 'bajar de plan o pasar de anual a mensual se aplica al momento, con abono (tiene que esperar al final del periodo pagado)'
         : null,

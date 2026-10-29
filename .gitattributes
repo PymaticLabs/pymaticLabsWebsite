@@ -1,0 +1,3 @@
+# Los textos legales siempre con LF, tambien en Windows (core.autocrlf=true): su huella sha256 es
+# la que acepta el cliente al comprar y la que comprueban las pruebas (lib/legal.test.mts).
+content/legal/** text eol=lf

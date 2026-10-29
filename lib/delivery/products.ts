@@ -139,21 +139,25 @@ export function licenseTermsFor(
   }
 }
 
+// El nombre que ve el cliente en el pago de Stripe, en las facturas, en los correos y en las
+// condiciones. Las modalidades, con su nombre propio (Sergio, 29-10-2026), el mismo que en la web
+// (offer.modalities.<id>.name): En solitario, Solista y Banda; Acompanado, Duo y Orquesta. Los ids
+// no cambian. En Stripe, el nombre del producto lo pone al dia scripts/stripe-setup.mts.
 const NAMES: Record<Locale, Record<ProductId, string>> = {
   es: {
-    'hazlo-tu': 'Hazlo tú',
-    'hazlo-tu-equipo': 'Hazlo tú con equipo',
-    acompanado: 'Acompañado',
-    'acompanado-equipo': 'Acompañado con equipo',
+    'hazlo-tu': 'Solista',
+    'hazlo-tu-equipo': 'Banda',
+    acompanado: 'Dúo',
+    'acompanado-equipo': 'Orquesta',
     'plan-esencial': 'Mensual Esencial',
     'plan-pro': 'Mensual Pro',
     'plan-premium': 'Mensual Premium',
   },
   en: {
-    'hazlo-tu': 'Do it yourself',
-    'hazlo-tu-equipo': 'Do it yourself, team',
-    acompanado: 'Guided',
-    'acompanado-equipo': 'Guided, team',
+    'hazlo-tu': 'Solo',
+    'hazlo-tu-equipo': 'Band',
+    acompanado: 'Duo',
+    'acompanado-equipo': 'Orchestra',
     'plan-esencial': 'Monthly Essential',
     'plan-pro': 'Monthly Pro',
     'plan-premium': 'Monthly Premium',
@@ -162,8 +166,13 @@ const NAMES: Record<Locale, Record<ProductId, string>> = {
 
 export const BRAND: Record<Locale, string> = { es: 'Cerebro Digital', en: 'Digital Brain' }
 
+/** El nombre propio del producto, sin la marca: Solista, Orquesta, Mensual Pro. */
+export function shortProductName(product: ProductId, locale: Locale): string {
+  return NAMES[locale][product]
+}
+
 export function productName(product: string, locale: Locale): string {
-  const name = isProduct(product) ? NAMES[locale][product] : product
+  const name = isProduct(product) ? shortProductName(product, locale) : product
   return `${BRAND[locale]} · ${name}`
 }
 

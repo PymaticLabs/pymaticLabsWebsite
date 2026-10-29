@@ -33,9 +33,9 @@ import { FakeCalendar } from './delivery/adapters/fakes.ts'
 import { issueLicense } from './delivery/license-issue.ts'
 import { devToolsEnabled, readConfig } from './delivery/config.ts'
 import { crc32c, madridTimeToUtc, normalizeTaxId, cleanCompanyName, formatMoney } from './delivery/util.ts'
-import { lookupKey, planProductName, priceCents, priceFromLookupKey, productFromLookupKey } from './delivery/products.ts'
+import { lookupKey, planProductName, priceCents, priceFromLookupKey, productFromLookupKey, productName } from './delivery/products.ts'
 import { currentSecuritySupport, securitySupportUntil } from './delivery/versions.ts'
-import { ANNUAL_PAID_MONTHS, formatPrice, plans } from './offer.ts'
+import { ANNUAL_PAID_MONTHS, formatPrice, modalities, plans } from './offer.ts'
 import { unzip, zip } from './delivery/zip.ts'
 import { createFakeDelivery } from './delivery/container.ts'
 import { CheckoutError, cancelCheckout, cancelReturnPath, companyTax, createCheckout, firstSessionSlots, oneTimeSessionParams, planSessionParams, trialEndFor } from './checkout.ts'
@@ -194,13 +194,13 @@ test('Holded: contacto por NIF (o nuevo), factura con el impuesto, aprobar, envi
 
   const doc = await holded.createDocument('invoice', {
     contactId: 'ct1',
-    reference: 'Cerebro Digital · Hazlo tú · pi_1',
+    reference: 'Cerebro Digital · Solista · pi_1',
     date: '2026-11-02',
     currency: 'eur',
     language: 'es',
     taxTreatment: 'standard',
     taxRate: 21,
-    lines: [{ name: 'Cerebro Digital · Hazlo tú', description: null, units: 1, price: 990 }],
+    lines: [{ name: 'Cerebro Digital · Solista', description: null, units: 1, price: 990 }],
     body: null,
     notes: 'Stripe pi_1',
   })
@@ -220,7 +220,7 @@ test('Holded: contacto por NIF (o nuevo), factura con el impuesto, aprobar, envi
 
 test('Holded: una factura encontrada en un reintento se lee entera (el listado no dice si esta aprobada), con su total y su IVA', async () => {
   const calls = mockFetch((call) => {
-    if (call.url.includes('/invoices?')) return { json: { items: [{ id: 'inv9', description: 'Cerebro Digital · Hazlo tú · pi_9' }] } }
+    if (call.url.includes('/invoices?')) return { json: { items: [{ id: 'inv9', description: 'Cerebro Digital · Solista · pi_9' }] } }
     if (call.url.endsWith('/invoices/inv9')) return { json: { id: 'inv9', document_number: 'F260009', draft: false, approved_at: '2026-11-02T10:00:00', total: '1197.90', tax: 207.9 } }
     return { status: 404, json: { detail: 'no' } }
   })
@@ -527,6 +527,8 @@ test('Checkout de pago unico: el NIF espanol de la web, el 21 % fijo (sin Stripe
   })
   // Lo declarado va tambien en el pago (lo ve quien mire el cobro en Stripe) y en el texto del boton.
   assert.deepEqual(params.payment_intent_data.metadata, params.metadata)
+  // El cobro, con el nombre de la web: acompanado es Duo.
+  assert.equal(params.payment_intent_data.description, 'Digital Brain · Duo')
   assert.equal(params.custom_text.submit.message, 'Prices plus 21% VAT. The invoice, with tax ID B12345674, arrives by email; the license, right away.')
   assert.deepEqual(params.custom_fields.map((f: { key: string }) => f.key), ['novedades'])
   // Solo tarjeta: nada de pagos que quedan pendientes (la plaza y el hueco caducarian antes de cobrar).
@@ -752,6 +754,17 @@ test('el mensual por ano adelantado: el precio de 10 meses, su lookup_key propio
   assert.equal(productFromLookupKey('cerebro-plan-pro-anual'), 'plan-pro')
   assert.equal(planProductName('plan-pro', 'year', 'en'), 'Digital Brain · Monthly Pro (paid yearly)')
   assert.equal(planProductName('plan-pro', 'month', 'es'), 'Cerebro Digital · Mensual Pro')
+  // Las modalidades, con su nombre propio (Sergio, 29-10-2026): el de los productos de Stripe, las
+  // facturas y los correos, como en la web. Los ids no cambian.
+  assert.deepEqual(
+    modalities.map((m) => productName(m.id, 'es')),
+    ['Cerebro Digital · Solista', 'Cerebro Digital · Banda', 'Cerebro Digital · Dúo', 'Cerebro Digital · Orquesta']
+  )
+  assert.deepEqual(
+    modalities.map((m) => productName(m.id, 'en')),
+    ['Digital Brain · Solo', 'Digital Brain · Band', 'Digital Brain · Duo', 'Digital Brain · Orchestra']
+  )
+  assert.deepEqual(modalities.map((m) => m.id), ['hazlo-tu', 'hazlo-tu-equipo', 'acompanado', 'acompanado-equipo'])
 
   const params = planSessionParams({
     siteUrl: 'https://pymaticlabs.com',

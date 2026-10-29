@@ -706,14 +706,14 @@
     "steps": [
       "The link to your member area, with your license, the downloads for Mac and Windows and your invoices.",
       "Your license, attached. Keep it: setup will ask you for it.",
-      "The terms you accepted and, with Guided, your first session appointment.",
+      "The terms you accepted and, with Duo and Orchestra, your first session appointment.",
       "The invoice, in a separate email."
     ],
     "subtitleManual": "In a few minutes you will get a welcome email with access to your member area. Your license follows in another email within a few hours.",
     "stepsManual": [
       "The link to your member area, with the downloads for Mac and Windows and, as soon as they are ready, your license and your invoices.",
       "Your license, in another email within a few hours. Keep it: setup will ask you for it.",
-      "The terms you accepted and, with Guided, your first session appointment.",
+      "The terms you accepted and, with Duo and Orchestra, your first session appointment.",
       "The invoice, in a separate email."
     ],
     "help": "Not arriving? Check your spam folder or write to info@pymaticlabs.com.",
@@ -1162,7 +1162,7 @@
     "sessions": {
       "title": "Setup sessions",
       "intro": "Two one-hour sessions by video call, with Eric or with Sergio, to get your Digital Brain set up. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Madrid time.",
-      "notGuided": "Setup sessions come with the Guided option. To get them, move to Guided by paying the difference: write to us at info@pymaticlabs.com.",
+      "notGuided": "Setup sessions come with Guided: Duo and Orchestra. To get them, move to Guided by paying the difference: write to us at info@pymaticlabs.com.",
       "bookedTitle": "Your sessions",
       "noneBooked": "You have no sessions booked yet.",
       "number": "Session {number}",

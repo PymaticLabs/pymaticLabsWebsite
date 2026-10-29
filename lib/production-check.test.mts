@@ -1,7 +1,7 @@
 import { test, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { formatReport, productionCheck, redact, type HealthReport } from './delivery/health.ts'
-import { WEBHOOK_EVENTS, isPlanProduct, launchCouponId, lookupKey, priceCents, type PlanPeriod, type ProductId } from './delivery/products.ts'
+import { WEBHOOK_EVENTS, isPlanProduct, launchCouponId, lookupKey, priceCents, productName, type PlanPeriod, type ProductId } from './delivery/products.ts'
 import { modalities, plans } from './offer.ts'
 
 // La comprobacion de produccion contra un fetch de mentira: Supabase, Stripe, Brevo, Holded,
@@ -62,7 +62,7 @@ interface World {
    * respetados; sin los anuales; sin esperar al final; subir sin cobrarlo al momento; o acabando los
    * meses incluidos al cambiar (end_trial, o sin poner).
    */
-  portal: 'ok' | 'monthly-only' | 'immediate' | 'prorations' | 'end-trial' | 'trial-unset'
+  portal: 'ok' | 'monthly-only' | 'immediate' | 'prorations' | 'end-trial' | 'trial-unset' | 'quantity'
   /** Lo que contesta VIES por el NIF-IVA de PymaticLabs: valido, no valido, caido o sin aceptar al solicitante. */
   vies: 'valid' | 'invalid' | 'down' | 'requester'
   /** Las ventas con el 21 % a la UE sin NIF-IVA que devuelve Supabase (base y fecha). */
@@ -71,6 +71,8 @@ interface World {
   pricingLinks: boolean
   /** El cupon de lanzamiento: del producto de su modalidad, o de otro (un producto duplicado por stripe-setup). */
   couponProduct: 'ok' | 'other'
+  /** El nombre de los productos en Stripe: el de la web, o el de antes (sin pasar otra vez stripe-setup). */
+  productNames: 'ok' | 'old'
 }
 
 function services(overrides: Partial<World> = {}) {
@@ -89,6 +91,7 @@ function services(overrides: Partial<World> = {}) {
     portal: 'ok',
     pricingLinks: true,
     couponProduct: 'ok',
+    productNames: 'ok',
     vies: 'valid',
     euSales: [],
     ...overrides,
@@ -155,7 +158,12 @@ function services(overrides: Partial<World> = {}) {
         // Como Stripe: solo los de los lookup_keys pedidos (lookup_keys[0]=...), como mucho 10.
         const keys = [...url.searchParams.entries()].filter(([k]) => k.startsWith('lookup_keys')).map(([, v]) => v)
         if (keys.length > 10) return json({ error: { message: 'lookup_keys: como mucho 10' } }, 400)
-        return json(list(prices.filter((p) => keys.includes(p.lookup_key))))
+        // Con expand[0]=data.product, el producto entero con su nombre (como Stripe).
+        const expandProduct = [...url.searchParams.entries()].some(([k, v]) => k.startsWith('expand') && v === 'data.product')
+        const found = prices.filter((p) => keys.includes(p.lookup_key))
+        if (!expandProduct) return json(list(found))
+        const named = (id: string) => (w.productNames === 'old' && id === 'prod_hazlo-tu' ? 'Cerebro Digital · Hazlo tú' : productName(id.replace(/^prod_/, '').replace(/_otro$/, ''), 'es'))
+        return json(list(found.map((p) => ({ ...p, product: { id: p.product, object: 'product', name: named(p.product) } }))))
       }
       if (path.startsWith('/v1/coupons/')) {
         const id = decodeURIComponent(path.split('/').pop()!)
@@ -167,14 +175,17 @@ function services(overrides: Partial<World> = {}) {
         return json({ id, object: 'coupon', amount_off: cents.list - cents.launch!, valid: true, times_redeemed: 1, max_redemptions: 10, ...(appliesTo ? { applies_to: { products } } : {}) })
       }
       if (path === '/v1/billing_portal/configurations') {
-        // Un producto por plan, con su precio del mes y el del ano (los que crea stripe-setup).
+        // Un producto por plan, con su precio del mes y el del ano (los que crea stripe-setup). Como
+        // Stripe (API 2025-09-30.clover): los productos solo llegan si se piden con expand.
+        const expanded = [...url.searchParams.entries()].some(([k, v]) => k.startsWith('expand') && v === 'data.features.subscription_update.products')
         const products = plans.map((p) => ({
           product: `prod_plan-${p.id}`,
           prices: prices.filter((x) => x.lookup_key.startsWith(`cerebro-plan-${p.id}`) && (w.portal !== 'monthly-only' || x.recurring?.interval === 'month')).map((x) => x.id),
+          adjustable_quantity: { enabled: w.portal === 'quantity', maximum: null, minimum: 1 },
         }))
         const conditions = w.portal === 'immediate' ? [] : [{ type: 'decreasing_item_amount' }, { type: 'shortening_interval' }]
         const trial = w.portal === 'end-trial' ? { trial_update_behavior: 'end_trial' } : w.portal === 'trial-unset' ? {} : { trial_update_behavior: 'continue_trial' }
-        const features = { subscription_update: { enabled: true, default_allowed_updates: ['price'], proration_behavior: w.portal === 'prorations' ? 'create_prorations' : 'always_invoice', products, schedule_at_period_end: { conditions }, ...trial } }
+        const features = { subscription_update: { enabled: true, default_allowed_updates: ['price'], proration_behavior: w.portal === 'prorations' ? 'create_prorations' : 'always_invoice', ...(expanded ? { products } : {}), schedule_at_period_end: { conditions }, ...trial } }
         return json(list([{ id: 'bpc_1', object: 'billing_portal.configuration', active: true, metadata: { cerebro: 'portal' }, features }]))
       }
     }
@@ -317,6 +328,16 @@ test('comprobacion de produccion: el pago anual del mensual, con sus precios en 
   const prorations = find(await productionCheck(ENV, at), 'Portal de cliente')
   assert.equal(prorations.status, 'falta')
   assert.match(prorations.detail!, /subir de plan no se cobra al momento \(proration_behavior create_prorations: tiene que ser always_invoice\)/)
+  // Un producto con el nombre de antes: es el que ve el cliente en la pagina de pago.
+  services({ productNames: 'old' })
+  const oldName = find(await productionCheck(ENV, at), 'Precio cerebro-hazlo-tu')
+  assert.equal(oldName.status, 'falta')
+  assert.match(oldName.detail!, /el producto se llama «Cerebro Digital · Hazlo tú» y en la web «Cerebro Digital · Solista»/)
+  // Con la cantidad cambiable, el cliente podria pagar el plan dos veces.
+  services({ portal: 'quantity' })
+  const quantity = find(await productionCheck(ENV, at), 'Portal de cliente')
+  assert.equal(quantity.status, 'falta')
+  assert.match(quantity.detail!, /deja cambiar la cantidad/)
   services()
   assert.equal(find(await productionCheck(ENV, at), 'Portal de cliente').status, 'ok')
   // Los botones de /precios llevan a /comprar (que pide el NIF): con la venta abierta, cuentan.
