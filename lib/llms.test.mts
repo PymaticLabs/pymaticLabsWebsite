@@ -27,15 +27,17 @@ test('llms.txt: precios y planes de lib/offer.ts, sin huecos', () => {
 })
 
 test('llms.txt: el Hazlo tu sin sesiones; el Acompanado no monta procedimientos ni carga documentos', () => {
+  // Cada modalidad, por el nombre que le dan los textos (en y, entre parentesis, es).
+  const modality = (id: string) => line(`- ${messages('en').offer.modalities[id].name} (${messages('es').offer.modalities[id].name})`)
   assert.doesNotMatch(txt, /All include two/i)
   assert.doesNotMatch(txt, /processes set up and documents loaded/i)
-  assert.match(line('- Do it yourself (Hazlo tú)'), /no setup sessions/)
-  assert.match(line('- Do it yourself, team'), /no setup sessions/)
-  const guided = line('- Guided (Acompañado)')
+  assert.match(modality('hazlo-tu'), /no setup sessions/)
+  assert.match(modality('hazlo-tu-equipo'), /no setup sessions/)
+  const guided = modality('acompanado')
   assert.match(guided, /2 one-hour video calls/)
   assert.match(guided, /does not set up the customer's own procedures or load the customer's documents/)
   assert.match(guided, /1 month of the Essential monthly plan included/)
-  assert.match(line('- Do it yourself (Hazlo tú)'), /no monthly plan included/)
+  assert.match(modality('hazlo-tu'), /no monthly plan included/)
 })
 
 test('llms.txt: sin Pack Espana (socios, 29-10-2026); el A medida, con el plan Esencial; las sesiones, con la prima en persona', () => {

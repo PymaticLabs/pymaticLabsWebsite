@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
 import { Mail, MapPin } from 'lucide-react'
+import { PymaticMark } from '@/components/pymatic-mark'
 import { localePath } from '@/lib/i18n'
 import { zoneAvailable } from '@/lib/delivery/config'
 
@@ -30,7 +31,8 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
           <div className="space-y-3">
-            <Link href={localePath(locale)} className="inline-flex min-h-11 items-center gap-2">
+            <Link href={localePath(locale)} className="inline-flex min-h-11 items-center gap-2.5">
+              <PymaticMark className="h-8 w-auto text-white" />
               <span className="text-lg font-bold">Pymatic Labs</span>
             </Link>
             <p className="text-sm text-white/60">{t('tagline')}</p>

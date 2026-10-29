@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CerebroIcon } from '@/components/cerebro-icon'
 import HeroChat, { type HeroChatTexts } from '@/components/home/hero-chat'
+import { LaunchBadge } from '@/components/pricing/launch-offer'
 import { formatPrice, modalities } from '@/lib/offer'
 import { localePath } from '@/lib/i18n'
 import { hilbertPath } from '@/lib/hilbert'
@@ -13,12 +14,12 @@ import { hilbertPath } from '@/lib/hilbert'
 const THREAD = hilbertPath(5, 35)
 
 // Portada al estilo de una pagina de producto: el nombre, un titular corto y enorme que entra palabra a
-// palabra, una linea que lo explica, el precio y, debajo, el producto funcionando: la conversacion.
-// El «desde», el de lanzamiento mientras queden plazas; despues, el de lista.
-export default function Hero({ launchOpen = true }: { launchOpen?: boolean }) {
+// palabra, una linea que lo explica, el precio con las licencias de lanzamiento que quedan y, debajo, el
+// producto funcionando: la conversacion. El «desde», el de lanzamiento mientras queden; despues, el de lista.
+export default function Hero({ launchLeft = null }: { launchLeft?: number | null }) {
   const t = useTranslations('home')
   const locale = useLocale()
-  const from = Math.min(...modalities.map((m) => (launchOpen ? m.launchPrice : m.listPrice)))
+  const from = Math.min(...modalities.map((m) => (launchLeft !== 0 ? m.launchPrice : m.listPrice)))
   const chat: HeroChatTexts = {
     caption: t('chat.caption'),
     name: t('chat.name'),
@@ -75,9 +76,10 @@ export default function Hero({ launchOpen = true }: { launchOpen?: boolean }) {
             <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </Link>
         </div>
-        <p className="mt-6 text-[15px] text-muted motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both]" style={{ animationDelay: '0.7s' }}>
-          {t('hero.price', { price: formatPrice(from, locale) })}
-        </p>
+        <div className="mt-6 flex flex-col items-center gap-4 motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both]" style={{ animationDelay: '0.7s' }}>
+          <p className="text-[15px] text-muted">{t('hero.price', { price: formatPrice(from, locale) })}</p>
+          <LaunchBadge left={launchLeft} />
+        </div>
       </div>
 
       {/* El producto: crece un poco al subirlo a la vista (donde el navegador lo sabe hacer, ver .scroll-zoom) */}
