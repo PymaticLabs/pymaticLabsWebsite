@@ -14,9 +14,9 @@ import { generatePageMetadata } from '@/lib/metadata'
 import { getOrganizationSchema, getProductSchema, getWebSiteSchema } from '@/lib/schemas'
 import { offerStatus } from './precios/offer-status'
 
-// Rehecha cada 5 minutos, como /precios: sin plazas de lanzamiento, el «desde», la tarjeta de precios
-// y los datos para buscadores dan el precio de lista (oferta v1.9: no se promete el de lanzamiento a
-// partir del cliente 11).
+// Rehecha cada 5 minutos, como /precios: la portada y el resumen de precios dicen cuantas licencias de
+// lanzamiento quedan y, sin ninguna, el «desde», la tarjeta de precios y los datos para buscadores dan
+// el precio de lista (oferta v1.9: no se promete el de lanzamiento a partir del cliente 11).
 export const revalidate = 300
 
 export async function generateMetadata({
@@ -45,7 +45,7 @@ export default async function HomePage({
   setRequestLocale(locale)
   const tMeta = await getTranslations({ locale, namespace: 'meta' })
   const t = await getTranslations({ locale, namespace: 'home.manifesto' })
-  const { launchOpen } = await offerStatus()
+  const { launchOpen, launchLeft } = await offerStatus()
   const schemas = [
     getOrganizationSchema(),
     getWebSiteSchema(),
@@ -61,13 +61,13 @@ export default async function HomePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <Hero launchOpen={launchOpen} />
+      <Hero launchLeft={launchLeft} />
       <Manifesto problem={t('problem')} promise={t('promise')} />
       <Story />
       <Bento />
       <Privacy />
       <Steps />
-      <PricingTeaser launchOpen={launchOpen} />
+      <PricingTeaser launchLeft={launchLeft} />
       <Faq />
       <Closing />
       <Reveals />

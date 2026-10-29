@@ -78,7 +78,8 @@ app/
 components/
   home/                 # Home: chat que se escribe solo, párrafo que se enciende al bajar, tareas con el chat fijo, baldosas, privacidad, pasos, precios, dudas y cierre
   cerebro-icon.tsx      # El sello del Cerebro Digital (el mismo trazo que public/icon.svg)
-  pricing/              # Tarjeta de modalidad
+  pymatic-mark.tsx      # El símbolo de Pymatic Labs (las dos piezas, negra y azul), en la barra y el pie
+  pricing/              # Las dos familias (en solitario y acompañado), la tarjeta de cada modalidad y las licencias de lanzamiento que quedan
   zone/                 # Piezas de la zona de socio
   ui/                   # Primitivas shadcn/ui
 content/legal/{es,en}/  # Textos largos en Markdown

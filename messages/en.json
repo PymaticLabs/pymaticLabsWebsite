@@ -6,15 +6,15 @@
     "howTitle": "Digital Brain features",
     "howDescription": "Everything the Digital Brain does and what you need to use it, at a glance.",
     "pricingTitle": "Digital Brain pricing",
-    "pricingDescription": "One-off payment and a perpetual license per company. Do it yourself from €500 (launch price), excluding VAT.",
+    "pricingDescription": "One-off payment and a perpetual license per company. From €500 (launch price), excluding VAT.",
     "securityTitle": "Security and privacy",
     "securityDescription": "Your brain lives on your computers. Our privacy promise, what is behind it and the Digital Brain vulnerability policy.",
     "contactTitle": "Contact",
     "contactDescription": "Tell us what your company does and we will tell you which Digital Brain option fits.",
-    "pricingDescriptionList": "One-off payment and a perpetual license per company. Do it yourself from {price}, excluding VAT."
+    "pricingDescriptionList": "One-off payment and a perpetual license per company. From {price}, excluding VAT."
   },
   "nav": {
-    "home": "Digital Brain, by Pymatic Labs: home",
+    "home": "Pymatic Labs, Digital Brain: home",
     "brand": "Digital Brain",
     "comoFunciona": "Features",
     "precios": "Pricing",
@@ -207,12 +207,6 @@
       "title": "Pay once.",
       "titleAccent": "It is yours.",
       "subtitle": "A license for good, in your company’s name.",
-      "launch": "Launch price for the first 10 customers",
-      "texts": {
-        "hazlo-tu": "You set it up yourself, at your own pace, with the extension and the guides.",
-        "acompanado": "We leave it set up on your computers, in two video calls with Eric or Sergio."
-      },
-      "team": "With a team, up to 10 people: {price}",
       "cta": "See pricing",
       "more": "What is included",
       "stats": [
@@ -468,30 +462,48 @@
     "link": "See security and privacy"
   },
   "offer": {
-    "launch": "Launch",
     "list": "List price",
     "noVat": "excl. VAT",
     "oneOff": "one-off payment",
-    "launchNote": "Launch price for the first 10 customers. After that, the list price applies.",
+    "save": "You save {amount}",
+    "launchOffer": {
+      "left": "{left, plural, one {<b>#</b> of 10 licenses left} other {<b>#</b> of 10 licenses left}} at the launch price.",
+      "unknown": "The first 10 licenses, at the launch price.",
+      "text": "You save {min} to {max} on the list price. Once all 10 are sold, the list price applies.",
+      "sold": "{count, plural, one {# sold} other {# sold}}",
+      "free": "{count, plural, one {# available} other {# available}}",
+      "badge": "{left, plural, one {# of 10 licenses left} other {# of 10 licenses left}} at the launch price",
+      "badgeUnknown": "Launch price for the first 10 licenses"
+    },
+    "families": {
+      "solo": {
+        "name": "On your own",
+        "text": "You set it up yourself, at your own pace, with the extension and the guides."
+      },
+      "guided": {
+        "name": "Guided",
+        "text": "We leave it set up on your computers, in two video calls with Eric or Sergio."
+      }
+    },
     "modalities": {
       "hazlo-tu": {
-        "name": "Do it yourself",
-        "tagline": "You set it up.",
+        "name": "Solo",
+        "tagline": "You, with the guides.",
         "people": "1 person"
       },
       "hazlo-tu-equipo": {
-        "name": "Do it yourself, team",
-        "tagline": "You set it up, for your team.",
+        "name": "Band",
+        "tagline": "Your team, with the guides.",
         "people": "Up to 10 people"
       },
       "acompanado": {
-        "name": "Guided",
-        "tagline": "We leave it set up on your computers.",
+        "name": "Duo",
+        "tagline": "You, with us.",
         "people": "1 person"
       },
       "acompanado-equipo": {
-        "name": "Guided, team",
-        "tagline": "We leave it set up, with your team added.",
+        "name": "Orchestra",
+        "tagline": "Your team, with us.",
         "people": "Up to 10 people"
       }
     },
@@ -542,7 +554,7 @@
     "sessions": {
       "title": "Setup and guarantee",
       "items": [
-        "With Guided we set it up for you: two 1-hour video calls, with Eric or Sergio, Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00 (Madrid time). You pick the first one when you buy. In person, only at weekends and with a surcharge: travel at cost plus 50% of the one-off payment.",
+        "With Duo and Orchestra we set it up for you: two 1-hour video calls, with Eric or Sergio, Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00 (Madrid time). You pick the first one when you buy. In person, only at weekends and with a surcharge: travel at cost plus 50% of the one-off payment.",
         "If the brain cannot be set up because of a product fault, we refund you. Ask in writing within 14 days of purchase.",
         "It is not a satisfaction guarantee. A missed session is lost.",
         "Setting it up yourself and want help? Move to Guided by paying the difference."
@@ -637,7 +649,7 @@
       ],
       "premiumNote": "The monthly session is for reviewing what has changed in the company and spotting automation opportunities. If a candidate is identified in the session that fits within the scope of the existing corpus and is classed as simple, it is implemented within the plan. Those of medium or higher complexity, or that require new systems or integrations, are quoted separately. At most one implemented per month, not cumulative.",
       "securityNote": "Security fixes are free during your version’s support period, with or without a monthly plan.",
-      "included": "With a team, 3 months of Pro included. Guided without a team, 1 month of Essential.",
+      "included": "Band and Orchestra come with 3 months of Pro. Duo comes with 1 month of Essential.",
       "perYear": "or {price} a year",
       "yes": "Included",
       "no": "Not included",
@@ -657,35 +669,7 @@
     },
     "markets": "21% VAT is added in Spain (mainland and Balearic Islands) and from other EU countries without a valid VAT number. No Spanish VAT for EU businesses with a valid VAT number, or for businesses in the Canary Islands, Ceuta, Melilla or outside the EU.",
     "b2b": "Sold to businesses and professionals in any country, in euros.",
-    "faqTitle": "Questions about buying",
-    "faq": [
-      {
-        "q": "What is the license?",
-        "a": "A file in your company’s name that the brain needs to be set up. It is for good."
-      },
-      {
-        "q": "Does it need the internet?",
-        "a": "The license does not: it is checked on your computer. There is no remote switch."
-      },
-      {
-        "q": "Is Guided a number of hours?",
-        "a": "No, it is an outcome: we leave the brain set up on your computers, with automation ideas for your company. Custom procedures are quoted separately."
-      },
-      {
-        "q": "Can I start alone and upgrade to a team?",
-        "a": "Yes. Write to us: you pay the difference between the team price at that time and what you paid, and we send you a new license."
-      },
-      {
-        "q": "What if I drop the monthly plan?",
-        "a": "The brain keeps working. You lose maintenance and support: what is new in upcoming versions does not switch on. Security fixes still reach you for free during your version’s support period."
-      },
-      {
-        "q": "Do prices include VAT?",
-        "a": "No. VAT is determined before you pay, from your company’s country and tax ID; an EU VAT number is checked in VIES. The invoice shows the VAT separately or, without Spanish VAT, carries the note that explains why."
-      }
-    ],
-    "launchOver": "The 10 launch-price places have been taken: list prices apply.",
-    "modalitiesTitle": "The four options"
+    "launchOver": "The 10 launch-price places have been taken: list prices apply."
   },
   "security": {
     "eyebrow": "Security and privacy",
@@ -829,10 +813,10 @@
     "phone": "Phone (optional)",
     "interest": "What are you interested in? (optional)",
     "interestOptions": {
-      "hazlo-tu": "Do it yourself",
-      "hazlo-tu-equipo": "Do it yourself, team",
-      "acompanado": "Guided",
-      "acompanado-equipo": "Guided, team",
+      "hazlo-tu": "Solo (on your own, 1 person)",
+      "hazlo-tu-equipo": "Band (on your own, up to 10 people)",
+      "acompanado": "Duo (guided, 1 person)",
+      "acompanado-equipo": "Orchestra (guided, up to 10 people)",
       "a-medida": "Custom",
       "no-lo-se": "Not sure yet"
     },

@@ -170,7 +170,6 @@ test('NIF, solo en el campo del NIF espanol de /comprar; a las empresas de fuera
   }
   assert.equal(str(en, 'purchase.taxId.label'), 'Company tax ID (Spanish NIF)')
   assert.equal(str(es, 'purchase.otherTaxId.label'), 'Identificación fiscal de la empresa')
-  assert.match(str(es, 'pricing.faq.5.a'), /con el país y la identificación fiscal de tu empresa/)
 })
 
 test('el IVA de cada caso, una vez por pantalla: en /precios, bajo las modalidades; en /comprar, con el precio', () => {
@@ -185,13 +184,11 @@ test('el IVA de cada caso, una vez por pantalla: en /precios, bajo las modalidad
     str(en, 'pricing.markets'),
     '21% VAT is added in Spain (mainland and Balearic Islands) and from other EU countries without a valid VAT number. No Spanish VAT for EU businesses with a valid VAT number, or for businesses in the Canary Islands, Ceuta, Melilla or outside the EU.'
   )
-  // /precios: el 21 % y los territorios, solo en esa linea. El titulo y las tarjetas dicen «sin IVA»; la
-  // duda del IVA, como se decide (antes de pagar, con el VIES) y que va en la factura.
+  // /precios: el 21 % y los territorios, solo en esa linea. El titulo y las tarjetas dicen «sin IVA». Las
+  // preguntas de /precios (con la del IVA) se quitaron (Sergio, 29-10-2026): como se decide, en /comprar.
   const cases = (o: Messages) => strings(get(o, 'pricing')).filter(([, v]) => /21\s?%|Canari|Ceuta|Melilla|Balear/.test(v)).map(([k]) => k)
   assert.deepEqual(cases(es), ['markets'])
   assert.deepEqual(cases(en), ['markets'])
-  assert.match(str(es, 'pricing.faq.5.a'), /^No\. El IVA se decide antes de pagar, con el país y la identificación fiscal de tu empresa; un NIF-IVA de la UE se comprueba en el VIES\./)
-  assert.match(str(en, 'pricing.faq.5.a'), /^No\. VAT is determined before you pay, from your company’s country and tax ID; an EU VAT number is checked in VIES\./)
   // /comprar: el precio (price o, sin plazas, priceList: se ve uno) dice cuando se suma el 21 %; lo demas
   // de la pagina que no es el formulario del pago, nada del IVA.
   for (const key of ['purchase.price', 'purchase.priceList']) {
@@ -288,21 +285,20 @@ test('la marca es Pymatic Labs (la razon social, PYMATICLABS, S.L.)', () => {
 })
 
 test('oferta: pasar a equipo se paga, la garantia es de montaje y la seguridad dura lo que el soporte de la version', () => {
-  // 14 y 86: la diferencia entre el precio con equipo y lo pagado.
-  assert.match(str(es, 'pricing.faq.3.a'), /pagas la diferencia/)
-  assert.match(str(en, 'pricing.faq.3.a'), /pay the difference/)
+  // 14 y 86: la diferencia entre el precio con equipo (o el acompanado) y lo pagado.
+  assert.match(str(es, 'pricing.sessions.items.3'), /pagando la diferencia/)
+  assert.match(str(en, 'pricing.sessions.items.3'), /paying the difference/)
   assert.match(str(es, 'zone.team.solo'), /pagando la diferencia/)
   // 49: de montaje, por un fallo del producto.
   assert.match(str(es, 'home.pricing.stats.1.text'), /garantía de montaje/)
   assert.match(str(en, 'home.pricing.stats.1.text'), /setup guarantee/)
   assert.ok((get(es, 'pricing.included') as string[]).includes('Garantía de montaje de 14 días'))
   // 16 y 91: gratis durante el periodo de soporte de la version, con o sin mensual.
-  for (const key of ['pricing.monthly.securityNote', 'pricing.faq.4.a', 'zone.home.monthly.security', 'zone.monthly.security']) {
+  for (const key of ['pricing.monthly.securityNote', 'zone.home.monthly.security', 'zone.monthly.security']) {
     assert.match(str(es, key), /periodo de soporte de (tu|su) versión/, key)
     assert.match(str(en, key), /support period/, key)
   }
   assert.match((get(es, 'pricing.included') as string[])[3], /soporte de tu versión/)
-  assert.match(str(es, 'pricing.faq.4.a'), /Pierdes el mantenimiento y el soporte/)
   // 54: los packs, aun por construir.
   assert.match(str(es, 'pricing.monthly.rows.5.label'), /\(en preparación\)$/)
   // Sin Pack Espana (socios, 29-10-2026): Aparte, solo el A medida, igual para todos. Los packs del

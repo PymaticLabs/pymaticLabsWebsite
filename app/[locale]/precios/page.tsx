@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Check, Minus } from 'lucide-react'
 import SectionHeader from '@/components/section-header'
-import ModalityCard from '@/components/pricing/modality-card'
-import FaqList from '@/components/faq-list'
+import PlanFamilies from '@/components/pricing/plan-families'
+import { LaunchOffer } from '@/components/pricing/launch-offer'
+import Reveals from '@/components/home/reveals'
 import { Button } from '@/components/ui/button'
 import { generatePageMetadata } from '@/lib/metadata'
 import { localePath } from '@/lib/i18n'
@@ -12,7 +13,7 @@ import { isCheckoutOpen } from '@/lib/checkout'
 import { CUSTOM_FROM_PRICE, formatPrice, modalities, plans, type Modality } from '@/lib/offer'
 import { formatMonthYear, offerStatus } from './offer-status'
 
-// Estatica, rehecha cada 5 minutos: lee si quedan plazas de lanzamiento (sin ninguna, solo el precio
+// Estatica, rehecha cada 5 minutos: lee cuantas plazas de lanzamiento quedan (sin ninguna, solo el precio
 // de lista) y hasta cuando tiene correcciones de seguridad la version que se vende (./offer-status.ts).
 export const revalidate = 300
 
@@ -47,43 +48,39 @@ export default async function PreciosPage({
   const included = t.raw('included') as string[]
   const sessions = t.raw('sessions.items') as string[]
   const rows = t.raw('monthly.rows') as { label: string; values: boolean[] }[]
-  const { launchOpen, security } = await offerStatus()
+  const { launchOpen, launchLeft, security } = await offerStatus()
 
   return (
     <>
       {/* El degradado deja ver el hilo del fondo (ver body::before en globals.css) */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent">
+      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent sm:pt-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
-
-          <div className="mb-8 rounded-2xl border border-brand/20 bg-surface p-5 sm:flex sm:items-center sm:justify-between gap-6">
-            <p className="font-semibold text-ink">{launchOpen ? tOffer('launchNote') : t('launchOver')}</p>
-            <ul className="mt-3 sm:mt-0 flex flex-wrap gap-x-5 gap-y-1">
-              <li className="text-sm text-muted">{t('includedTitle')}:</li>
-              {included.map((item) => (
-                <li key={item} className="flex items-center gap-1.5 text-sm text-ink">
-                  <Check className="h-4 w-4 text-brand" aria-hidden="true" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-balance text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h1>
+            <p className="mt-5 text-pretty text-xl leading-relaxed text-muted sm:text-2xl">{t('subtitle')}</p>
           </div>
 
-          {/* Del h1 a los h3 de las tarjetas, por un h2 (para quien navega por los titulos) */}
-          <h2 className="sr-only">{t('modalitiesTitle')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {modalities.map((modality) => (
-              <ModalityCard
-                key={modality.id}
-                modality={modality}
-                extras={t.raw(`extras.${modality.id}`) as string[]}
-                highlighted={modality.id === 'acompanado'}
-                launchOpen={launchOpen}
-              >
-                <BuyAction modality={modality} locale={locale} t={t} />
-              </ModalityCard>
+          {/* Cuantas de las 10 licencias de lanzamiento quedan; sin ninguna, una linea y el precio de lista */}
+          <LaunchOffer left={launchLeft} className="mx-auto mt-12 max-w-5xl sm:mt-16" />
+
+          <div className="mt-10 sm:mt-14">
+            <PlanFamilies
+              launchOpen={launchOpen}
+              extras={(modality) => t.raw(`extras.${modality.id}`) as string[]}
+              action={(modality) => <BuyAction modality={modality} locale={locale} t={t} />}
+            />
+          </div>
+
+          {/* Lo que llevan las cuatro, en una linea bajo las tarjetas */}
+          <ul className="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2">
+            <li className="text-sm text-muted">{t('includedTitle')}:</li>
+            {included.map((item) => (
+              <li key={item} className="flex items-center gap-1.5 text-sm text-ink">
+                <Check className="h-4 w-4 text-brand" aria-hidden="true" />
+                {item}
+              </li>
             ))}
-          </div>
+          </ul>
 
           <div className="mt-6 space-y-1 text-center text-sm text-muted">
             {!isCheckoutOpen() && <p className="font-medium text-ink">{t('comingSoonNote')}</p>}
@@ -222,10 +219,14 @@ export default async function PreciosPage({
         </div>
       </section>
 
-      <FaqList title={t('faqTitle')} items={t.raw('faq')} className="py-16 sm:py-20 bg-band" />
+      <Reveals />
     </>
   )
 }
+
+// En las tarjetas estrechas (cuatro en fila), un texto largo como «Elegir sesión y comprar» parte en dos
+// lineas en vez de salirse del boton.
+const BUY_BUTTON = 'h-auto min-h-11 w-full whitespace-normal py-2.5 text-balance'
 
 function BuyAction({
   modality,
@@ -244,7 +245,7 @@ function BuyAction({
     return (
       <div className="space-y-2">
         <p className="text-xs text-muted">{t('payWith.card')}</p>
-        <Button className="w-full" asChild>
+        <Button className={BUY_BUTTON} asChild>
           <Link href={localePath(locale, `/comprar/${modality.id}`)}>{modality.guided ? t('chooseSession') : t('buy')}</Link>
         </Button>
       </div>
@@ -254,10 +255,10 @@ function BuyAction({
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted">{t('payWith.card')}</p>
-      <Button className="w-full" variant="outline" disabled>
+      <Button className={BUY_BUTTON} variant="outline" disabled>
         {t('comingSoon')}
       </Button>
-      <Button className="w-full" asChild>
+      <Button className={BUY_BUTTON} asChild>
         <Link href={contactHref}>{t('notifyMe')}</Link>
       </Button>
     </div>

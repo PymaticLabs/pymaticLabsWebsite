@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import ThemeToggle from '@/components/theme-toggle'
-import { CerebroIcon } from '@/components/cerebro-icon'
+import { PymaticMark } from '@/components/pymatic-mark'
 import { ChevronDown, Download, KeyRound, LayoutGrid, LogOut, Menu, Receipt, UserRound, X } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -129,12 +129,12 @@ export default function Navbar({ zone }: { zone: boolean }) {
       )}
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* El producto, con su sello, y debajo quien lo hace. */}
+        {/* La empresa, con su simbolo, y debajo el producto. */}
         <Link href={localePath(locale)} onClick={closeMobile} className="flex min-h-11 items-center gap-2.5" aria-label={t('home')}>
-          <CerebroIcon className="h-9 w-9" />
+          <PymaticMark className="h-9 w-auto text-ink" />
           <span className="flex flex-col">
-            <span className="text-[17px] font-bold leading-tight text-ink">{t('brand')}</span>
-            <span className="text-xs leading-tight text-muted">Pymatic Labs</span>
+            <span className="text-[17px] font-bold leading-tight tracking-[-0.01em] text-ink">Pymatic Labs</span>
+            <span className="text-xs leading-tight text-muted">{t('brand')}</span>
           </span>
         </Link>
 
@@ -145,7 +145,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
               href={link.href}
               aria-current={isActive(link.href) ? 'page' : undefined}
               className={cn(
-                'text-sm transition-colors hover:text-brand',
+                'inline-flex min-h-11 items-center text-sm transition-colors hover:text-brand',
                 isActive(link.href) ? 'text-brand font-medium' : 'text-ink'
               )}
             >

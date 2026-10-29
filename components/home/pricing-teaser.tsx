@@ -1,18 +1,26 @@
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { Users } from 'lucide-react'
+import { User, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LaunchBadge } from '@/components/pricing/launch-offer'
 import { formatPrice, modalities } from '@/lib/offer'
 import { localePath } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 
-// Precios en corto, como se comparan dos modelos: las cuatro modalidades caben en dos caminos (lo montas tu
-// o te lo montamos), cada uno para una persona y, debajo, con equipo. Y tres datos grandes. El detalle y la
-// compra, en /precios. Sin plazas de lanzamiento (launchOpen false, como /precios), solo el precio de lista.
-export default function PricingTeaser({ launchOpen = true }: { launchOpen?: boolean }) {
+// Precios en corto, como se comparan dos modelos: las dos familias (en solitario, lo montas tu; acompanado,
+// te lo montamos), cada una con sus dos modalidades por su nombre (la de una persona y la de equipo), y
+// cuantas licencias de lanzamiento quedan. La acompanada, en el azul suave, como en /precios. Y tres datos
+// grandes. El detalle y la compra, en /precios. launchLeft: el de offerStatus (0: el precio de lista).
+const FAMILIES = [
+  { key: 'solo', guided: false },
+  { key: 'guided', guided: true },
+] as const
+
+export default function PricingTeaser({ launchLeft = null }: { launchLeft?: number | null }) {
   const t = useTranslations('home.pricing')
   const tOffer = useTranslations('offer')
   const locale = useLocale()
-  const paths = modalities.filter((m) => !m.team)
+  const launchOpen = launchLeft !== 0
   const stats = t.raw('stats') as { value: string; text: string }[]
 
   return (
@@ -23,48 +31,56 @@ export default function PricingTeaser({ launchOpen = true }: { launchOpen?: bool
             {t('title')} <span className="text-gradient">{t('titleAccent')}</span>
           </h2>
           <p className="mt-5 text-xl leading-relaxed text-muted sm:text-2xl">{t('subtitle')}</p>
-          {launchOpen && <p className="mt-7 inline-flex rounded-full bg-brand-soft px-4 py-1.5 text-sm font-semibold text-brand">{t('launch')}</p>}
+          <LaunchBadge left={launchLeft} className="mt-7" />
         </div>
 
         <div className="mx-auto mt-14 grid max-w-4xl gap-5 md:grid-cols-2">
-          {paths.map((modality, i) => {
-            const team = modalities.find((m) => m.team && m.guided === modality.guided)
-            return (
-              <div
-                key={modality.id}
-                data-reveal
-                style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}
-                className="flex flex-col items-center rounded-[28px] bg-surface px-7 py-10 text-center dark:bg-white/[0.04] dark:ring-1 dark:ring-white/10 sm:px-10 sm:py-12"
-              >
-                <h3 className="text-3xl font-bold tracking-[-0.03em] text-ink">{tOffer(`modalities.${modality.id}.name`)}</h3>
-                {/* Siempre el alto de tres lineas, para que los precios de las dos queden a la misma altura */}
-                <p className="mt-3 max-w-sm text-lg leading-snug text-muted md:min-h-[4.75rem]">{t(`texts.${modality.id}`)}</p>
-                <p className="mt-8 text-6xl font-bold tracking-[-0.045em] text-ink">{formatPrice(launchOpen ? modality.launchPrice : modality.listPrice, locale)}</p>
-                {/* Cada dato entero en su linea: en el movil no se parte por la mitad */}
-                <p className="mt-2 text-sm text-muted">
-                  {launchOpen && (
-                    <>
-                      <span className="whitespace-nowrap">
-                        {tOffer('list')}: <s>{formatPrice(modality.listPrice, locale)}</s>
-                      </span>{' '}
-                      ·{' '}
-                    </>
-                  )}
-                  <span className="whitespace-nowrap">{tOffer('oneOff')}</span> ·{' '}
-                  <span className="whitespace-nowrap">{tOffer(`modalities.${modality.id}.people`)}</span>
-                </p>
-                {team && (
-                  <p className="mt-6 text-base text-ink">
-                    <Users className="mr-2 inline h-5 w-5 align-[-4px] text-brand" aria-hidden="true" />
-                    {t('team', { price: formatPrice(launchOpen ? team.launchPrice : team.listPrice, locale) })}
-                  </p>
-                )}
-                <Button size="lg" className="mt-8 h-12 px-8 text-[17px]" asChild>
-                  <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
-                </Button>
-              </div>
-            )
-          })}
+          {FAMILIES.map(({ key, guided }, i) => (
+            <div
+              key={key}
+              data-reveal
+              style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}
+              className={cn(
+                'flex flex-col items-center rounded-[28px] px-5 py-10 text-center sm:px-8 sm:py-12',
+                guided ? 'bg-brand-soft ring-1 ring-inset ring-brand/15' : 'bg-surface dark:bg-white/[0.04] dark:ring-1 dark:ring-inset dark:ring-white/10'
+              )}
+            >
+              <h3 className="text-3xl font-bold tracking-[-0.03em] text-ink">{tOffer(`families.${key}.name`)}</h3>
+              {/* Siempre el alto de tres lineas, para que los precios de las dos queden a la misma altura */}
+              <p className="mt-3 max-w-sm text-pretty text-lg leading-snug text-muted md:min-h-[4.75rem]">{tOffer(`families.${key}.text`)}</p>
+              <dl className="mt-8 grid w-full grid-cols-2 gap-3">
+                {modalities
+                  .filter((modality) => modality.guided === guided)
+                  .map((modality) => {
+                    const PeopleIcon = modality.team ? Users : User
+                    return (
+                      <div key={modality.id} className="flex flex-col items-center">
+                        <dt className="text-xl font-bold tracking-[-0.02em] text-ink">{tOffer(`modalities.${modality.id}.name`)}</dt>
+                        <dd className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted sm:text-sm">
+                          <PeopleIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          {tOffer(`modalities.${modality.id}.people`)}
+                        </dd>
+                        <dd className="mt-3 text-[2rem] font-bold tabular-nums leading-none tracking-[-0.04em] text-ink sm:text-4xl">
+                          {formatPrice(launchOpen ? modality.launchPrice : modality.listPrice, locale)}
+                        </dd>
+                        {launchOpen && (
+                          <dd className="mt-1.5 text-sm text-muted">
+                            <span className="sr-only">{tOffer('list')}: </span>
+                            <s className="tabular-nums">{formatPrice(modality.listPrice, locale)}</s>
+                          </dd>
+                        )}
+                      </div>
+                    )
+                  })}
+              </dl>
+              <p className="mt-6 text-sm text-muted first-letter:uppercase">
+                {tOffer('oneOff')} · {tOffer('noVat')}
+              </p>
+              <Button size="lg" className="mt-8 h-12 px-8 text-[17px]" asChild>
+                <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
+              </Button>
+            </div>
+          ))}
         </div>
 
         <dl className="mx-auto mt-16 grid max-w-4xl gap-10 text-center sm:mt-20 sm:grid-cols-3">

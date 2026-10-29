@@ -24,13 +24,13 @@ export default function SectionHeader({
       )}
       <Heading
         className={cn(
-          'font-bold tracking-tight text-ink',
+          'text-balance font-bold tracking-tight text-ink',
           Heading === 'h1' ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'
         )}
       >
         {title}
       </Heading>
-      {subtitle && <p className="mt-4 text-lg text-body leading-relaxed">{subtitle}</p>}
+      {subtitle && <p className="mt-4 text-pretty text-lg text-body leading-relaxed">{subtitle}</p>}
     </div>
   )
 }

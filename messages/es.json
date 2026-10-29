@@ -6,15 +6,15 @@
     "howTitle": "Funciones del Cerebro Digital",
     "howDescription": "Todo lo que hace el Cerebro Digital y lo que necesitas para usarlo, de un vistazo.",
     "pricingTitle": "Precios del Cerebro Digital",
-    "pricingDescription": "Pago único y licencia perpetua por empresa. Hazlo tú desde 500 € (precio de lanzamiento), sin IVA.",
+    "pricingDescription": "Pago único y licencia perpetua por empresa. Desde 500 € (precio de lanzamiento), sin IVA.",
     "securityTitle": "Seguridad y privacidad",
     "securityDescription": "Tu cerebro vive en tus equipos. Nuestra promesa de privacidad, lo que hay detrás y la política de vulnerabilidades del Cerebro Digital.",
     "contactTitle": "Contacto",
     "contactDescription": "Cuéntanos qué hace tu empresa y te decimos qué modalidad del Cerebro Digital te encaja.",
-    "pricingDescriptionList": "Pago único y licencia perpetua por empresa. Hazlo tú desde {price}, sin IVA."
+    "pricingDescriptionList": "Pago único y licencia perpetua por empresa. Desde {price}, sin IVA."
   },
   "nav": {
-    "home": "Cerebro Digital, de Pymatic Labs: inicio",
+    "home": "Pymatic Labs, Cerebro Digital: inicio",
     "brand": "Cerebro Digital",
     "comoFunciona": "Funciones",
     "precios": "Precios",
@@ -207,12 +207,6 @@
       "title": "Pagas una vez.",
       "titleAccent": "Es tuyo.",
       "subtitle": "Licencia para siempre, a nombre de tu empresa.",
-      "launch": "Precio de lanzamiento para los 10 primeros clientes",
-      "texts": {
-        "hazlo-tu": "Lo montas tú, a tu ritmo, con la extensión y las guías.",
-        "acompanado": "Te lo dejamos montado en tus equipos, en dos videollamadas con Eric o con Sergio."
-      },
-      "team": "Con equipo, hasta 10 personas: {price}",
       "cta": "Ver precios",
       "more": "Qué incluye",
       "stats": [
@@ -468,30 +462,48 @@
     "link": "Ver seguridad y privacidad"
   },
   "offer": {
-    "launch": "Lanzamiento",
     "list": "Precio de lista",
     "noVat": "sin IVA",
     "oneOff": "pago único",
-    "launchNote": "Precio de lanzamiento para los 10 primeros clientes. Después, rige el de lista.",
+    "save": "Ahorras {amount}",
+    "launchOffer": {
+      "left": "{left, plural, one {Queda <b>#</b> de 10 licencias} other {Quedan <b>#</b> de 10 licencias}} a precio de lanzamiento.",
+      "unknown": "Las 10 primeras licencias, a precio de lanzamiento.",
+      "text": "Ahorras de {min} a {max} sobre el precio de lista. Cuando se vendan las 10, rige el de lista.",
+      "sold": "{count, plural, one {# vendida} other {# vendidas}}",
+      "free": "{count, plural, one {# libre} other {# libres}}",
+      "badge": "{left, plural, one {Queda # de 10 licencias} other {Quedan # de 10 licencias}} a precio de lanzamiento",
+      "badgeUnknown": "Precio de lanzamiento para las 10 primeras licencias"
+    },
+    "families": {
+      "solo": {
+        "name": "En solitario",
+        "text": "Lo montas tú, a tu ritmo, con la extensión y las guías."
+      },
+      "guided": {
+        "name": "Acompañado",
+        "text": "Te lo dejamos montado en tus equipos, en dos videollamadas con Eric o con Sergio."
+      }
+    },
     "modalities": {
       "hazlo-tu": {
-        "name": "Hazlo tú",
-        "tagline": "Lo montas tú.",
+        "name": "Solista",
+        "tagline": "Tú, con las guías.",
         "people": "1 persona"
       },
       "hazlo-tu-equipo": {
-        "name": "Hazlo tú con equipo",
-        "tagline": "Lo montas tú, para tu equipo.",
+        "name": "Banda",
+        "tagline": "Tu equipo, con las guías.",
         "people": "Hasta 10 personas"
       },
       "acompanado": {
-        "name": "Acompañado",
-        "tagline": "Te lo dejamos montado en tus equipos.",
+        "name": "Dúo",
+        "tagline": "Tú, con nosotros.",
         "people": "1 persona"
       },
       "acompanado-equipo": {
-        "name": "Acompañado con equipo",
-        "tagline": "Te lo dejamos montado, con tu equipo dado de alta.",
+        "name": "Orquesta",
+        "tagline": "Tu equipo, con nosotros.",
         "people": "Hasta 10 personas"
       }
     },
@@ -542,7 +554,7 @@
     "sessions": {
       "title": "Montaje y garantía",
       "items": [
-        "En el Acompañado lo montamos nosotros: dos videollamadas de 1 hora, con Eric o con Sergio, de lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00 (hora de Madrid). La primera la eliges al comprar. En persona, solo en fin de semana y con prima: el viaje, a lo que cueste, más el 50 % del pago único.",
+        "En Dúo y Orquesta lo montamos nosotros: dos videollamadas de 1 hora, con Eric o con Sergio, de lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00 (hora de Madrid). La primera la eliges al comprar. En persona, solo en fin de semana y con prima: el viaje, a lo que cueste, más el 50 % del pago único.",
         "Si el cerebro no se puede montar por un fallo del producto, te devolvemos el dinero. Lo pides por escrito en los 14 días siguientes a la compra.",
         "No es una garantía de satisfacción. Si faltas a una sesión, se pierde.",
         "¿Lo montas tú y quieres ayuda? Pasas al Acompañado pagando la diferencia."
@@ -637,7 +649,7 @@
       ],
       "premiumNote": "La sesión mensual sirve para revisar qué ha cambiado en la empresa y detectar oportunidades de automatización. Si en la sesión se identifica una candidata que encaje en el alcance del corpus existente y clasifique como sencilla, se implementa dentro del plan. Las de complejidad media o superior, o las que requieran sistemas o integraciones nuevos, se presupuestan aparte. Máximo una implementada al mes, no acumulable.",
       "securityNote": "Las correcciones de seguridad son gratis durante el periodo de soporte de tu versión, con o sin mensual.",
-      "included": "Con equipo, 3 meses de Pro incluidos. Acompañado sin equipo, 1 mes de Esencial.",
+      "included": "Banda y Orquesta, con 3 meses de Pro incluidos. Dúo, con 1 mes de Esencial.",
       "perYear": "o {price} al año",
       "yes": "Incluido",
       "no": "No incluido",
@@ -657,35 +669,7 @@
     },
     "markets": "Se suma el 21 % de IVA en España (península y Baleares) y desde otro país de la UE sin NIF-IVA válido. Sin IVA español: empresas de la UE con NIF-IVA válido, de Canarias, Ceuta y Melilla, y de fuera de la UE.",
     "b2b": "Venta a empresas y profesionales de cualquier país, en euros.",
-    "faqTitle": "Dudas sobre la compra",
-    "faq": [
-      {
-        "q": "¿Qué es la licencia?",
-        "a": "Un fichero a nombre de tu empresa que necesita el cerebro para montarse. Es para siempre."
-      },
-      {
-        "q": "¿Necesita internet?",
-        "a": "La licencia no: se comprueba en tu equipo. No hay ningún interruptor a distancia."
-      },
-      {
-        "q": "¿El Acompañado son horas?",
-        "a": "No, es un resultado: te dejamos el cerebro montado en tus equipos, con ideas de automatizaciones para tu empresa. Los procedimientos a medida se presupuestan aparte."
-      },
-      {
-        "q": "¿Puedo empezar solo y ampliar a equipo?",
-        "a": "Sí. Escríbenos: pagas la diferencia entre el precio con equipo de ese momento y lo que pagaste, y te pasamos una licencia nueva."
-      },
-      {
-        "q": "¿Y si dejo el mensual?",
-        "a": "El cerebro sigue funcionando. Pierdes el mantenimiento y el soporte: lo nuevo de las próximas versiones no se enciende. Las correcciones de seguridad te siguen llegando gratis durante el periodo de soporte de tu versión."
-      },
-      {
-        "q": "¿Los precios llevan IVA?",
-        "a": "No. El IVA se decide antes de pagar, con el país y la identificación fiscal de tu empresa; un NIF-IVA de la UE se comprueba en el VIES. La factura lo desglosa o, sin IVA español, lleva la mención que lo explica."
-      }
-    ],
-    "launchOver": "Las 10 plazas del precio de lanzamiento ya se han cubierto: rige el precio de lista.",
-    "modalitiesTitle": "Las cuatro modalidades"
+    "launchOver": "Las 10 plazas del precio de lanzamiento ya se han cubierto: rige el precio de lista."
   },
   "security": {
     "eyebrow": "Seguridad y privacidad",
@@ -829,10 +813,10 @@
     "phone": "Teléfono (opcional)",
     "interest": "¿Qué te interesa? (opcional)",
     "interestOptions": {
-      "hazlo-tu": "Hazlo tú",
-      "hazlo-tu-equipo": "Hazlo tú con equipo",
-      "acompanado": "Acompañado",
-      "acompanado-equipo": "Acompañado con equipo",
+      "hazlo-tu": "Solista (en solitario, 1 persona)",
+      "hazlo-tu-equipo": "Banda (en solitario, hasta 10 personas)",
+      "acompanado": "Dúo (acompañado, 1 persona)",
+      "acompanado-equipo": "Orquesta (acompañado, hasta 10 personas)",
       "a-medida": "A medida",
       "no-lo-se": "Aún no lo sé"
     },
