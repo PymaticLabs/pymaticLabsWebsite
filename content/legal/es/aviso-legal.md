@@ -11,7 +11,7 @@ En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios
 
 ## 2. Objeto
 
-Este aviso legal regula el uso del sitio web pymaticlabs.com, en el que Pymatic Labs presenta y vende el Cerebro Digital. La venta se dirige solo a empresas y profesionales, y se rige por las condiciones de uso y venta que se aceptan al comprar.
+Este aviso legal regula el uso del sitio web pymaticlabs.com, en el que Pymatic Labs presenta y vende el Cerebro Digital. La venta se dirige solo a empresas y profesionales, para su actividad, y se rige por las [condiciones de uso y venta](/condiciones) que se aceptan al comprar.
 
 ## 3. Uso del sitio web
 
@@ -27,8 +27,8 @@ Pymatic Labs procura que la información del sitio sea correcta y esté al día,
 
 ## 6. Protección de datos y cookies
 
-El tratamiento de los datos personales de quien usa este sitio se explica en la política de privacidad de la web, y el uso de cookies, en la política de cookies.
+El tratamiento de los datos personales de quien usa este sitio se explica en la [política de privacidad de la web](/politica-privacidad), y el uso de cookies y del almacenamiento del navegador, en la [política de cookies](/politica-cookies).
 
 ## 7. Ley aplicable y jurisdicción
 
-Este aviso legal se rige por la ley española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de Castellón de la Plana, salvo que la ley disponga otro fuero.
+Este aviso legal se rige por la ley española. Para las controversias sobre el uso de este sitio web, las partes se someten a los juzgados y tribunales de Castellón de la Plana, salvo que la ley disponga otro fuero. Las de la compra se rigen por la cláusula 18 de las [condiciones de uso y venta](/condiciones).

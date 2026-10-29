@@ -64,7 +64,7 @@ app/
   [locale]/
     page.tsx            # Home
     funciones/          # Funciones y especificaciones
-    precios/            # Modalidades, mensual, Pack España y A medida
+    precios/            # Modalidades, mensual y A medida
     seguridad/          # Promesa de privacidad y política de vulnerabilidades
     contacto/
     zona/               # Zona de socio: entrar, licencia, descargas, sesiones, equipo, mensual y facturas

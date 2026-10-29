@@ -8,10 +8,12 @@ interface ModalityCardProps {
   /** En la pagina de precios se ven los extras de cada modalidad. */
   extras?: string[]
   highlighted?: boolean
+  /** Si quedan plazas de lanzamiento: sin ninguna, solo el precio de lista (oferta v1.9). */
+  launchOpen?: boolean
   children?: React.ReactNode
 }
 
-export default function ModalityCard({ modality, extras, highlighted, children }: ModalityCardProps) {
+export default function ModalityCard({ modality, extras, highlighted, launchOpen = true, children }: ModalityCardProps) {
   const t = useTranslations('offer')
   const locale = useLocale()
 
@@ -32,16 +34,20 @@ export default function ModalityCard({ modality, extras, highlighted, children }
       </p>
 
       <div className="mt-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-brand">{t('launch')}</p>
+        {launchOpen && <p className="text-xs font-semibold uppercase tracking-wider text-brand">{t('launch')}</p>}
         <p className="mt-1 flex items-baseline gap-2">
           <span className="text-4xl font-bold tracking-tight text-ink">
-            {formatPrice(modality.launchPrice, locale)}
+            {formatPrice(launchOpen ? modality.launchPrice : modality.listPrice, locale)}
           </span>
           <span className="text-sm text-muted">{t('noVat')}</span>
         </p>
-        <p className="mt-1 text-sm text-muted">
-          {t('list')}: <s>{formatPrice(modality.listPrice, locale)}</s> · {t('oneOff')}
-        </p>
+        {launchOpen ? (
+          <p className="mt-1 text-sm text-muted">
+            {t('list')}: <s>{formatPrice(modality.listPrice, locale)}</s> · {t('oneOff')}
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-muted first-letter:uppercase">{t('oneOff')}</p>
+        )}
       </div>
 
       {extras && (

@@ -5,11 +5,12 @@
 //
 // Y la lista de anuladas para el esqueleto: licencias y claves que el cerebro debe rechazar.
 
+import { addMonths } from '../license.ts'
 import { compareVersions } from './adapters/memory-repository.ts'
 import { fingerprint } from './limits.ts'
-import { sha256Hex } from './util.ts'
+import { madridDate, sha256Hex } from './util.ts'
 import type { Delivery } from './container.ts'
-import type { NewJob, VersionFileKind } from './types.ts'
+import type { NewJob, Version, VersionFileKind } from './types.ts'
 
 const VERSION_RE = /^\d+\.\d+\.\d+$/
 const KINDS: VersionFileKind[] = ['mac', 'windows', 'registry', 'sbom', 'checksum', 'other']
@@ -75,6 +76,40 @@ export async function publishVersion(d: Delivery, input: PublishVersionInput) {
     announced = jobs.length
   }
   return { version, files, announced }
+}
+
+/**
+ * Si lo nuevo de esa version se enciende con esa licencia (clausula 11, lo que comprueba el
+ * producto): su soporte_hasta cubre el dia en que se publico, en Madrid. La descarga de la zona es
+ * siempre la ultima; lo que da (o no) las versiones nuevas es esto. Con un cobro del mensual que
+ * falla, la licencia del periodo pagado cubre aun los 15 dias del aviso (UNPAID_NOTICE_DAYS).
+ */
+export function coversVersion(license: { soporteHasta: string; revokedAt?: string | null }, version: Pick<Version, 'publishedAt'>): boolean {
+  return !license.revokedAt && license.soporteHasta >= madridDate(new Date(version.publishedAt))
+}
+
+/** Anos de correcciones de seguridad de cada version desde que se publica (politica de vulnerabilidades v1.7, Eric 26-10-2026). */
+export const SECURITY_SUPPORT_YEARS = 5
+
+/**
+ * Hasta cuando corrige PymaticLabs una version (AAAA-MM-DD, en Madrid): cinco anos desde que se
+ * publico. Una de correccion (solo cambia la Z de X.Y.Z) conserva la fecha de la que corrige: la de
+ * la primera X.Y publicada. Con mes y ano, va en las notas de la version y en la pagina de compra
+ * (art. 13.19 del CRA). null si esa version no esta publicada.
+ */
+export function securitySupportUntil(versions: Pick<Version, 'id' | 'publishedAt'>[], id: string): string | null {
+  const series = (v: string) => v.split('.').slice(0, 2).join('.')
+  const same = versions.filter((v) => series(v.id) === series(id)).sort((a, b) => compareVersions(a.id, b.id))
+  if (!same.some((v) => v.id === id)) return null
+  return addMonths(madridDate(new Date(same[0].publishedAt)), SECURITY_SUPPORT_YEARS * 12)
+}
+
+/** La version que se vende (la ultima publicada: una sola linea) y hasta cuando tiene correcciones de seguridad. */
+export async function currentSecuritySupport(d: Delivery): Promise<{ version: string; until: string } | null> {
+  const versions = await d.repo.listVersions()
+  const latest = [...versions].sort((a, b) => compareVersions(b.id, a.id))[0]
+  const until = latest ? securitySupportUntil(versions, latest.id) : null
+  return latest && until ? { version: latest.id, until } : null
 }
 
 /**

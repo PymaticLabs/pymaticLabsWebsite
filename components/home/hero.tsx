@@ -14,10 +14,11 @@ const THREAD = hilbertPath(5, 35)
 
 // Portada al estilo de una pagina de producto: el nombre, un titular corto y enorme que entra palabra a
 // palabra, una linea que lo explica, el precio y, debajo, el producto funcionando: la conversacion.
-export default function Hero() {
+// El «desde», el de lanzamiento mientras queden plazas; despues, el de lista.
+export default function Hero({ launchOpen = true }: { launchOpen?: boolean }) {
   const t = useTranslations('home')
   const locale = useLocale()
-  const from = Math.min(...modalities.map((m) => m.launchPrice))
+  const from = Math.min(...modalities.map((m) => (launchOpen ? m.launchPrice : m.listPrice)))
   const chat: HeroChatTexts = {
     caption: t('chat.caption'),
     name: t('chat.name'),

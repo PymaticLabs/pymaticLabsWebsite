@@ -3,14 +3,15 @@
 //
 // - LocalSigner: una clave Ed25519 de prueba (nunca la de licencias.pub: sus licencias no valen
 //   en ningun cerebro).
-// - FakeInvoicer, OutboxMailer, LocalStorage, FakeCalendar, FakeAuth y FakePayments guardan lo
-//   que harian, para mirarlo despues. Se les pueden provocar fallos (failNext) para probar los
+// - FakeInvoicer, OutboxMailer, LocalStorage, FakeCalendar, FakeAuth, FakePayments y FakeVies guardan
+//   lo que harian, para mirarlo despues. Se les pueden provocar fallos (failNext) para probar los
 //   reintentos.
 
 import { generateKeyPairSync, sign as edSign } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { privateKeyFromSeed, rawPublicKey } from '../../license.ts'
+import type { TaxRateLookup } from '../tax.ts'
 import { EU_COUNTRIES, addDays, hmacHex, madridDate, madridTimeToUtc, newId, safeEqual, weekday } from '../util.ts'
 import {
   PermanentError,
@@ -34,6 +35,8 @@ import {
   type RefundInfo,
   type TaxDetails,
   type Signer,
+  type VatChecker,
+  type ViesResult,
   type Slot,
   type Storage,
   type ZoneAuth,
@@ -496,7 +499,7 @@ export class FakeAuth implements ZoneAuth {
  * (/api/dev/checkout) y los de los avisos que le llegan al webhook en modo falso (observe()). Una
  * licencia cuyo pago no conoce es, para la conciliacion, una licencia sin pago.
  */
-export class FakePayments implements Payments {
+export class FakePayments implements Payments, TaxRateLookup {
   readonly name = 'fake'
   sessions = new Map<string, { id: string; url: string; expiresAt: number; params: Record<string, unknown> }>()
   payments = new Map<string, PaymentStatus>()
@@ -506,6 +509,10 @@ export class FakePayments implements Payments {
   /** Lo que diria VIES de cada NIF-IVA (por defecto, verified). */
   taxIdStatus = new Map<string, string>()
   canceledSubscriptions = new Set<string>()
+  /** Los pagos abiertos que se cerraron a medias (expireCheckoutSession). */
+  expiredSessions = new Set<string>()
+  /** El pais de la tarjeta de cada pago (pi_...), el que diria el cargo; sin el, null (sin tarjeta). */
+  cards = new Map<string, string>()
   failures = new Failures()
   private siteUrl: string
 
@@ -517,6 +524,11 @@ export class FakePayments implements Payments {
     return `price_fake_${lookupKey}`
   }
 
+  /** El tipo de IVA del 21 % (en Stripe, el de stripe-setup con cerebro=iva-21). */
+  async taxRateId() {
+    return 'txr_fake_iva_21'
+  }
+
   async createCheckoutSession(params: Record<string, unknown>) {
     this.failures.check('createCheckoutSession')
     const id = `cs_fake_${newId().replace(/-/g, '')}`
@@ -524,6 +536,25 @@ export class FakePayments implements Payments {
     const session = { id, url: `${this.siteUrl}/api/dev/checkout?id=${id}`, expiresAt, params }
     this.sessions.set(id, session)
     return { id, url: session.url, expiresAt }
+  }
+
+  async expireCheckoutSession(sessionId: string) {
+    this.failures.check('expireCheckoutSession')
+    const session = this.sessions.get(sessionId)
+    if (!session) return { status: 'missing' as const, metadata: {} }
+    const metadata = (session.params.metadata ?? {}) as Record<string, string>
+    if (this.paidSessions.some((s) => s.id === sessionId)) return { status: 'complete' as const, metadata }
+    this.expiredSessions.add(sessionId)
+    return { status: 'expired' as const, metadata }
+  }
+
+  async getCheckoutSession(sessionId: string) {
+    this.failures.check('getCheckoutSession')
+    const session = this.sessions.get(sessionId)
+    if (!session) return { status: 'missing' as const, metadata: {} }
+    const metadata = (session.params.metadata ?? {}) as Record<string, string>
+    if (this.paidSessions.some((s) => s.id === sessionId)) return { status: 'complete' as const, metadata }
+    return { status: this.expiredSessions.has(sessionId) ? ('expired' as const) : ('open' as const), metadata }
   }
 
   async createPortalSession(customerId: string, returnUrl: string) {
@@ -555,7 +586,7 @@ export class FakePayments implements Payments {
       const tax = session.total_details?.amount_tax ?? 0
       const country = session.customer_details?.address?.country ?? null
       const ids = session.customer_details?.tax_ids ?? []
-      // Como Stripe Tax: con IVA, standard_rated; a la UE con NIF-IVA, reverse_charge; si no, not_collecting.
+      // Como Stripe: con IVA, standard_rated; a la UE con NIF-IVA, reverse_charge (de cuando se cobraba con Stripe Tax); si no, not_collecting.
       const reasons =
         session.total_details?.breakdown?.taxes?.map((t) => t.taxability_reason ?? '').filter(Boolean) ??
         [tax > 0 ? 'standard_rated' : country && country !== 'ES' && EU_COUNTRIES.has(country) && ids.some((t) => t.type === 'eu_vat') ? 'reverse_charge' : 'not_collecting']
@@ -568,6 +599,12 @@ export class FakePayments implements Payments {
       return { reasons: taxes.length ? taxes.map((t) => t.taxability_reason ?? '').filter(Boolean) : ['not_collecting'], amountTax: taxes.reduce((s, t) => s + t.amount, 0), taxIds: [] }
     }
     return { reasons: [], amountTax: null, taxIds: [] }
+  }
+
+  /** Como el de verdad: el pais de la tarjeta del cargo, o null si no se sabe (la pagina de pago de prueba lo pide). */
+  async cardCountry(paymentIntentId: string) {
+    this.failures.check('cardCountry')
+    return this.cards.get(paymentIntentId) ?? null
   }
 
   async priceLookupKey(priceId: string) {
@@ -608,5 +645,37 @@ export class FakePayments implements Payments {
       // Como paymentStatus de verdad: cuenta un contracargo abierto o perdido, no uno ganado ni una peticion de informacion.
       set(object.payment_intent, { disputed: ['needs_response', 'under_review', 'lost'].includes(String(object.status)) })
     }
+  }
+}
+
+// --- VIES -----------------------------------------------------------------------------------------
+
+/**
+ * VIES de mentira: cada NIF-IVA (con su prefijo, como DE123456789) es valido salvo que se diga otra
+ * cosa en results; down: VIES sin contestar. Sin nombre ni direccion del titular (como Espana, que
+ * da «---»), salvo los de holders. Guarda cada consulta (checks).
+ */
+export class FakeVies implements VatChecker {
+  readonly name = 'fake'
+  results = new Map<string, 'valid' | 'invalid' | 'unavailable'>()
+  holders = new Map<string, { name: string | null; address: string | null }>()
+  down = false
+  checks: { countryCode: string; vatNumber: string }[] = []
+  private clock: () => Date
+  private seq = 0
+
+  constructor(options: { clock?: () => Date } = {}) {
+    this.clock = options.clock ?? (() => new Date())
+  }
+
+  async check(query: { countryCode: string; vatNumber: string }): Promise<ViesResult> {
+    this.checks.push({ ...query })
+    const vatId = `${query.countryCode}${query.vatNumber}`
+    const result = this.down ? 'unavailable' : (this.results.get(vatId) ?? 'valid')
+    if (result === 'unavailable') return { status: 'unavailable', reason: 'MS_UNAVAILABLE (falso)' }
+    if (result === 'invalid') return { status: 'invalid', reason: null }
+    this.seq += 1
+    const holder = this.holders.get(vatId) ?? { name: null, address: null }
+    return { status: 'valid', requestIdentifier: `WAPIFALSO${String(this.seq).padStart(7, '0')}`, requestDate: this.clock().toISOString(), ...holder }
   }
 }

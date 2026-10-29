@@ -40,9 +40,9 @@ export default function Footer() {
           <FooterColumn title={t('legal')} links={legalLinks} />
 
           <div>
-            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">
+            <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">
               {t('contact')}
-            </h3>
+            </h2>
             <div className="text-sm text-white/60">
               <a
                 href="mailto:info@pymaticlabs.com"
@@ -70,10 +70,12 @@ export default function Footer() {
   )
 }
 
+// Los titulos del pie son h2: no cuelgan de la ultima seccion de la pagina, y tras un h1 solo (la zona,
+// gracias) no se salta ningun nivel.
 function FooterColumn({ title, links }: { title: string; links: { href: string; label: string }[] }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">{title}</h3>
+      <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">{title}</h2>
       <ul>
         {links.map((link) => (
           <li key={link.href}>

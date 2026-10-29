@@ -12,11 +12,16 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { modalities, plans } from '../offer.ts'
 import { CalcomCalendar } from './adapters/calcom-calendar.ts'
 import { GcpKmsSigner } from './adapters/gcp-kms-signer.ts'
+import { ViesChecker } from './adapters/vies-checker.ts'
 import { requestJson } from './adapters/http.ts'
 import { compareVersions } from './adapters/memory-repository.ts'
+import { isSpainTaxRate } from './adapters/stripe-payments.ts'
 import { readConfig, type DeliveryConfig } from './config.ts'
-import { SESSION_HOSTS, WEBHOOK_EVENTS, launchCouponId, lookupKey, priceCents, type ProductId } from './products.ts'
-import { errorMessage } from './util.ts'
+import { SESSION_HOSTS, WEBHOOK_EVENTS, launchCouponId, lookupKey, priceCents, type PlanPeriod, type ProductId } from './products.ts'
+import { EU_DISTANCE_SALES_LIMIT, SPAIN_VAT_RATE, TAX_RATE_TAG } from './tax.ts'
+import { SALE_COUNTRIES, isEuCountry } from './checkout-tax.ts'
+import { errorMessage, formatMoney, madridDate } from './util.ts'
+import { viesRequester } from './vies.ts'
 
 type Env = Record<string, string | undefined>
 
@@ -127,8 +132,9 @@ function variables(config: DeliveryConfig | null, expectLive: boolean): Variable
         }
       },
     },
-    { name: 'HOLDED_TAX_REVERSE_CHARGE', what: 'el impuesto de Holded de la inversión del sujeto pasivo (UE)', fix: `${GUIDE}, 3.5, paso 2 (sin él, esas ventas se paran con aviso)`, optional: true },
-    { name: 'HOLDED_TAX_EXPORT', what: 'el impuesto de Holded de las ventas fuera de la UE', fix: `${GUIDE}, 3.5, paso 2 (sin él, esas ventas se paran con aviso)`, optional: true },
+    // Los impuestos de Holded de las ventas sin IVA: sin ellos, esas facturas no se crean (holded-invoicer.ts).
+    { name: 'HOLDED_TAX_REVERSE_CHARGE', what: 'el impuesto de Holded de la inversión del sujeto pasivo (UE con NIF-IVA)', fix: `${GUIDE}, 3.5, paso 2 (sin él, esas ventas no se facturan solas)` },
+    { name: 'HOLDED_TAX_EXPORT', what: 'el impuesto de Holded de las ventas sin IVA español (fuera de la UE, Canarias, Ceuta y Melilla)', fix: `${GUIDE}, 3.5, paso 2 (sin él, esas ventas no se facturan solas)` },
     { name: 'RESEND_API_KEY', what: 'el correo del formulario de contacto', fix: 'Resend (no es de la venta)', optional: true },
   ]
   if (config?.licenseMode === 'kms') {
@@ -214,7 +220,7 @@ const MIGRATIONS: { file: string; tables: string[] }[] = [
 ]
 const CRON_JOBS = ['entrega-cola', 'entrega-conciliacion', 'entrega-huellas-ip', 'entrega-limites', 'entrega-historial-cron']
 
-async function checkSupabase(env: Env, config: DeliveryConfig, add: Add) {
+async function checkSupabase(env: Env, config: DeliveryConfig, expectLive: boolean, now: Date, add: Add) {
   const url = env.SUPABASE_URL!.replace(/\/+$/, '')
   const db: SupabaseClient = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } })
   const first = await db.from('companies').select('id').limit(1)
@@ -294,6 +300,53 @@ async function checkSupabase(env: Env, config: DeliveryConfig, add: Add) {
     const late = await db.from('license_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').lt('created_at', cutoff)
     if (!late.error) add(`Licencias a mano sin firmar desde hace más de ${config.licensePendingAlertHours} h`, (late.count ?? 0) > 0 ? 'aviso' : 'ok', `${late.count ?? 0}`, 'scripts/subir-licencia.mts --pendientes')
   }
+  await checkEuDistanceSales(db, expectLive, now, add)
+}
+
+/** Las ventas que cuentan para el limite: cobradas y entregadas, como en el aviso de cada venta. */
+const EU_SALE_STATUSES = ['paid', 'partially_refunded', 'disputed']
+
+/**
+ * Las ventas con el 21 % a empresas de otros paises de la UE sin NIF-IVA: como a particulares, con
+ * IVA espanol mientras no pasen de 10.000 euros al ano, este o el anterior (arts. 70.Uno.8.o y 73
+ * LIVA). Pasado, el IVA es el del pais del cliente por la ventanilla unica (OSS) y la web no lo sabe
+ * cobrar: aviso para hablarlo con Manel. La base sin IVA, menos lo devuelto; solo las de vivo (o
+ * las de prueba, en un entorno de pruebas). Solo las cobradas y entregadas (EU_SALE_STATUSES), como
+ * el aviso de cada venta (euNoVatSales, en steps.ts): ni las que esperan revision (sin factura) ni
+ * los contracargos perdidos (ya con su rectificativa).
+ */
+async function checkEuDistanceSales(db: SupabaseClient, expectLive: boolean, now: Date, add: Add) {
+  const year = Number(madridDate(now).slice(0, 4))
+  // Los de la UE en el IVA, como el aviso de cada venta (isEuNoVatSale): los 26 y Monaco, con Francia.
+  const others = SALE_COUNTRIES.filter((c) => c !== 'ES' && isEuCountry(c))
+  const sales = await db
+    .from('purchases')
+    .select('amount_subtotal, amount_discount, amount_total, amount_refunded, paid_at, companies!inner(country)')
+    .eq('tax_treatment', 'standard')
+    .eq('livemode', expectLive)
+    .in('status', EU_SALE_STATUSES)
+    .gte('paid_at', `${year - 1}-01-01T00:00:00Z`)
+    .in('companies.country', others)
+  const item = 'Ventas con el 21 % a la UE sin NIF-IVA (límite de 10.000 € al año)'
+  if (sales.error) {
+    add(item, 'aviso', `no se pudieron sumar: ${sales.error.message}`, 'Mirarlas en Supabase (purchases con tax_treatment standard y la empresa de otro país de la UE)')
+    return
+  }
+  const total: Record<number, number> = { [year]: 0, [year - 1]: 0 }
+  for (const row of (sales.data ?? []) as { amount_subtotal: number; amount_discount: number; amount_total: number; amount_refunded: number; paid_at: string }[]) {
+    const net = Number(row.amount_subtotal) - Number(row.amount_discount)
+    const refunded = Number(row.amount_total) > 0 ? Math.round((Number(row.amount_refunded) * net) / Number(row.amount_total)) : 0
+    const at = Number(madridDate(new Date(row.paid_at)).slice(0, 4))
+    if (at in total) total[at] += net - refunded
+  }
+  const over = Math.max(total[year], total[year - 1]) > EU_DISTANCE_SALES_LIMIT
+  const detail = `${formatMoney(total[year], 'eur', 'es')} este año y ${formatMoney(total[year - 1], 'eur', 'es')} el anterior, sin IVA`
+  add(
+    item,
+    over ? 'aviso' : 'ok',
+    over ? `${detail}: pasado el límite, el IVA es el del país del cliente (ventanilla única, OSS) y la web sigue cobrando el 21 % español` : detail,
+    'Hablarlo con Manel antes de seguir vendiendo así a la UE (alta en la ventanilla única, modelo 035)'
+  )
 }
 
 // --- Stripe ------------------------------------------------------------------------------------
@@ -315,43 +368,105 @@ async function checkStripe(env: Env, config: DeliveryConfig, expectLive: boolean
     add('Secreto del webhook', 'info', 'no se puede comprobar desde aquí: si Stripe dice 400 al mandar avisos, STRIPE_WEBHOOK_SECRET no es el de este endpoint')
   }
 
-  const tax = await stripe.tax.settings.retrieve()
-  add('Stripe Tax', tax.status === 'active' ? 'ok' : 'falta', tax.status === 'active' ? 'activo' : `sin activar (${tax.status})`, `${GUIDE}, 3.4, paso 3`)
-  const registrations = await stripe.tax.registrations.list({ status: 'active', limit: 100 })
-  const spain = registrations.data.some((r) => r.country === 'ES')
-  add('Registro del IVA de España en Stripe Tax', spain ? 'ok' : 'falta', spain ? 'activo' : 'no está', `${GUIDE}, 3.4, paso 3`)
+  // El IVA de las ventas con IVA es un tipo fijo del 21 % (sin Stripe Tax): el de stripe-setup, activo y sin IVA dentro.
+  const rates = await stripe.taxRates.list({ limit: 100 })
+  const rate = rates.data.find(isSpainTaxRate)
+  const tagged = rates.data.filter((r) => r.metadata?.cerebro === TAX_RATE_TAG)
+  add(
+    `Tipo de IVA del ${SPAIN_VAT_RATE} %`,
+    rate ? 'ok' : 'falta',
+    rate
+      ? `${rate.id}, activo, sin IVA dentro`
+      : tagged.length
+        ? `el de cerebro=${TAX_RATE_TAG} no vale: ${tagged.map((r) => `${r.percentage} %${r.inclusive ? ', IVA dentro' : ''}${r.active ? '' : ', archivado'}`).join('; ')}`
+        : `no está (metadata cerebro=${TAX_RATE_TAG}): sin él no se abre ningún pago con IVA`,
+    'scripts/stripe-setup.mts (lo crea si falta)'
+  )
 
-  const products: ProductId[] = [...modalities.map((m) => m.id), ...plans.map((p) => `plan-${p.id}` as const)]
-  const prices = await stripe.prices.list({ lookup_keys: products.map(lookupKey), active: true, limit: 100, expand: ['data.currency_options'] })
-  for (const product of products) {
-    const price = prices.data.find((p) => p.lookup_key === lookupKey(product))
-    const want = priceCents(product).list
-    const recurring = product.startsWith('plan-')
-    if (!price) add(`Precio ${lookupKey(product)}`, 'falta', 'no está', 'scripts/stripe-setup.mts')
+  // El pago unico y el mensual, al mes y por ano adelantado (el del ano, en el producto del plan: el
+  // portal cambia entre los dos). Stripe da como mucho 10 lookup_keys por consulta: van por separado.
+  const wanted: { product: ProductId; period: PlanPeriod | null }[] = [
+    ...modalities.map((m) => ({ product: m.id, period: null })),
+    ...plans.flatMap((p) => (['month', 'year'] as const).map((period) => ({ product: `plan-${p.id}` as const, period }))),
+  ]
+  const keyOf = (w: { product: ProductId; period: PlanPeriod | null }) => lookupKey(w.product, w.period ?? 'month')
+  const prices: Stripe.Price[] = []
+  for (const group of [wanted.filter((w) => !w.period), wanted.filter((w) => w.period)]) {
+    prices.push(...(await stripe.prices.list({ lookup_keys: group.map(keyOf), active: true, limit: 100 })).data)
+  }
+  const productOf = (price: Stripe.Price) => (typeof price.product === 'string' ? price.product : price.product?.id)
+  for (const w of wanted) {
+    const key = keyOf(w)
+    const price = prices.find((p) => p.lookup_key === key)
+    const want = priceCents(w.product, w.period ?? 'month').list
+    if (!price) add(`Precio ${key}`, 'falta', 'no está', 'scripts/stripe-setup.mts')
     else {
+      const monthly = w.period === 'year' ? prices.find((p) => p.lookup_key === lookupKey(w.product, 'month')) : null
       const wrong = [
         price.unit_amount !== want ? `cuesta ${price.unit_amount} y la oferta dice ${want} (céntimos)` : null,
         price.currency !== 'eur' ? `en ${price.currency}` : null,
-        Boolean(price.recurring) !== recurring ? (recurring ? 'no es mensual' : 'es recurrente') : null,
+        (price.recurring?.interval ?? null) !== w.period ? (w.period ? `no se cobra ${w.period === 'year' ? 'al año' : 'al mes'}` : 'es recurrente') : null,
         price.tax_behavior !== 'exclusive' ? 'con el IVA dentro (tiene que ser exclusive)' : null,
+        monthly && productOf(monthly) !== productOf(price) ? 'no es del producto del plan (el del mes): el portal no cambiaría entre los dos' : null,
       ].filter(Boolean)
-      add(`Precio ${lookupKey(product)}`, wrong.length ? 'falta' : 'ok', wrong.length ? wrong.join('; ') : `${want / 100} € sin IVA${price.currency_options?.usd ? ' (y en USD)' : ''}`, 'scripts/stripe-setup.mts')
+      const ok = `${want / 100} € sin IVA${w.period === 'year' ? ', al año' : w.period ? ', al mes' : ''}`
+      add(`Precio ${key}`, wrong.length ? 'falta' : 'ok', wrong.length ? wrong.join('; ') : ok, 'scripts/stripe-setup.mts')
     }
   }
   for (const m of modalities) {
     const id = launchCouponId(m.id)
     const cents = priceCents(m.id)
     try {
-      const coupon = await stripe.coupons.retrieve(id)
-      const wrong = coupon.amount_off !== cents.list - (cents.launch ?? cents.list) ? `descuenta ${coupon.amount_off} y la oferta ${cents.list - (cents.launch ?? cents.list)}` : !coupon.valid ? 'ya no vale (gastado o caducado)' : null
-      add(`Cupón ${id}`, wrong ? 'falta' : 'ok', wrong ?? `${coupon.times_redeemed} de ${coupon.max_redemptions ?? '∞'} usados`, 'scripts/stripe-setup.mts')
+      // applies_to solo llega pedido. Tiene que ser el producto del precio de la modalidad: con otro
+      // (un producto duplicado por stripe-setup), el pago con la plaza de lanzamiento no se abre o
+      // sale sin el descuento.
+      const coupon = await stripe.coupons.retrieve(id, { expand: ['applies_to'] })
+      const off = cents.list - (cents.launch ?? cents.list)
+      const price = prices.find((p) => p.lookup_key === lookupKey(m.id))
+      const product = price ? productOf(price) : null
+      // Un cupon no cambia de importe ni de producto: se borra y stripe-setup lo crea otra vez.
+      const remake = 'borrarlo a mano en Stripe y repetir scripts/stripe-setup.mts'
+      const [wrong, fix]: [string | null, string] =
+        coupon.amount_off !== off
+          ? [`descuenta ${coupon.amount_off} y la oferta ${off}`, remake]
+          : product && !coupon.applies_to?.products.includes(product)
+            ? [`no es del producto de ${lookupKey(m.id)} (${product}), sino de ${coupon.applies_to?.products.join(', ') || 'ninguno en concreto'}`, remake]
+            : !coupon.valid
+              ? ['ya no vale (gastado o caducado)', 'scripts/stripe-setup.mts']
+              : [null, 'scripts/stripe-setup.mts']
+      add(`Cupón ${id}`, wrong ? 'falta' : 'ok', wrong ?? `${coupon.times_redeemed} de ${coupon.max_redemptions ?? '∞'} usados`, fix)
     } catch (error) {
       add(`Cupón ${id}`, 'falta', `no está (${errorMessage(error)})`, 'scripts/stripe-setup.mts')
     }
   }
   const portals = await stripe.billingPortal.configurations.list({ limit: 100 })
   const portal = portals.data.find((c) => c.metadata?.cerebro === 'portal')
-  add('Portal de cliente', portal?.active ? 'ok' : 'falta', portal ? (portal.active ? 'configurado' : 'desactivado') : 'no está', 'scripts/stripe-setup.mts')
+  if (!portal?.active) add('Portal de cliente', 'falta', portal ? 'desactivado' : 'no está', 'scripts/stripe-setup.mts')
+  else {
+    // Cambiar de plan y entre pago mensual y anual; subir, cobrado al momento (always_invoice); bajar o
+    // pasar a mensual, al final del periodo pagado (los periodos empezados no se devuelven: clausula 5).
+    // Con meses incluidos, ningun cambio los acaba (continue_trial: los socios, 27-10-2026).
+    const update = portal.features?.subscription_update
+    const offered = new Set((update?.products ?? []).flatMap((p) => p.prices))
+    const missing = prices.filter((p) => p.recurring && !offered.has(p.id)).map((p) => p.lookup_key)
+    const scheduled = (update?.schedule_at_period_end?.conditions ?? []).map((c) => c.type)
+    const wrong = [
+      !update?.enabled ? 'no deja cambiar de plan' : null,
+      update?.enabled && missing.length ? `no deja cambiar a ${missing.join(', ')}` : null,
+      update?.enabled && !(scheduled.includes('decreasing_item_amount') && scheduled.includes('shortening_interval'))
+        ? 'bajar de plan o pasar de anual a mensual se aplica al momento, con abono (tiene que esperar al final del periodo pagado)'
+        : null,
+      // Con create_prorations, la diferencia de subir de plan espera a la renovacion (en el anual, hasta un ano).
+      update?.enabled && update.proration_behavior !== 'always_invoice'
+        ? `subir de plan no se cobra al momento (proration_behavior ${update.proration_behavior ?? 'sin poner'}: tiene que ser always_invoice)`
+        : null,
+      // Sin decirlo, end_trial: pasar a anual o a un plan mayor con meses incluidos los acaba y se cobra ese dia.
+      update?.enabled && update.trial_update_behavior !== 'continue_trial'
+        ? `con meses incluidos, cambiar de plan o pasar a anual los acaba y se cobra ese día (trial_update_behavior ${update.trial_update_behavior ?? 'sin poner'}: tiene que ser continue_trial)`
+        : null,
+    ].filter(Boolean)
+    add('Portal de cliente', wrong.length ? 'falta' : 'ok', wrong.length ? wrong.join('; ') : 'configurado, con el pago mensual y el anual de cada plan', 'scripts/stripe-setup.mts (lo pone al día)')
+  }
 }
 
 // --- Brevo, Holded, Cal.com y KMS ---------------------------------------------------------------
@@ -386,14 +501,17 @@ async function checkHolded(env: Env, add: Add) {
       add(`Permiso de ${what}`, 'falta', errorMessage(error), `${GUIDE}, 3.5, paso 1`)
     }
   }
+  // Los de las ventas de la web: el 21 %, la inversion del sujeto pasivo (UE con NIF-IVA) y sin IVA
+  // espanol (fuera de la UE, Canarias, Ceuta y Melilla); el exento, si esta puesto. Si falta la
+  // variable, ya sale arriba (Modos y variables).
   for (const [name, fallback, what] of [
     ['HOLDED_TAX_STANDARD', 's_iva_21', 'IVA del 21 %'],
     ['HOLDED_TAX_REVERSE_CHARGE', '', 'inversión del sujeto pasivo'],
-    ['HOLDED_TAX_EXPORT', '', 'fuera de la UE'],
+    ['HOLDED_TAX_EXPORT', '', 'sin IVA español'],
     ['HOLDED_TAX_EXEMPT', '', 'exento'],
   ]) {
     const id = env[name]?.trim() || fallback
-    if (!id) continue // ya avisado en las variables (o no hace falta: exento)
+    if (!id) continue // no hace falta
     add(`Impuesto ${what} (${name})`, taxes.includes(`"${id}"`) ? 'ok' : 'aviso', taxes.includes(`"${id}"`) ? 'está en la cuenta' : `«${id}» no aparece en /taxes de la cuenta`, `${GUIDE}, 3.5, paso 2`)
   }
 }
@@ -407,6 +525,30 @@ async function checkCalcom(env: Env, add: Add, now: Date) {
     const count = slots.filter((s) => s.host === host.id).length
     add(`Huecos de ${host.name}`, count ? 'ok' : 'aviso', count ? `${count} en las dos próximas semanas` : 'ninguno en las dos próximas semanas: revisar su horario', `${GUIDE}, 3.6`)
   }
+}
+
+// --- VIES -----------------------------------------------------------------------------------------
+
+/**
+ * Que VIES contesta con el NIF-IVA de PymaticLabs (VIES_REQUESTER): el que pregunta en cada venta sin
+ * IVA a la UE. No valido, o VIES sin aceptarlo como solicitante: falta (esas ventas no se abririan).
+ * VIES caido ahora: aviso (le pasa a ratos; las ventas esperan a que vuelva). Siempre al VIES de
+ * verdad: el servicio de prueba (VIES_TEST_SERVICE, solo fuera de produccion) contesta por el numero
+ * y no diria nada del nuestro; con el puesto, aviso.
+ */
+async function checkVies(env: Env, config: DeliveryConfig, add: Add) {
+  const own = config.vies.requester
+  const { memberState, number } = viesRequester(own)
+  if (config.vies.testService) {
+    add('Servicio de prueba de VIES (VIES_TEST_SERVICE)', 'aviso', 'las ventas preguntan al servicio de prueba de VIES, que no comprueba ningún NIF-IVA (100 es válido, 200 no)', 'Solo en Preview: quitarlo en cualquier otro sitio')
+  }
+  const result = await new ViesChecker(env, { ...config.vies, testService: false }).check({ countryCode: memberState, vatNumber: number })
+  const item = `NIF-IVA de PymaticLabs (${own})`
+  const fix = 'VIES_REQUESTER con el NIF-IVA de PymaticLabs, de alta en el ROI (o sin poner: ESB88781745)'
+  if (result.status === 'valid') add(item, 'ok', `válido en VIES (consulta ${result.requestIdentifier})`)
+  else if (result.status === 'invalid') add(item, 'falta', 'VIES dice que no es válido: sin él no se puede vender sin IVA a empresas de la UE', fix)
+  else if (/INVALID_REQUESTER_INFO|requestIdentifier/.test(result.reason)) add(item, 'falta', `VIES no lo acepta como solicitante (${result.reason}): las ventas sin IVA a la UE no se abrirían`, fix)
+  else add(item, 'aviso', `VIES no contesta ahora (${result.reason}): mientras, las empresas de la UE con NIF-IVA no pueden pagar`, 'Repetir la comprobación en unos minutos')
 }
 
 async function checkKms(env: Env, config: DeliveryConfig, add: Add) {
@@ -438,7 +580,8 @@ async function checkSite(env: Env, config: DeliveryConfig, add: Add) {
   const login = home.text.includes('href="/zona/entrar"')
   add('Botón Entrar', login ? 'ok' : 'falta', login ? 'en la barra de arriba' : 'la portada publicada no lo tiene (se hizo antes de poner Supabase)', 'Volver a desplegar en Vercel (Redeploy): las páginas se hacen al desplegar')
   const pricing = await get('/precios')
-  const buttons = pricing.text.includes('action="/api/checkout"')
+  // Los botones llevan a /comprar/<modalidad> (que pide el NIF); en versiones de antes, el formulario al pago.
+  const buttons = pricing.text.includes('action="/api/checkout"') || pricing.text.includes('href="/comprar/')
   const open = env.CHECKOUT_OPEN === 'true'
   if (buttons !== open) {
     add('Botones de compra', open ? 'falta' : 'aviso', open ? 'CHECKOUT_OPEN=true pero /precios sigue con «Próximamente»' : '/precios enseña los botones con CHECKOUT_OPEN=false', 'Volver a desplegar en Vercel (Redeploy) tras cambiar CHECKOUT_OPEN')
@@ -452,7 +595,9 @@ const MANUAL: [string, string][] = [
   ['Supabase: «IP address forwarding» y el límite de correos subido', `${GUIDE}, 3.1, paso 7`],
   ['Supabase: plan Pro (el gratuito se pausa y no tiene copias)', `${GUIDE}, 3.1, paso 1`],
   ['Stripe: la URL de las condiciones y de la privacidad en Public details (la pide la casilla del pago)', `${GUIDE}, 3.4, paso 2`],
+  ['Stripe: cobros del mensual fallidos, con reintentos durante 3 semanas (más de los 15 días del aviso) y, al acabar, la suscripción marcada como impagada', `${GUIDE}, 3.4, paso 6`],
   ['Holded: Verifactu activo; las facturas quedan en borrador hasta confirmar que aprobar por la API lo registra', `${GUIDE}, 3.5`],
+  ['Holded: con Manel, una factura en borrador de cada caso sin IVA (inversión del sujeto pasivo, N2 en Verifactu; fuera de la UE; Canarias) con su mención', `${GUIDE}, 3.5`],
   ['Cal.com: los dos eventos sin «requiere confirmación», con videollamada', `${GUIDE}, 3.6`],
   ['Vercel: región dub1 (Dublín, junto a Supabase) y los secretos de producción Sensitive y solo en Production', `${GUIDE}, 3.7`],
 ]
@@ -471,12 +616,13 @@ export async function productionCheck(env: Env, options: { expectLive?: boolean;
   if (config) {
     sections.push(
       has('SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY')
-        ? section('Supabase', env, (add) => checkSupabase(env, config, add), `${GUIDE}, 3.1`)
+        ? section('Supabase', env, (add) => checkSupabase(env, config, expectLive, now, add), `${GUIDE}, 3.1`)
         : skip('Supabase', ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY']),
       has('STRIPE_SECRET_KEY') ? section('Stripe', env, (add) => checkStripe(env, config, expectLive, add), `${GUIDE}, 3.4`) : skip('Stripe', ['STRIPE_SECRET_KEY']),
       has('BREVO_API_KEY') ? section('Brevo', env, (add) => checkBrevo(env, config, add), `${GUIDE}, 3.2`) : skip('Brevo', ['BREVO_API_KEY']),
       has('HOLDED_API_KEY') ? section('Holded', env, (add) => checkHolded(env, add), `${GUIDE}, 3.5`) : skip('Holded', ['HOLDED_API_KEY']),
-      has('CALCOM_API_KEY', 'CALCOM_EVENT_TYPES') ? section('Cal.com', env, (add) => checkCalcom(env, add, now), `${GUIDE}, 3.6`) : skip('Cal.com', ['CALCOM_API_KEY', 'CALCOM_EVENT_TYPES'])
+      has('CALCOM_API_KEY', 'CALCOM_EVENT_TYPES') ? section('Cal.com', env, (add) => checkCalcom(env, add, now), `${GUIDE}, 3.6`) : skip('Cal.com', ['CALCOM_API_KEY', 'CALCOM_EVENT_TYPES']),
+      section('VIES', env, (add) => checkVies(env, config, add), 'Repetir la comprobación en unos minutos')
     )
     if (config.licenseMode === 'kms') {
       sections.push(has('GCP_KMS_KEY_VERSION', 'GOOGLE_SERVICE_ACCOUNT_JSON') ? section('Google Cloud KMS', env, (add) => checkKms(env, config, add), `${GUIDE}, 3.3`) : skip('Google Cloud KMS', ['GCP_KMS_KEY_VERSION', 'GOOGLE_SERVICE_ACCOUNT_JSON']))

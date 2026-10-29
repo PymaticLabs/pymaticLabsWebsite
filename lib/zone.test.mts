@@ -6,6 +6,7 @@ import { downloadLink, invoiceLink, licenseFile, termsFile, zoneOverview, zonePr
 import { SupabaseAuth, ZONE_SESSION_DAYS, refreshZoneSession } from './delivery/adapters/supabase-auth.ts'
 import { RateLimitedError, type CookieToSet, type ZoneUser } from './delivery/types.ts'
 import { verifyLicense } from './license.ts'
+import { withUnpaidMargin } from './delivery/util.ts'
 import { currentLicense, downloadGroups, formatBytes, monthlyState, otherLicenses, safeZoneReturn, sectionPath, upcomingSessions, zoneSections, type ZoneOverview } from './zone-view.ts'
 import { profileInitials, profileShortcuts } from './zone-profile.ts'
 
@@ -37,11 +38,12 @@ test('zona de muestra: la titular ve todo lo de su compra, con datos de la entre
   assert.equal(o.company.seats, 10)
   assert.deepEqual(zoneSections(o), ['inicio', 'licencia', 'descargas', 'sesiones', 'equipo', 'mensual', 'facturas'])
 
-  // Licencia del Acompanado con equipo, con los 3 meses de Pro, que verifica con la clave de la web.
+  // Licencia del Acompanado con equipo, con los 3 meses de Pro (y 15 dias de margen por si el primer
+  // cobro del mensual falla), que verifica con la clave de la web. La zona ensena lo incluido.
   const license = currentLicense(o.licenses)!
   assert.equal(license.modalidad, 'acompanado')
   assert.equal(license.equipo, true)
-  assert.equal(license.soporteHasta, '2027-01-27')
+  assert.deepEqual([license.soporteHasta, license.paidUntil], ['2027-02-11', '2027-01-27'])
   const file = await licenseFile(d, owner, license.id)
   assert.equal(verifyLicense(file.content, await d.signer.publicKey()).id, license.id)
 
@@ -149,7 +151,17 @@ test('zona: el codigo frena tras varios intentos fallidos', async () => {
 })
 
 test('vista de la zona: licencia vigente, mensual, tamanos y a donde se vuelve tras entrar', () => {
-  const license = (id: string, emitida: string, soporteHasta: string, revoked = false) => ({ id, modalidad: 'hazlo-tu' as const, equipo: true, emitida, soporteHasta, fileName: `${id}.cerebro-licencia`, revoked })
+  // paid: lo pagado o incluido; la licencia firma 15 dias mas (el margen de un cobro fallido).
+  const license = (id: string, emitida: string, paid: string, revoked = false) => ({
+    id,
+    modalidad: 'hazlo-tu' as const,
+    equipo: true,
+    emitida,
+    soporteHasta: paid > emitida ? withUnpaidMargin(paid) : paid,
+    paidUntil: paid,
+    fileName: `${id}.cerebro-licencia`,
+    revoked,
+  })
   const licenses = [license('L1', '2026-11-02', '2027-02-02'), license('L2', '2027-02-02', '2027-03-02'), license('L3', '2027-03-02', '2027-04-02', true)]
   assert.equal(currentLicense(licenses)?.id, 'L2') // la anulada no cuenta
   assert.deepEqual(otherLicenses(licenses, currentLicense(licenses)).map((l) => l.id), ['L3', 'L1'])
@@ -159,7 +171,12 @@ test('vista de la zona: licencia vigente, mensual, tamanos y a donde se vuelve t
   assert.equal(monthlyState(overview('active', '2026-12-01'), NOW).kind, 'subscribed')
   assert.equal(monthlyState(overview('canceled', '2026-12-01'), NOW).kind, 'included')
   assert.equal(monthlyState(overview(null, '2026-11-02'), NOW).kind, 'included') // el mismo dia aun cubre
+  // Los 15 dias de margen no son mantenimiento incluido: la licencia los cubre, pero no se ensenan.
   assert.equal(monthlyState(overview(null, '2026-11-01'), NOW).kind, 'none')
+  assert.deepEqual(monthlyState(overview('past_due', '2026-11-01'), NOW), { kind: 'subscribed', product: 'plan-esencial', status: 'past_due', supportUntil: '2026-11-01' })
+  // Hazlo tu sin equipo: soporte_hasta es el dia de la compra; no incluye nada, ni ese dia (clausula 3).
+  const solo = { licenses: [license('S', '2026-11-02', '2026-11-02')], company: { subscription: { status: null, plan: null } } } as unknown as ZoneOverview
+  assert.deepEqual(monthlyState(solo, NOW), { kind: 'none', supportUntil: '2026-11-02' })
 
   assert.equal(formatBytes(18_420_000, 'es'), '18,4 MB')
   assert.equal(formatBytes(86_000, 'en'), '86 KB')

@@ -55,7 +55,10 @@ export default async function SeguridadPage({
               {t('promiseTitle')}
             </h2>
             <blockquote className="rounded-2xl bg-inverse p-6 sm:p-8 text-lg leading-relaxed text-white/90">
-              “{tPromise('quote')}”
+              {/* En castellano, comillas latinas, como el resto de la web y /privacidad-producto */}
+              {locale === 'es' ? '«' : '“'}
+              {tPromise('quote')}
+              {locale === 'es' ? '»' : '”'}
             </blockquote>
           </div>
 

@@ -11,7 +11,7 @@ In compliance with Article 10 of Spanish Law 34/2002 of 11 July on Information S
 
 ## 2. Purpose
 
-This legal notice governs the use of the website pymaticlabs.com, where Pymatic Labs presents and sells the Digital Brain. Sales are addressed only to businesses and professionals, and are governed by the terms of use and sale accepted at purchase.
+This legal notice governs the use of the website pymaticlabs.com, where Pymatic Labs presents and sells the Digital Brain. Sales are addressed only to businesses and professionals, for their business activity, and are governed by the [terms of use and sale](/en/condiciones) accepted at purchase.
 
 ## 3. Use of the website
 
@@ -27,10 +27,10 @@ Pymatic Labs tries to keep the information on the site correct and up to date, b
 
 ## 6. Data protection and cookies
 
-How the personal data of people using this site is processed is explained in the website privacy policy, and the use of cookies, in the cookie policy.
+How the personal data of people using this site is processed is explained in the [website privacy policy](/en/politica-privacidad), and the use of cookies and browser storage, in the [cookie policy](/en/politica-cookies).
 
 ## 7. Governing law and jurisdiction
 
-This legal notice is governed by Spanish law. For any dispute, the parties submit to the courts of Castellón de la Plana, unless the law provides for another jurisdiction.
+This legal notice is governed by Spanish law. For disputes about the use of this website, the parties submit to the courts of Castellón de la Plana, unless the law provides for another jurisdiction. Disputes about a purchase are governed by clause 18 of the [terms of use and sale](/en/condiciones).
 
 *This English version is provided for convenience. In case of discrepancy, the Spanish version prevails.*

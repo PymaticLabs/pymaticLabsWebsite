@@ -1,4 +1,8 @@
-last 2 Chrome versions
-last 2 Firefox versions
-last 2 Safari versions
-last 2 Edge versions
+# Los navegadores de los ultimos anos, con versiones fijas: las de Next 16 por defecto y el iPhone o el
+# iPad con iOS 16.4 o mas. Con "last 2 versions" el JS salia compilado a ES5 (lo mas probable, porque
+# el compilador no conocia las versiones nuevas): mas peso y mas trabajo en el movil.
+chrome 111
+edge 111
+firefox 111
+safari 16.4
+ios_saf 16.4

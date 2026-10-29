@@ -1,10 +1,14 @@
-// Stripe: sesiones de Checkout, portal de cliente y lo que la conciliacion pregunta de cada pago.
+// Stripe: sesiones de Checkout, portal de cliente, lo que la conciliacion pregunta de cada pago y el
+// pais de la tarjeta de un pago (la segunda prueba del pais en las ventas sin IVA fuera de la UE).
 //
-// STRIPE_SECRET_KEY (sk_test_... hasta abrir la venta). Los precios se buscan por lookup_key y se
-// guardan en memoria: los crea scripts/stripe-setup.mts.
+// STRIPE_SECRET_KEY (sk_test_... hasta abrir la venta). Los precios se buscan por lookup_key, y el
+// tipo de IVA del 21 % por su metadato (cerebro=iva-21), y se guardan en memoria: los crea
+// scripts/stripe-setup.mts. Si Stripe rechaza un pago y alguno ha cambiado (stripe-setup archivo el
+// viejo), se buscan otra vez y se reintenta: no hace falta volver a desplegar.
 
 import Stripe from 'stripe'
 import { requireEnv } from './http.ts'
+import { SPAIN_VAT_RATE, TAX_RATE_TAG, type TaxRateLookup } from '../tax.ts'
 import { PermanentError, RetryableError, type PaymentStatus, type Payments, type RefundInfo, type TaxDetails } from '../types.ts'
 
 /** Un contracargo que cuenta: abierto o perdido (no uno ganado, evitado ni una peticion de informacion). */
@@ -24,10 +28,16 @@ async function call<T>(what: string, run: () => Promise<T>): Promise<T> {
   }
 }
 
-export class StripePayments implements Payments {
+/** El tipo de IVA de las ventas: el del 21 % de stripe-setup, activo, sin IVA dentro y de Espana. */
+export function isSpainTaxRate(rate: Pick<Stripe.TaxRate, 'active' | 'percentage' | 'inclusive' | 'country' | 'metadata'>): boolean {
+  return rate.metadata?.cerebro === TAX_RATE_TAG && rate.active && rate.percentage === SPAIN_VAT_RATE && !rate.inclusive && (!rate.country || rate.country === 'ES')
+}
+
+export class StripePayments implements Payments, TaxRateLookup {
   readonly name = 'stripe'
   private stripe: Stripe
   private prices = new Map<string, string>()
+  private taxRate: string | null = null
   private portalConfiguration: string | null = null
 
   constructor(env: Record<string, string | undefined>) {
@@ -44,10 +54,68 @@ export class StripePayments implements Payments {
     return price.id
   }
 
+  async taxRateId() {
+    if (this.taxRate) return this.taxRate
+    const list = await call('tax_rates', () => this.stripe.taxRates.list({ active: true, inclusive: false, limit: 100 }))
+    const rate = list.data.find(isSpainTaxRate)
+    if (!rate) throw new PermanentError(`Stripe no tiene el tipo de IVA del ${SPAIN_VAT_RATE} % (metadata cerebro=${TAX_RATE_TAG}; scripts/stripe-setup.mts)`)
+    this.taxRate = rate.id
+    return rate.id
+  }
+
   async createCheckoutSession(params: Record<string, unknown>) {
+    try {
+      return await this.openCheckout(params)
+    } catch (error) {
+      // Un precio o el tipo de IVA guardados en memoria pueden ser de antes de pasar stripe-setup (que
+      // archiva los que no valen y crea otros): Stripe rechaza el pago hasta que la instancia se
+      // recicla. Se buscan otra vez los que lleva el pago y, si alguno ha cambiado, se reintenta una vez.
+      if (!(error instanceof PermanentError)) throw error
+      const before = JSON.stringify(params)
+      let text = before
+      const prices = [...this.prices.entries()].filter(([, id]) => before.includes(`"${id}"`))
+      const rate = this.taxRate && before.includes(`"${this.taxRate}"`) ? this.taxRate : null
+      for (const [key, id] of prices) {
+        this.prices.delete(key)
+        text = text.replaceAll(`"${id}"`, `"${await this.priceId(key)}"`)
+      }
+      if (rate) {
+        this.taxRate = null
+        text = text.replaceAll(`"${rate}"`, `"${await this.taxRateId()}"`)
+      }
+      if (text === before) throw error
+      return this.openCheckout(JSON.parse(text) as Record<string, unknown>)
+    }
+  }
+
+  private async openCheckout(params: Record<string, unknown>) {
     const session = await call('checkout', () => this.stripe.checkout.sessions.create(params as unknown as Stripe.Checkout.SessionCreateParams))
     if (!session.url) throw new PermanentError('Stripe no devolvio la URL de pago')
     return { id: session.id, url: session.url, expiresAt: session.expires_at }
+  }
+
+  async expireCheckoutSession(sessionId: string) {
+    try {
+      const session = await call('checkout', () => this.stripe.checkout.sessions.expire(sessionId))
+      return { status: 'expired' as const, metadata: session.metadata ?? {} }
+    } catch (error) {
+      if (error instanceof RetryableError) throw error
+      if ((error as { code?: string }).code === 'resource_missing') return { status: 'missing' as const, metadata: {} }
+      // Solo se expira una abierta: si no lo estaba, se mira como quedo (pagada, o caducada antes).
+      const session = await call('checkout', () => this.stripe.checkout.sessions.retrieve(sessionId))
+      if (session.status === 'open') throw error
+      return { status: session.status === 'complete' ? ('complete' as const) : ('expired' as const), metadata: session.metadata ?? {} }
+    }
+  }
+
+  async getCheckoutSession(sessionId: string) {
+    try {
+      const session = await call('checkout', () => this.stripe.checkout.sessions.retrieve(sessionId))
+      return { status: session.status ?? ('open' as const), metadata: session.metadata ?? {} }
+    } catch (error) {
+      if ((error as { code?: string }).code === 'resource_missing') return { status: 'missing' as const, metadata: {} }
+      throw error
+    }
   }
 
   /**
@@ -140,6 +208,18 @@ export class StripePayments implements Payments {
         }))
       : []
     return { reasons, amountTax, taxIds }
+  }
+
+  async cardCountry(paymentIntentId: string): Promise<string | null> {
+    try {
+      const intent = await call('payment_intents', () => this.stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] }))
+      const charge = typeof intent.latest_charge === 'object' ? intent.latest_charge : null
+      const country = charge?.payment_method_details?.card?.country
+      return typeof country === 'string' && /^[A-Z]{2}$/.test(country) ? country : null
+    } catch (error) {
+      if ((error as { code?: string }).code === 'resource_missing') return null
+      throw error
+    }
   }
 
   async priceLookupKey(priceId: string) {

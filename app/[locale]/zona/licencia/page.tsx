@@ -57,7 +57,7 @@ export default async function LicenciaPage({ params, searchParams }: { params: P
                 { label: t('license.fields.issued'), value: formatDate(current.emitida, loc) },
                 {
                   label: t('license.fields.support'),
-                  value: current.soporteHasta > current.emitida ? formatDate(current.soporteHasta, loc) : t('license.noSupportShort'),
+                  value: current.paidUntil > current.emitida ? formatDate(current.paidUntil, loc) : t('license.noSupportShort'),
                 },
               ]}
             />
@@ -86,7 +86,7 @@ export default async function LicenciaPage({ params, searchParams }: { params: P
                 { label: t('license.fields.people'), value: pending.equipo ? t('license.team', { seats: data.company.seats }) : t('license.solo') },
                 {
                   label: t('license.fields.support'),
-                  value: pending.soporteHasta > pending.emitida ? formatDate(pending.soporteHasta, loc) : t('license.noSupportShort'),
+                  value: pending.paidUntil > pending.emitida ? formatDate(pending.paidUntil, loc) : t('license.noSupportShort'),
                 },
               ]}
             />
@@ -115,7 +115,7 @@ export default async function LicenciaPage({ params, searchParams }: { params: P
                     <p className="font-mono font-medium text-ink">{l.id}</p>
                     <p className="text-sm text-body">
                       {t('license.issuedOn', { date: formatDate(l.emitida, loc) })} ·{' '}
-                      {l.soporteHasta > l.emitida ? t('license.supportUntil', { date: formatDate(l.soporteHasta, loc) }) : t('license.noSupportShort')}
+                      {l.paidUntil > l.emitida ? t('license.supportUntil', { date: formatDate(l.paidUntil, loc) }) : t('license.noSupportShort')}
                     </p>
                   </div>
                   {l.revoked ? (

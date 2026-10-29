@@ -8,24 +8,40 @@
 // Aqui casi no se llama a ningun proveedor (a Stripe, para las devoluciones y el plan de un cobro
 // del mensual): el aviso se contesta en segundos y el trabajo lo hace la cola.
 //
-// Lo que no se entrega solo, sino que va a revisar a mano (con aviso a PymaticLabs):
-// - una compra sin razon social, NIF o correo;
+// Lo que no se entrega solo, sino que va a revisar a mano (con aviso a PymaticLabs), antes de crear
+// la empresa, la licencia, la factura o la bienvenida:
+// - una compra sin razon social, NIF o correo (missing_data);
+// - una compra cuyo IVA no cuadra (checkPaidTax de lib/delivery/tax.ts; se vende a todo el mundo,
+//   solo a empresas y profesionales, con el IVA que la web decide antes de pagar y deja en los
+//   metadatos): lo declarado no vale (un NIF espanol mal escrito, un NIF-IVA sin su consulta de VIES
+//   de justo antes de pagar, el IVA que no toca a ese pais) o la direccion de facturacion de Stripe
+//   no es la declarada (country_mismatch: otro pais o, en Espana, otro territorio por el codigo
+//   postal); o el IVA cobrado no es el esperado (vat_mismatch: el 21 % de la base tras el cupon, o
+//   nada); o, en una venta sin IVA fuera de la UE, la tarjeta es de Espana o de otro pais de la UE
+//   (card_country: la segunda prueba del pais, que se pregunta a Stripe). Ni licencia, ni factura,
+//   ni zona. La pagina y la tarjeta no se bloquean por pais (Reglamento (UE) 2018/302);
 // - una compra con el NIF de una empresa que ya es cliente desde un correo que no es de sus
-//   titulares: el NIF lo escribe el comprador (Stripe solo mira el formato), y daria las facturas, las
-//   licencias y el portal de esa empresa a cualquiera. Tambien se avisa a sus titulares;
-// - un cobro del mensual de una empresa sin pago unico vigente, o con otro NIF que el suyo.
+//   titulares (aunque ademas no cuadre el IVA: va primero). El NIF lo escribe el comprador, y daria
+//   las facturas, las licencias y el portal de esa empresa a cualquiera. Tambien se avisa a sus
+//   titulares;
+// - un cobro del mensual de una empresa sin pago unico vigente, con otro NIF que el suyo, con la
+//   direccion de facturacion cambiada a otro pais u otro territorio, o sin el IVA que le toca.
+// Los pagos de antes (sin tax_country en los metadatos) se miran como entonces: Espana peninsular
+// o Baleares, NIF espanol y el 21 %.
 
 import type Stripe from 'stripe'
+import { parseSpanishTaxId } from './checkout-nif.ts'
+import { isEuCountry } from './checkout-tax.ts'
+import { releaseCheckoutHolds } from './launch.ts'
 import { isGuided, isOneTimeProduct, isPlanProduct, productFromLookupKey, seatsFor } from './products.ts'
-import { validBases } from './steps.ts'
-import { taxTreatment } from './tax.ts'
-import { cleanCompanyName, madridDate, normalizeEmail, normalizeTaxId, unixToIso } from './util.ts'
+import { REVIEW_TODO, validBases, type ViesEvidence } from './steps.ts'
+import { checkPaidTax, declaredTax, sameVatCountry, type DeclaredTax } from './tax.ts'
+import { companyDeclaration, legacyDeclaration, viesProblems } from './tax-check.ts'
+import { UNPAID_NOTICE_DAYS, addDays, cleanCompanyName, madridDate, normalizeEmail, normalizeTaxId, unixToIso } from './util.ts'
 import type { Delivery } from './container.ts'
-import type { Address, Company, Locale, NewJob, Purchase } from './types.ts'
+import { RetryableError, type Address, type Company, type Locale, type NewJob, type Purchase } from './types.ts'
 
 export type EventOutcome = string
-
-export { taxTreatment }
 
 export async function handleStripeEvent(d: Delivery, event: Stripe.Event): Promise<{ outcome: EventOutcome }> {
   // El Stripe de mentira aprende de los avisos que "manda" (para la conciliacion en modo falso).
@@ -60,6 +76,8 @@ async function dispatch(d: Delivery, event: Stripe.Event): Promise<EventOutcome>
       return releaseCheckout(d, event.data.object)
     case 'invoice.paid':
       return ingestInvoice(d, event.data.object)
+    case 'invoice.payment_failed':
+      return onPaymentFailed(d, event.data.object, event.created)
     case 'charge.refunded':
       return onRefund(d, event.data.object)
     case 'charge.dispute.created':
@@ -100,12 +118,22 @@ function idOf(value: string | { id: string } | null | undefined): string | null 
   return typeof value === 'string' ? value : value.id
 }
 
-export function oneTimeJobs(purchase: Purchase): NewJob[] {
+/** El NIF como lo guarda la empresa: el espanol sin el prefijo ES; los demas, limpios. */
+function canonicalTaxId(value: string | null | undefined): string | null {
+  return parseSpanishTaxId(value)?.taxId ?? normalizeTaxId(value)
+}
+
+/**
+ * Los pasos del pago unico. vies: la consulta de VIES de antes de pagar (inversion del sujeto pasivo),
+ * con el nombre y la direccion que dio VIES si los dio, que van a la factura. Sin ella, la factura
+ * queda en borrador.
+ */
+export function oneTimeJobs(purchase: Purchase, vies: ViesEvidence | null = null): NewJob[] {
   const payload = { purchaseId: purchase.id }
   const key = (kind: string) => `${kind}:${purchase.id}`
   const guided = isGuided(purchase.product)
   const jobs: NewJob[] = [
-    { key: key('invoice'), kind: 'invoice', payload },
+    { key: key('invoice'), kind: 'invoice', payload: vies ? { ...payload, vies } : payload },
     { key: key('license'), kind: 'license', payload },
     { key: key('account'), kind: 'account', payload },
   ]
@@ -141,7 +169,108 @@ export function renewalJobs(purchase: Purchase, manualLicense = false): NewJob[]
   ]
 }
 
-export type ReviewReason = 'missing_data' | 'nif_conflict' | 'unknown_company' | 'no_base' | 'tax_id_changed'
+/**
+ * Los pasos de una compra a revisar que se entrega a mano (POST /api/admin/jobs deliver), ya con su
+ * empresa y status paid. Con inversion del sujeto pasivo, la consulta de VIES de antes del pago
+ * (review_data.declared) va a su factura si es del NIF-IVA de la empresa y de justo antes del pago:
+ * asi no queda retenida por no tenerla. Si no, en borrador, para mirar VIES otra vez a mano. Con
+ * esa consulta, la empresa queda como eu_vat, como al pagar (refreshCompanyTax): una que compro antes
+ * sin NIF-IVA (other, con el 21 %) y ahora con el, desde otro correo (nif_conflict), seguia con el
+ * 21 % en su mensual.
+ */
+export async function deliverJobs(d: Delivery, purchase: Purchase): Promise<NewJob[]> {
+  if (purchase.kind !== 'one_time') return renewalJobs(purchase, d.config.licenseMode === 'manual')
+  const vies = await reviewedVies(d, purchase)
+  if (vies && purchase.companyId) {
+    const company = await d.repo.getCompany(purchase.companyId)
+    if (company && company.taxIdType !== 'eu_vat') await d.repo.updateCompany(company.id, { taxIdType: 'eu_vat' })
+  }
+  return oneTimeJobs(purchase, vies)
+}
+
+async function reviewedVies(d: Delivery, purchase: Purchase): Promise<ViesEvidence | null> {
+  if (purchase.taxTreatment !== 'reverse_charge' || !purchase.companyId) return null
+  const data = (purchase.reviewData ?? {}) as { taxId?: unknown; declared?: Record<string, unknown> | null }
+  const declared = data.declared ?? {}
+  const text = (value: unknown) => (typeof value === 'string' && value ? value : null)
+  const request = text(declared.vies)
+  const checkedAt = text(declared.viesCheckedAt)
+  if (!request || !checkedAt) return null
+  const company = await d.repo.getCompany(purchase.companyId)
+  if (!company || text(data.taxId) !== company.taxId) return null
+  // Una consulta vieja (la compra pudo quedar a revisar por eso) no vale para esta factura.
+  const decl: DeclaredTax = { country: company.country ?? '', territory: null, taxId: company.taxId, taxIdType: 'eu_vat', treatment: 'reverse_charge', viesRequest: request, viesCheckedAt: checkedAt, legacy: false }
+  if (viesProblems(decl, purchase.paidAt).length) return null
+  const name = text(declared.viesName)
+  const address = text(declared.viesAddress)
+  return { request, checkedAt, ...(name ? { name } : {}), ...(address ? { address } : {}) }
+}
+
+/**
+ * Por que una compra queda a revisar. outside_spain y vat_not_21 son de cuando solo se vendia en
+ * Espana (las de antes en la base de datos): hoy, country_mismatch y vat_mismatch.
+ */
+export type ReviewReason =
+  | 'missing_data'
+  | 'country_mismatch'
+  | 'vat_mismatch'
+  | 'card_country'
+  | 'nif_conflict'
+  | 'unknown_company'
+  | 'no_base'
+  | 'tax_id_changed'
+  | 'outside_spain'
+  | 'vat_not_21'
+
+/** Los motivos del IVA: con el NIF de otro cliente, nif_conflict va antes (sus problemas quedan en review_data). */
+const TAX_REASONS: ReviewReason[] = ['country_mismatch', 'vat_mismatch', 'card_country']
+
+/** El primer motivo del IVA que falla: lo declarado o la direccion de facturacion, lo cobrado y la tarjeta. */
+function taxReason(country: string[], vat: string[], card: string[] = []): ReviewReason | null {
+  return country.length ? 'country_mismatch' : vat.length ? 'vat_mismatch' : card.length ? 'card_country' : null
+}
+
+/**
+ * La segunda prueba del pais en una venta sin IVA espanol fuera de la UE (lo declarado y la
+ * direccion de facturacion los escribe el cliente): el pais de la tarjeta del cargo, que se pregunta
+ * a Stripe. Una de Espana o de otro pais de la UE, a revisar (card_country). Nunca se rechaza la
+ * tarjeta por su pais (Reglamento (UE) 2018/302); sin cargo, sin tarjeta o sin saberlo, no se frena
+ * nada. Con Stripe sin contestar, el aviso se reintenta (como las devoluciones).
+ */
+async function cardProblems(d: Delivery, decl: DeclaredTax, paymentIntent: string | null): Promise<string[]> {
+  if (decl.treatment !== 'export' || isEuCountry(decl.country) || !paymentIntent || !d.payments.cardCountry) return []
+  let card: string | null
+  try {
+    card = await d.payments.cardCountry(paymentIntent)
+  } catch (error) {
+    if (error instanceof RetryableError) throw error
+    console.warn(`[entrega] sin el pais de la tarjeta de ${paymentIntent}: ${error instanceof Error ? error.message : error}`)
+    return []
+  }
+  if (!card || !isEuCountry(card)) return []
+  return [`tarjeta emitida en ${card} y venta sin IVA a ${decl.country}, fuera de la UE: la empresa puede ser de ${card === 'ES' ? 'España' : 'la UE'}`]
+}
+
+/** Lo que hay que hacer, tambien en los datos de la compra (review_data.todo). */
+function todoFor(reason: ReviewReason, kind: Purchase['kind']): string | undefined {
+  return (kind === 'renewal' ? REVIEW_TODO[`${reason}_renewal`] : undefined) ?? REVIEW_TODO[reason]
+}
+
+/**
+ * Lo declarado, para los datos de una compra a revisar: con la consulta de VIES entera (numero,
+ * fecha y, si los dio, nombre y direccion), para entregarla a mano con ella (deliverJobs).
+ */
+function declaredData(decl: DeclaredTax) {
+  const vies = decl.viesRequest
+    ? { vies: decl.viesRequest, viesCheckedAt: decl.viesCheckedAt, ...(decl.viesName ? { viesName: decl.viesName } : {}), ...(decl.viesAddress ? { viesAddress: decl.viesAddress } : {}) }
+    : {}
+  return { country: decl.country, territory: decl.territory, taxIdType: decl.taxIdType, treatment: decl.treatment, ...vies, legacy: decl.legacy }
+}
+
+/** La direccion de facturacion como la lee checkPaidTax. */
+function billingOf(value: Address | null) {
+  return { country: value?.country ?? null, postalCode: value?.postal_code ?? null, state: value?.state ?? null, city: value?.city ?? null }
+}
 
 function reviewJobs(purchase: Purchase, reason: ReviewReason, companyId: string | null = null): NewJob[] {
   const jobs: NewJob[] = [{ key: `notice:review:${purchase.id}`, kind: 'notice', payload: { purchaseId: purchase.id, event: 'review', reason, companyId } }]
@@ -154,6 +283,27 @@ function reviewJobs(purchase: Purchase, reason: ReviewReason, companyId: string 
 async function isOwnerEmail(d: Delivery, company: Company, email: string): Promise<boolean> {
   if (company.email === email) return true
   return (await d.repo.listMembers(company.id)).some((m) => m.role === 'owner' && m.email === email)
+}
+
+function sameAddress(a: Address | null, b: Address | null): boolean {
+  const keys = ['line1', 'line2', 'city', 'postal_code', 'state', 'country'] as const
+  return keys.every((k) => (a?.[k] ?? null) === (b?.[k] ?? null))
+}
+
+/**
+ * Una empresa que ya era cliente: lo fiscal de esta compra (lo declarado, comprobado al pagar con la
+ * direccion de facturacion de Stripe y, con NIF-IVA, con VIES) manda sobre lo de la primera; el
+ * nombre no cambia. Asi el mensual (companyTax) y las facturas (decideTax) llevan el IVA de hoy: un
+ * NIF-IVA validado en esta compra (antes sin el, con el 21 %) o la mudanza a Canarias. Un aviso
+ * viejo que llega tarde no pisa lo de una compra posterior.
+ */
+async function refreshCompanyTax(d: Delivery, company: Company, purchase: Purchase, decl: DeclaredTax, billing: Address | null) {
+  const fresh = { taxIdType: decl.taxIdType, country: billing?.country ?? decl.country, address: billing ?? company.address }
+  if (company.taxIdType === fresh.taxIdType && company.country === fresh.country && sameAddress(company.address, fresh.address)) return
+  // Por el instante, no por el texto (Supabase da ...+00:00 y aqui sale ...Z).
+  const paid = Date.parse(purchase.paidAt)
+  const later = (await d.repo.listPurchasesByCompany(company.id)).some((p) => p.kind === 'one_time' && p.id !== purchase.id && Date.parse(p.paidAt) > paid)
+  if (!later) await d.repo.updateCompany(company.id, fresh)
 }
 
 /** Una sesion de Checkout pagada: la compra y sus pasos. La usa tambien la conciliacion. */
@@ -201,12 +351,15 @@ export async function ingestCheckoutSession(d: Delivery, session: Stripe.Checkou
   }
 
   const details = session.customer_details
-  const country = details?.address?.country ?? null
+  const billing = address(details?.address)
+  // Lo declarado antes de pagar (tax_country, tax_id...: lo escribe /api/checkout, comprobado alli).
+  // En un pago de antes, el NIF de sus metadatos, el de Stripe (tax_id_collection) o el del campo
+  // propio "nif", como Espana peninsular con el 21 %.
   const taxIdRaw = details?.tax_ids?.[0]
-  // Donde Checkout no pide NIF (Estados Unidos, por ejemplo), llega en el campo propio "nif".
   const customTaxId = session.custom_fields?.find((f) => f.key === 'nif')?.text?.value ?? null
-  const taxId = normalizeTaxId(taxIdRaw?.value ?? customTaxId)
-  const taxIdType = taxIdRaw?.type ?? (customTaxId ? (country === 'US' ? 'us_ein' : 'otro') : null)
+  const written = meta.tax_id || taxIdRaw?.value || customTaxId || null
+  const decl = declaredTax(meta.tax_country ? meta : { ...meta, tax_id: written ?? undefined }) ?? legacyDeclaration(written, taxIdRaw?.type ?? null)
+  const taxId = decl.taxId || null
   const name = cleanCompanyName(details?.business_name || session.collected_information?.business_name || details?.name)
   const email = normalizeEmail(details?.email)
   const locale = asLocale(meta.locale ?? (session.locale === 'en' ? 'en' : 'es'))
@@ -214,14 +367,35 @@ export async function ingestCheckoutSession(d: Delivery, session: Stripe.Checkou
   const paidAt = unixToIso(options.paidAtUnix ?? session.created)
   const net = (session.amount_subtotal ?? 0) - (session.total_details?.amount_discount ?? 0)
   const amountTax = session.total_details?.amount_tax ?? 0
-  const tax = taxTreatment({ country, taxIdType, amountTax, net })
+  // Otra vez aqui, con lo que dice el aviso y no con lo que se pidio: lo declarado (la identificacion
+  // para su tipo, el IVA de ese pais y la consulta de VIES), la direccion de facturacion de Stripe
+  // frente a lo declarado y el IVA cobrado.
+  const tax = checkPaidTax({ declared: decl, billing: billingOf(billing), currency: session.currency, amountTax, net })
   const paymentRef = idOf(session.payment_intent) ?? session.id
   const novedades = session.custom_fields?.find((f) => f.key === 'novedades')?.dropdown?.value
 
   // Sin razon social, NIF o correo no se puede firmar una licencia que valga: a revisar a mano.
   let review: ReviewReason | null = taxId && name && email ? null : 'missing_data'
+  // Si el IVA no cuadra, a revisar, antes de crear la empresa o encolar nada.
+  const countryProblems = review ? [] : [...tax.countryProblems, ...viesProblems(decl, paidAt)]
+  const vatProblems = review ? [] : tax.vatProblems
+  const cardIssues = review ? [] : await cardProblems(d, decl, idOf(session.payment_intent))
+  review = review ?? taxReason(countryProblems, vatProblems, cardIssues)
+  const problems = [...countryProblems, ...vatProblems, ...cardIssues]
+  // Lo que pide hacer cada problema, tambien si el motivo pasa a nif_conflict.
+  const taxTodo = review ? todoFor(review, 'one_time') : undefined
   let company: Company | null = null
   let conflictCompanyId: string | null = null
+  // El NIF de una empresa cliente desde otro correo va antes que el IVA: con la direccion en otro
+  // sitio (un codigo postal de Canarias basta), la unica fila con ese NIF es la suya y entregarla le
+  // daria su zona a quien compro. Sus titulares, avisados igual; los problemas, en review_data.problems.
+  if (review && TAX_REASONS.includes(review) && taxId && email) {
+    const existing = await d.repo.getCompanyByTaxId(taxId)
+    if (existing && !(await isOwnerEmail(d, existing, email))) {
+      review = 'nif_conflict'
+      conflictCompanyId = existing.id
+    }
+  }
   if (!review) {
     const existing = await d.repo.getCompanyByTaxId(taxId!)
     if (existing && !(await isOwnerEmail(d, existing, email!))) {
@@ -231,9 +405,9 @@ export async function ingestCheckoutSession(d: Delivery, session: Stripe.Checkou
       company = await d.repo.upsertCompany({
         name: name!,
         taxId: taxId!,
-        taxIdType,
-        country,
-        address: address(details?.address),
+        taxIdType: decl.taxIdType,
+        country: billing?.country ?? decl.country,
+        address: billing,
         email: email!,
         locale,
         currency: session.currency ?? 'eur',
@@ -280,7 +454,15 @@ export async function ingestCheckoutSession(d: Delivery, session: Stripe.Checkou
     status: review ? 'needs_review' : 'paid',
     livemode: session.livemode === true,
     reviewData: review
-      ? { reason: review, companyId: conflictCompanyId, customer_details: details ?? null, taxId, session: session.id }
+      ? {
+          reason: review,
+          ...(problems.length ? { problems, todo: taxTodo } : {}),
+          companyId: conflictCompanyId,
+          customer_details: details ?? null,
+          taxId,
+          declared: declaredData(decl),
+          session: session.id,
+        }
       : null,
     paidAt,
   })
@@ -290,20 +472,17 @@ export async function ingestCheckoutSession(d: Delivery, session: Stripe.Checkou
     await d.repo.enqueueJobs(reviewJobs(purchase, data.reason ?? 'missing_data', data.companyId ?? null), d.clock())
     return 'needs-review'
   }
-  await d.repo.enqueueJobs(oneTimeJobs(purchase), d.clock())
+  if (company) await refreshCompanyTax(d, company, purchase, decl, billing)
+  const vies =
+    purchase.taxTreatment === 'reverse_charge' && decl.viesRequest && decl.viesCheckedAt
+      ? { request: decl.viesRequest, checkedAt: decl.viesCheckedAt, ...(decl.viesName ? { name: decl.viesName } : {}), ...(decl.viesAddress ? { address: decl.viesAddress } : {}) }
+      : null
+  await d.repo.enqueueJobs(oneTimeJobs(purchase, vies), d.clock())
   return 'purchase'
 }
 
 async function releaseCheckout(d: Delivery, session: Stripe.Checkout.Session): Promise<EventOutcome> {
-  const meta = session.metadata ?? {}
-  if (meta.launch_ref) await d.repo.markLaunchSlot(meta.launch_ref, 'released')
-  if (meta.calendar_reservation) {
-    try {
-      await d.calendar.release(meta.calendar_reservation)
-    } catch {
-      // caduca sola
-    }
-  }
+  await releaseCheckoutHolds(d, session.metadata ?? {})
   return 'released'
 }
 
@@ -322,8 +501,12 @@ export async function ingestInvoice(d: Delivery, invoice: Stripe.Invoice): Promi
     (meta.company_id ? await d.repo.getCompany(meta.company_id) : null) ??
     (customerId ? await d.repo.getCompanyByStripeCustomer(customerId) : null)
 
-  const line = invoice.lines?.data?.find((l) => l.parent?.type === 'subscription_item_details') ?? invoice.lines?.data?.[0]
-  // El plan, por el precio cobrado: tras cambiar de plan en el portal, los metadatos de la suscripcion siguen con el viejo.
+  // La linea del periodo que se paga: la que llega mas lejos. Al pasar en el portal de pago mensual a
+  // anual, la factura lleva tambien el abono del mes sin usar, con el precio viejo y su fin de mes.
+  const items = (invoice.lines?.data ?? []).filter((l) => l.parent?.type === 'subscription_item_details')
+  const line = items.sort((a, b) => (b.period?.end ?? 0) - (a.period?.end ?? 0) || b.amount - a.amount)[0] ?? invoice.lines?.data?.[0]
+  // El plan, por el precio cobrado (al mes o al ano, cerebro-plan-<plan>[-anual]): tras cambiar de plan
+  // en el portal, los metadatos de la suscripcion siguen con el viejo. El soporte_hasta, el fin de ese periodo.
   const priceId = line?.pricing?.price_details?.price ?? null
   const fromPrice = priceId ? productFromLookupKey(await d.payments.priceLookupKey(priceId)) : null
   const product = [fromPrice, meta.product, company?.subscriptionPlan].find((p) => isPlanProduct(p)) ?? null
@@ -338,16 +521,35 @@ export async function ingestInvoice(d: Delivery, invoice: Stripe.Invoice): Promi
   const amountTax = (invoice.total_taxes ?? []).reduce((sum, t) => sum + t.amount, 0)
   const amountDiscount = (invoice.total_discount_amounts ?? []).reduce((sum, t) => sum + t.amount, 0)
   const net = invoice.total_excluding_tax ?? invoice.total - amountTax
-  const taxIds = (invoice.customer_tax_ids ?? []).map((t) => normalizeTaxId(t.value)).filter(Boolean)
-  const tax = taxTreatment({ country: invoice.customer_address?.country ?? company?.country ?? null, taxIdType: invoice.customer_tax_ids?.[0]?.type ?? company?.taxIdType ?? null, amountTax, net })
+  const taxIds = (invoice.customer_tax_ids ?? []).map((t) => canonicalTaxId(t.value)).filter(Boolean)
   const paidAt = unixToIso(invoice.status_transitions?.paid_at ?? invoice.created)
 
+  // Lo declarado al contratar (los metadatos de la suscripcion, con el contrato comun) o, en una de
+  // antes, lo de la empresa: el IVA que le toca a cada cobro. checkPaidTax pide la consulta de VIES de
+  // antes de pagar; en un cobro del mensual la hace su factura (el paso invoice), asi que aqui no.
+  const declared = meta.tax_country ? declaredTax(meta) : company ? companyDeclaration(company) : null
+  const decl = declared && declared.taxIdType === 'eu_vat' && !declared.viesRequest ? { ...declared, viesRequest: 'cada cobro, en su factura' } : declared
+  // Sin direccion en la factura, la de la empresa: la direccion se cambia en el pago del mensual y en el portal.
+  const billing = address(invoice.customer_address) ?? company?.address ?? null
+  const tax = decl ? checkPaidTax({ declared: decl, billing: billingOf(billing), currency: invoice.currency, amountTax, net }) : null
+
   let review: ReviewReason | null = null
-  if (!company) review = 'unknown_company'
+  let problems: string[] = []
+  if (!company || !decl || !tax) review = 'unknown_company'
   // El NIF de la factura de Stripe tiene que ser el de la empresa (la licencia y Holded van con ese).
-  else if (taxIds.length && !taxIds.includes(company.taxId)) review = 'tax_id_changed'
+  else if ((taxIds.length && !taxIds.includes(company.taxId)) || (decl.taxId && decl.taxId !== company.taxId) || (meta.tax_id && canonicalTaxId(meta.tax_id) !== company.taxId)) {
+    review = 'tax_id_changed'
+  }
   // Sin pago unico vigente (devuelto o con contracargo), el mensual no da licencia.
   else if (company.accessRevokedAt || !(await validBases(d, company.id)).length) review = 'no_base'
+  else {
+    // Lo mismo que en el pago unico, en cada cobro.
+    const moved = company.country && !sameVatCountry(decl.country, company.country, decl)
+    const countryProblems = [...tax.countryProblems, ...(moved ? [`la suscripción dice ${decl.country} y la empresa es de ${company.country}`] : [])]
+    review = taxReason(countryProblems, tax.vatProblems)
+    problems = [...countryProblems, ...tax.vatProblems]
+  }
+  const todo = review && problems.length ? todoFor(review, 'renewal') : null
 
   const { purchase } = await d.repo.createPurchase({
     companyId: company?.id ?? null,
@@ -366,8 +568,8 @@ export async function ingestInvoice(d: Delivery, invoice: Stripe.Invoice): Promi
     amountDiscount,
     amountTax,
     amountTotal: invoice.total,
-    taxTreatment: tax.treatment,
-    taxRate: tax.rate,
+    taxTreatment: tax?.treatment ?? 'standard',
+    taxRate: tax?.rate ?? null,
     launch: false,
     seats: company?.seats ?? 1,
     termsVersion: meta.terms_version ?? null,
@@ -380,7 +582,17 @@ export async function ingestInvoice(d: Delivery, invoice: Stripe.Invoice): Promi
     supportUntil: madridDate(new Date(periodEnd * 1000)),
     status: review ? 'needs_review' : 'paid',
     livemode: invoice.livemode === true,
-    reviewData: review ? { reason: review, invoice: invoice.id, customer: customerId, taxIds } : null,
+    reviewData: review
+      ? {
+          reason: review,
+          ...(problems.length ? { problems, todo } : {}),
+          invoice: invoice.id,
+          customer: customerId,
+          taxIds,
+          ...(declared ? { declared: declaredData(declared) } : {}),
+          ...(review === 'country_mismatch' ? { address: billing } : {}),
+        }
+      : null,
     paidAt,
   })
   if (purchase.status === 'needs_review') {
@@ -391,6 +603,51 @@ export async function ingestInvoice(d: Delivery, invoice: Stripe.Invoice): Promi
   if (company && company.subscriptionPlan !== product) await d.repo.updateCompany(company.id, { subscriptionPlan: product })
   await d.repo.enqueueJobs(renewalJobs(purchase, d.config.licenseMode === 'manual'), d.clock())
   return 'renewal'
+}
+
+// Clausula 4: el mensual impagado se suspende tras avisar con UNPAID_NOTICE_DAYS dias (lib/delivery/util.ts).
+// Mientras, siguen llegando las versiones nuevas: cada licencia con mantenimiento cubre su periodo y
+// esos dias mas (el paso license).
+export { UNPAID_NOTICE_DAYS }
+
+/**
+ * Un cobro del mensual que no se pudo hacer (tarjeta rechazada, o que pide confirmarlo): el aviso de
+ * la clausula 4 a los titulares, una vez por factura (al primer fallo), con el dia en que se suspende
+ * si sigue sin pagarse y el enlace de Stripe para pagarla. Stripe sigue reintentando y, al acabar (no
+ * antes de esos 15 dias: docs/entrega-automatica.md, 3.4), deja la suscripcion impagada.
+ */
+async function onPaymentFailed(d: Delivery, invoice: Stripe.Invoice, eventCreated: number): Promise<EventOutcome> {
+  if (!(invoice.total > 0)) return 'ignored-zero'
+  const subscription = invoice.parent?.subscription_details
+  if (!subscription) return 'ignored-not-subscription'
+  const meta = subscription.metadata ?? {}
+  const customerId = idOf(invoice.customer as string | { id: string } | null)
+  const company =
+    (meta.company_id ? await d.repo.getCompany(meta.company_id) : null) ??
+    (customerId ? await d.repo.getCompanyByStripeCustomer(customerId) : null)
+  if (!company) return 'payment-failed-unknown-company'
+  const product = [company.subscriptionPlan, meta.product].find((p) => isPlanProduct(p)) ?? null
+  await d.repo.enqueueJobs(
+    [
+      {
+        key: `payment_failed_email:${invoice.id}`,
+        kind: 'payment_failed_email',
+        payload: {
+          companyId: company.id,
+          invoiceId: invoice.id,
+          product,
+          amount: invoice.amount_due || invoice.total,
+          // Sin IVA espanol (inversion del sujeto pasivo, fuera de la UE...), el correo no dice «IVA incluido».
+          vatIncluded: (invoice.total_taxes ?? []).some((t) => t.amount > 0),
+          currency: invoice.currency,
+          suspendFrom: addDays(madridDate(new Date(eventCreated * 1000)), UNPAID_NOTICE_DAYS),
+          payUrl: invoice.hosted_invoice_url ?? null,
+        },
+      },
+    ],
+    d.clock()
+  )
+  return 'payment-failed'
 }
 
 const ALIVE = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused']
@@ -461,29 +718,36 @@ async function onRefund(d: Delivery, charge: Stripe.Charge): Promise<EventOutcom
   const refunds = (await d.payments.refundsOf(charge)).filter((r) => r.status !== 'failed' && r.status !== 'canceled').sort((a, b) => (a.id < b.id ? -1 : 1))
   // Devuelta entera, el Acompanado pierde sus sesiones: el aviso espera a saber cuales se cancelaron.
   const cancel = full ? cancelBookingsJob(purchase, `cancel_bookings:${p}:refund`, 'refund') : null
+  const afterInvoice = await rectifyDependsOn(d, p)
   const jobs: NewJob[] = []
+  const rectifies: string[] = []
   let credited = 0
   for (const refund of refunds) {
     // Nunca mas de lo cobrado, aunque Stripe dijera otra cosa.
     const amount = Math.min(refund.amount, Math.max(0, purchase.amountTotal - credited))
     credited += refund.amount
     if (!(amount > 0)) continue
+    rectifies.push(`rectify:${p}:${refund.id}`)
     jobs.push({
       key: `rectify:${p}:${refund.id}`,
       kind: 'rectify',
       payload: { purchaseId: p, amount, ref: `credit:${p}:${refund.id}`, reason: 'refund', refundId: refund.id },
-      dependsOn: [`invoice:${p}`],
+      dependsOn: afterInvoice,
     })
+    // El aviso cuenta lo que paso de verdad: espera a la rectificativa, a la anulacion (devuelta
+    // entera) y a las sesiones canceladas.
     jobs.push({
       key: `notice:refund:${refund.id}`,
       kind: 'notice',
       payload: { purchaseId: p, event: 'refund', amount, full, refundId: refund.id },
-      ...(cancel ? { dependsOn: [cancel.key] } : {}),
+      dependsOn: [`rectify:${p}:${refund.id}`, ...(full ? [`revoke:${p}:refund`] : []), ...(cancel ? [cancel.key] : [])],
     })
   }
   if (full) {
     jobs.push({ key: `revoke:${p}:refund`, kind: 'revoke', payload: { purchaseId: p, reason: 'refund', final: true } })
-    jobs.push({ key: `refund_email:${p}`, kind: 'refund_email', payload: { purchaseId: p, amount: charge.amount_refunded }, dependsOn: [`revoke:${p}:refund`] })
+    // Tras las rectificativas: si la factura se emitio a mano hoy, rectify la pone al dia y el correo
+    // ya puede prometer la rectificativa.
+    jobs.push({ key: `refund_email:${p}`, kind: 'refund_email', payload: { purchaseId: p, amount: charge.amount_refunded }, dependsOn: [`revoke:${p}:refund`, ...rectifies] })
     if (cancel) jobs.push(cancel)
   }
   // Primero la cola, despues la compra: si se corta en medio, el reintento de Stripe encola lo que falte.
@@ -491,6 +755,16 @@ async function onRefund(d: Delivery, charge: Stripe.Charge): Promise<EventOutcom
   const changed = await d.repo.recordRefund(p, charge.amount_refunded, full)
   if (!changed) return 'refund-already'
   return full ? 'refund' : 'partial-refund'
+}
+
+/**
+ * La rectificativa espera a la factura, salvo si su paso ya esta parado: un paso muerto no deja
+ * correr a quien depende de el, y con ella esperarian para siempre el correo de la devolucion y el
+ * aviso. Sin esperar, rectify da el aviso de rectificar a mano.
+ */
+async function rectifyDependsOn(d: Delivery, purchaseId: string): Promise<string[]> {
+  const invoice = await d.repo.getJobByKey(`invoice:${purchaseId}`)
+  return invoice?.status === 'dead' ? [] : [`invoice:${purchaseId}`]
 }
 
 /**
@@ -558,7 +832,7 @@ async function onDisputeClosed(d: Delivery, dispute: Stripe.Dispute): Promise<Ev
         key: `rectify:${p}:dispute:${dispute.id}`,
         kind: 'rectify',
         payload: { purchaseId: p, amount: Math.min(dispute.amount, purchase.amountTotal), ref: `credit:${p}:dispute:${dispute.id}`, reason: 'dispute' },
-        dependsOn: [`invoice:${p}`],
+        dependsOn: await rectifyDependsOn(d, p),
       },
       // Definitivo: como una devolucion (y sin pago unico vigente, se cancela el mensual).
       { key: `revoke:${p}:dispute-lost:${dispute.id}`, kind: 'revoke', payload: { purchaseId: p, reason: 'dispute', final: true } }

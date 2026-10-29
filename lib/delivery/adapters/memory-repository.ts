@@ -447,6 +447,10 @@ export class MemoryRepository implements Repository {
     return { version: copy(version), files: copy(files) }
   }
 
+  async listVersions() {
+    return copy(Object.values(this.state.versions))
+  }
+
   async getVersionFile(id: string) {
     const file = this.state.versionFiles[id]
     return file ? copy(file) : null
@@ -540,6 +544,18 @@ export class MemoryRepository implements Repository {
     return true
   }
 
+  /** Los pasos pendientes de esa clave dejan de esperar a dependency (lib/delivery/jobs.ts, un paso parado). */
+  async releaseDependency(dependency: string, keyPrefix: string, now: Date) {
+    let released = 0
+    for (const job of Object.values(this.state.jobs)) {
+      if (job.status !== 'pending' || !job.key.startsWith(keyPrefix) || !job.dependsOn.includes(dependency)) continue
+      job.dependsOn = job.dependsOn.filter((key) => key !== dependency)
+      job.updatedAt = now.toISOString()
+      released += 1
+    }
+    return released
+  }
+
   async reserveLaunchSlot(
     input: { ref: string; product: string; clientHash: string | null; expiresAt: string; limit: number; clientLimit: number },
     now: Date
@@ -588,6 +604,14 @@ export class MemoryRepository implements Repository {
 
   async countLaunchSlotsUsed() {
     return Object.values(this.state.launchSlots).filter((s) => s.status === 'used').length
+  }
+
+  async listOpenLaunchSlots(clientHash: string, now: Date) {
+    const at = now.toISOString()
+    // En el orden en que se apartaron (el de las claves del objeto).
+    return Object.values(this.state.launchSlots)
+      .filter((s) => s.clientHash === clientHash && s.status === 'reserved' && s.expiresAt > at)
+      .map((s) => ({ ref: s.ref, sessionId: s.sessionId }))
   }
 }
 

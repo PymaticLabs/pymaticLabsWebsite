@@ -413,6 +413,10 @@ export class SupabaseRepository implements Repository {
     return { version, files }
   }
 
+  async listVersions() {
+    return this.many<Version>('versions', this.db.from('versions').select('*'))
+  }
+
   async getVersionFile(id: string) {
     if (!isUuid(id)) return null
     return this.one<VersionFile>('version_files', this.db.from('version_files').select('*').eq('id', id).maybeSingle())
@@ -490,6 +494,32 @@ export class SupabaseRepository implements Repository {
     return rows.length > 0
   }
 
+  /**
+   * Los pasos pendientes de esa clave dejan de esperar a dependency (lib/delivery/jobs.ts, un paso
+   * parado). Uno a uno, y solo si siguen pendientes (claim_jobs no cambia depends_on: nadie mas la toca).
+   */
+  async releaseDependency(dependency: string, keyPrefix: string, now: Date) {
+    // El prefijo, sin comodines de like (las claves llevan uuid y dos puntos).
+    const pattern = `${keyPrefix.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
+    const rows = await this.many<Job>(
+      'jobs',
+      this.db.from('jobs').select('*').like('key', pattern).eq('status', 'pending').contains('depends_on', [dependency]),
+      fromJob
+    )
+    let released = 0
+    for (const job of rows) {
+      const { data, error } = await this.db
+        .from('jobs')
+        .update({ depends_on: job.dependsOn.filter((key) => key !== dependency), updated_at: now.toISOString() })
+        .eq('id', Number(job.id))
+        .eq('status', 'pending')
+        .select('id')
+      if (error) fail('jobs', error)
+      if ((data as unknown[] | null)?.length) released += 1
+    }
+    return released
+  }
+
   async reserveLaunchSlot(input: { ref: string; product: string; clientHash: string | null; expiresAt: string; limit: number; clientLimit: number }) {
     const { data, error } = await this.db.rpc('reserve_launch_slot', {
       p_ref: input.ref,
@@ -530,5 +560,17 @@ export class SupabaseRepository implements Repository {
     const { count, error } = await this.db.from('launch_slots').select('ref', { count: 'exact', head: true }).eq('status', 'used')
     if (error) fail('launch_slots', error)
     return count ?? 0
+  }
+
+  async listOpenLaunchSlots(clientHash: string, now: Date) {
+    const { data, error } = await this.db
+      .from('launch_slots')
+      .select('ref, checkout_session_id')
+      .eq('client_hash', clientHash)
+      .eq('status', 'reserved')
+      .gt('expires_at', now.toISOString())
+      .order('created_at', { ascending: true })
+    if (error) fail('launch_slots', error)
+    return ((data ?? []) as { ref: string; checkout_session_id: string | null }[]).map((r) => ({ ref: r.ref, sessionId: r.checkout_session_id }))
   }
 }

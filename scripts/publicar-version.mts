@@ -4,8 +4,9 @@
 //   node --env-file=.env.local scripts/publicar-version.mts --version 1.2.0 --dir <SALIDA> \
 //     --notas <NOTAS> --notas-en <NOTAS_EN> [--sin-aviso]
 //
-// Lee de <SALIDA> las dos extensiones, el instalador del registro, sus .sha256 y sus SBOM (los que
-// esten), comprueba cada sha256, los sube a releases/versiones/<VERSION>/ y llama a
+// Lee de <SALIDA> las dos extensiones con sus SBOM (obligatorios: la politica de vulnerabilidades
+// promete el inventario de cada version en las descargas), el instalador del registro y los .sha256
+// (los que esten), comprueba cada sha256, los sube a releases/versiones/<VERSION>/ y llama a
 // /api/admin/versions. Necesita SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_SECRET y
 // DELIVERY_SITE_URL (o NEXT_PUBLIC_SITE_URL). Ficheros de mas de 50 MB: el plan de Supabase tiene
 // que admitirlos (Storage > Settings > Upload file size limit).
@@ -43,12 +44,17 @@ const files = [
   { kind: 'checksum', name: `cerebro-registro-${version}-windows.zip.sha256`, teamOnly: true },
 ]
 
+/** Sin estos no se publica: las dos extensiones y su inventario de componentes (SBOM). */
+const REQUIRED = ['mac', 'windows', 'sbom']
+
 async function main() {
+  // Antes de subir nada: una version a medias no se queda en el almacen.
+  const missing = files.filter((f) => REQUIRED.includes(f.kind) && !fs.existsSync(path.join(dir!, f.name))).map((f) => path.join(dir!, f.name))
+  if (missing.length) throw new Error(`falta ${missing.join(', ')}`)
   const published = []
   for (const file of files) {
     const local = path.join(dir!, file.name)
     if (!fs.existsSync(local)) {
-      if (file.kind === 'mac' || file.kind === 'windows') throw new Error(`falta ${local}`)
       console.log(`  (sin ${file.name})`)
       continue
     }

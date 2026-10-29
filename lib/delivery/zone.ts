@@ -11,11 +11,11 @@
 // Cada funcion comprueba que la persona tiene acceso a esa empresa. En Supabase, la seguridad por
 // filas (RLS) lo repite por debajo para quien lea con su sesion.
 
-import { coveringPlan, firstSessionSlots } from '../checkout.ts'
+import { coveringPlan, firstSessionSlots, trialEndFor } from '../checkout.ts'
 import { clearLimit, fingerprint, ipBucket, withinLimit } from './limits.ts'
 import { isGuided, isSessionHost } from './products.ts'
 import { termsAttachment } from './terms.ts'
-import { madridDate, normalizeEmail } from './util.ts'
+import { madridDate, normalizeEmail, paidUntil } from './util.ts'
 import type { Delivery } from './container.ts'
 import type { ZoneProfile } from '../zone-profile.ts'
 import { INVOICE_DELETED_IN_HOLDED, RateLimitedError, SeatLimitError, SlotUnavailableError, type Company, type CookieJar, type Locale, type Member, type Slot, type ZoneUser } from './types.ts'
@@ -137,8 +137,11 @@ export async function zoneOverview(d: Delivery, user: ZoneUser, companyId?: stri
   ])
   const guided = purchases.some((p) => p.kind === 'one_time' && isGuided(p.product) && p.status === 'paid')
   const booked = bookings.filter((b) => b.status === 'booked')
-  // El plan con el que el mensual no se cobra hasta que acaben los meses que ya tiene (o uno menor).
+  // El plan con el que el mensual no se cobra hasta que acaben los meses que ya tiene (o uno menor),
+  // con la misma regla que el pago: si quedan 48 horas o menos (o ya acabaron), no hay prueba y se
+  // cobra desde que se contrata (trialEndFor), asi que ninguno.
   const covering = owner ? await coveringPlan(d, company) : null
+  const coveredBy = covering && trialEndFor(covering.supportUntil, d.clock()) ? covering.plan : null
   return {
     user: { email: user.email },
     companies: all.map((a) => ({ id: a.company.id, name: a.company.name, role: a.member.role })),
@@ -147,21 +150,24 @@ export async function zoneOverview(d: Delivery, user: ZoneUser, companyId?: stri
       name: company.name,
       taxId: company.taxId,
       seats: company.seats,
-      subscription: { status: company.subscriptionStatus, plan: company.subscriptionPlan, coveredBy: covering?.plan ?? null },
+      subscription: { status: company.subscriptionStatus, plan: company.subscriptionPlan, coveredBy },
       canOpenPortal: owner && Boolean(company.stripeCustomerId),
     },
     role: owner ? 'owner' : 'member',
+    // soporteHasta: lo que firma la licencia (con los 15 dias de margen de un cobro fallido); paidUntil:
+    // lo pagado o incluido, lo que se ensena.
     licenses: licenses.map((l) => ({
       id: l.id,
       modalidad: l.modalidad,
       equipo: l.equipo,
       emitida: l.emitida,
       soporteHasta: l.soporteHasta,
+      paidUntil: paidUntil(l),
       fileName: l.fileName,
       revoked: Boolean(l.revokedAt),
     })),
     // Las que Eric aun tiene que firmar (LICENSE_MODE=manual): la zona dice que llegan en unas horas.
-    pendingLicenses: requested.map((r) => ({ kind: r.kind, modalidad: r.modalidad, equipo: r.equipo, emitida: r.emitida, soporteHasta: r.soporteHasta, requestedAt: r.createdAt })),
+    pendingLicenses: requested.map((r) => ({ kind: r.kind, modalidad: r.modalidad, equipo: r.equipo, emitida: r.emitida, soporteHasta: r.soporteHasta, paidUntil: paidUntil(r), requestedAt: r.createdAt })),
     invoices: invoices
       .filter((i) => i.status !== 'draft')
       .map((i) => ({ id: i.id, kind: i.kind, number: i.number, amountTotal: i.amountTotal, currency: i.currency, date: i.approvedAt ?? i.createdAt, downloadable: Boolean(i.storagePath) })),
@@ -241,6 +247,8 @@ export async function termsFile(d: Delivery, user: ZoneUser, purchaseId: string)
     taxId: company.taxId,
     acceptedAt: purchase.termsAcceptedAt ?? purchase.paidAt,
     paymentRef: purchase.paymentRef,
+    // Sus enlaces, a la web desde el fichero guardado (como la copia de la bienvenida).
+    siteUrl: d.config.siteUrl,
   })
   if (!terms) throw new ZoneError(404, 'no esta la copia de esa version')
   return { fileName: terms.attachment.name, content: terms.attachment.content }

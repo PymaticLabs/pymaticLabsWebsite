@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { localePath } from '@/lib/i18n'
+import { BOOKING_URL } from '@/app/[locale]/contacto/booking'
 
 const PEOPLE = [
   { name: 'Eric', photo: '/eric.jpg' },
@@ -43,7 +44,7 @@ export default function Closing() {
           </Button>
         </div>
         <a
-          href="https://cal.com/pymaticlabs"
+          href={BOOKING_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-5 inline-flex min-h-11 items-center gap-0.5 text-[17px] font-medium text-brand hover:underline hover:underline-offset-4"

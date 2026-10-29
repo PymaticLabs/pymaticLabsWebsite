@@ -8,8 +8,10 @@
 //    acaba este paso: la clave de la web pudo usarse fuera de la entrega. Se pregunta a Stripe de
 //    pocos en pocos a la vez y con tiempo tasado: si no da tiempo a todas, el aviso lo dice.
 //    Las firmadas a mano por Eric (LICENSE_MODE=manual) cuentan igual: tambien tienen su pago.
-// 3. Facturas en borrador (emision a mano): si ya se emitieron en Holded, se guardan para la zona.
-//    Si ya no estan (404: borradas a mano), se apuntan asi y no se buscan mas.
+// 3. Facturas y rectificativas en borrador (emision a mano): si ya se emitieron en Holded, se
+//    guardan para la zona y Holded se las manda al cliente, como a las que se emiten solas (la
+//    clausula 4 y el diseno: «Holded la envia por correo»). Si ya no estan (404: borradas a mano),
+//    se apuntan asi y no se buscan mas.
 // 4. Pasos parados en la cola.
 // 5. Licencias pedidas a mano que siguen sin firmar pasadas LICENSE_PENDING_ALERT_HOURS horas:
 //    aviso cada dia hasta que se suban (el primero lo da license_reminder a esas horas).
@@ -32,6 +34,8 @@ export interface ReconcileReport {
   recovered: { ref: string; outcome: string }[]
   skipped: { ref: string; reason: string }[]
   invoicesStored: string[]
+  /** De esas, las que Holded ha mandado al cliente (todas las de una compra que la web conoce). */
+  invoicesSent: string[]
   /** Borradores que ya no estan en Holded (borrados a mano): se apuntan y dejan de buscarse. */
   invoicesDeleted: string[]
   deadJobs: number
@@ -49,7 +53,20 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
   const now = d.clock()
   const since = new Date(now.getTime() - (options.days ?? d.config.reconcileDays) * 86400_000)
   const sinceUnix = Math.floor(since.getTime() / 1000)
-  const report: ReconcileReport = { since: since.toISOString(), checkedLicenses: 0, unchecked: 0, orphans: [], recovered: [], skipped: [], invoicesStored: [], invoicesDeleted: [], deadJobs: 0, pendingLicenses: [], errors: [] }
+  const report: ReconcileReport = {
+    since: since.toISOString(),
+    checkedLicenses: 0,
+    unchecked: 0,
+    orphans: [],
+    recovered: [],
+    skipped: [],
+    invoicesStored: [],
+    invoicesSent: [],
+    invoicesDeleted: [],
+    deadJobs: 0,
+    pendingLicenses: [],
+    errors: [],
+  }
 
   // 1. Pagos sin entregar
   for (const raw of await d.payments.listPaidCheckoutSessions(sinceUnix)) {
@@ -158,9 +175,20 @@ export async function reconcile(d: Delivery, options: { days?: number; budgetMs?
         continue
       }
       if (!doc.approved) continue
-      const updated = await d.repo.updateInvoice(invoice.id, { status: 'approved', number: doc.number, approvedAt: now.toISOString() })
-      await storeInvoicePdf(d, updated, invoice.kind)
+      // Emitida a mano en Holded: su PDF para la zona y, como al emitirse sola, que Holded se la mande
+      // al cliente (los avisos ya no piden enviarla). El estado, al final: si algo falla, se repite
+      // al dia siguiente.
+      const purchase = await d.repo.getPurchase(invoice.purchaseId)
+      await storeInvoicePdf(d, { ...invoice, number: doc.number }, invoice.kind)
+      if (purchase) await d.invoicer.sendDocument(invoice.kind, invoice.providerId, purchase.email, purchase.locale)
+      await d.repo.updateInvoice(invoice.id, {
+        status: purchase ? 'sent' : 'approved',
+        number: doc.number,
+        approvedAt: now.toISOString(),
+        ...(purchase ? { sentAt: now.toISOString() } : {}),
+      })
       report.invoicesStored.push(doc.number ?? invoice.id)
+      if (purchase) report.invoicesSent.push(doc.number ?? invoice.id)
     } catch (error) {
       report.errors.push(`factura ${invoice.ref}: ${errorMessage(error)}`)
     }
