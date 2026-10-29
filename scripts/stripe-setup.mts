@@ -169,7 +169,8 @@ async function main() {
       // la renovacion (en el anual, hasta un ano) y, cancelando al final del periodo, no se cobraba
       // nunca. La factura del cambio llega con invoice.paid y da la licencia con el plan nuevo.
       proration_behavior: 'always_invoice',
-      products: planProducts,
+      // Sin cambiar la cantidad: cada suscripcion es una empresa y un plan (Stripe la deja cambiar si no se dice).
+      products: planProducts.map((p) => ({ ...p, adjustable_quantity: { enabled: false } })),
       // Bajar de plan o pasar de anual a mensual, al final del periodo pagado: ni abonos ni devoluciones.
       schedule_at_period_end: { conditions: [{ type: 'decreasing_item_amount' }, { type: 'shortening_interval' }] },
       // Con meses incluidos (prueba), cambiar de plan o pasar a anual no los acaba: se cobra al acabar.

@@ -6,12 +6,12 @@
     "howTitle": "Funciones del Cerebro Digital",
     "howDescription": "Todo lo que hace el Cerebro Digital y lo que necesitas para usarlo, de un vistazo.",
     "pricingTitle": "Precios del Cerebro Digital",
-    "pricingDescription": "Pago único y licencia perpetua por empresa. Hazlo tú desde 500 € (precio de lanzamiento), sin IVA.",
+    "pricingDescription": "Pago único y licencia perpetua por empresa. Desde 500 € (precio de lanzamiento), sin IVA.",
     "securityTitle": "Seguridad y privacidad",
     "securityDescription": "Tu cerebro vive en tus equipos. Nuestra promesa de privacidad, lo que hay detrás y la política de vulnerabilidades del Cerebro Digital.",
     "contactTitle": "Contacto",
     "contactDescription": "Cuéntanos qué hace tu empresa y te decimos qué modalidad del Cerebro Digital te encaja.",
-    "pricingDescriptionList": "Pago único y licencia perpetua por empresa. Hazlo tú desde {price}, sin IVA."
+    "pricingDescriptionList": "Pago único y licencia perpetua por empresa. Desde {price}, sin IVA."
   },
   "nav": {
     "home": "Cerebro Digital, de Pymatic Labs: inicio",
@@ -722,14 +722,14 @@
     "steps": [
       "El enlace a tu zona de socio, donde están tu licencia, las descargas para Mac y Windows y tus facturas.",
       "Tu licencia, adjunta. Guárdala: el montaje te la pedirá.",
-      "Las condiciones que aceptaste y, en el Acompañado, la cita de tu primera sesión.",
+      "Las condiciones que aceptaste y, en Dúo y Orquesta, la cita de tu primera sesión.",
       "La factura, en un correo aparte."
     ],
     "subtitleManual": "En unos minutos te llega un correo de bienvenida con el acceso a tu zona de socio. Tu licencia, en otro correo, en unas horas.",
     "stepsManual": [
       "El enlace a tu zona de socio, con las descargas para Mac y Windows y, en cuanto estén, tu licencia y tus facturas.",
       "Tu licencia, en otro correo en unas horas. Guárdala: el montaje te la pedirá.",
-      "Las condiciones que aceptaste y, en el Acompañado, la cita de tu primera sesión.",
+      "Las condiciones que aceptaste y, en Dúo y Orquesta, la cita de tu primera sesión.",
       "La factura, en un correo aparte."
     ],
     "help": "¿No te llega? Mira en la carpeta de correo no deseado o escríbenos a info@pymaticlabs.com.",
@@ -829,10 +829,10 @@
     "phone": "Teléfono (opcional)",
     "interest": "¿Qué te interesa? (opcional)",
     "interestOptions": {
-      "hazlo-tu": "Hazlo tú",
-      "hazlo-tu-equipo": "Hazlo tú con equipo",
-      "acompanado": "Acompañado",
-      "acompanado-equipo": "Acompañado con equipo",
+      "hazlo-tu": "Solista (en solitario, 1 persona)",
+      "hazlo-tu-equipo": "Banda (en solitario, hasta 10 personas)",
+      "acompanado": "Dúo (acompañado, 1 persona)",
+      "acompanado-equipo": "Orquesta (acompañado, hasta 10 personas)",
       "a-medida": "A medida",
       "no-lo-se": "Aún no lo sé"
     },
@@ -1178,7 +1178,7 @@
     "sessions": {
       "title": "Sesiones de montaje",
       "intro": "Dos sesiones de una hora por videollamada, con Eric o con Sergio, para dejar tu Cerebro Digital montado. De lunes a viernes de 18:00 a 22:00 y los sábados de 10:00 a 14:00, hora de Madrid.",
-      "notGuided": "Las sesiones de montaje son del Acompañado. Para tenerlas, pasa al Acompañado pagando la diferencia: escríbenos a info@pymaticlabs.com.",
+      "notGuided": "Las sesiones de montaje son del Acompañado: Dúo y Orquesta. Para tenerlas, pasa al Acompañado pagando la diferencia: escríbenos a info@pymaticlabs.com.",
       "bookedTitle": "Tus sesiones",
       "noneBooked": "Aún no tienes ninguna sesión reservada.",
       "number": "{number}.ª sesión",

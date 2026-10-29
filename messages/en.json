@@ -6,12 +6,12 @@
     "howTitle": "Digital Brain features",
     "howDescription": "Everything the Digital Brain does and what you need to use it, at a glance.",
     "pricingTitle": "Digital Brain pricing",
-    "pricingDescription": "One-off payment and a perpetual license per company. Do it yourself from €500 (launch price), excluding VAT.",
+    "pricingDescription": "One-off payment and a perpetual license per company. From €500 (launch price), excluding VAT.",
     "securityTitle": "Security and privacy",
     "securityDescription": "Your brain lives on your computers. Our privacy promise, what is behind it and the Digital Brain vulnerability policy.",
     "contactTitle": "Contact",
     "contactDescription": "Tell us what your company does and we will tell you which Digital Brain option fits.",
-    "pricingDescriptionList": "One-off payment and a perpetual license per company. Do it yourself from {price}, excluding VAT."
+    "pricingDescriptionList": "One-off payment and a perpetual license per company. From {price}, excluding VAT."
   },
   "nav": {
     "home": "Digital Brain, by Pymatic Labs: home",
@@ -722,14 +722,14 @@
     "steps": [
       "The link to your member area, with your license, the downloads for Mac and Windows and your invoices.",
       "Your license, attached. Keep it: setup will ask you for it.",
-      "The terms you accepted and, with Guided, your first session appointment.",
+      "The terms you accepted and, with Duo and Orchestra, your first session appointment.",
       "The invoice, in a separate email."
     ],
     "subtitleManual": "In a few minutes you will get a welcome email with access to your member area. Your license follows in another email within a few hours.",
     "stepsManual": [
       "The link to your member area, with the downloads for Mac and Windows and, as soon as they are ready, your license and your invoices.",
       "Your license, in another email within a few hours. Keep it: setup will ask you for it.",
-      "The terms you accepted and, with Guided, your first session appointment.",
+      "The terms you accepted and, with Duo and Orchestra, your first session appointment.",
       "The invoice, in a separate email."
     ],
     "help": "Not arriving? Check your spam folder or write to info@pymaticlabs.com.",
@@ -829,10 +829,10 @@
     "phone": "Phone (optional)",
     "interest": "What are you interested in? (optional)",
     "interestOptions": {
-      "hazlo-tu": "Do it yourself",
-      "hazlo-tu-equipo": "Do it yourself, team",
-      "acompanado": "Guided",
-      "acompanado-equipo": "Guided, team",
+      "hazlo-tu": "Solo (on your own, 1 person)",
+      "hazlo-tu-equipo": "Band (on your own, up to 10 people)",
+      "acompanado": "Duo (guided, 1 person)",
+      "acompanado-equipo": "Orchestra (guided, up to 10 people)",
       "a-medida": "Custom",
       "no-lo-se": "Not sure yet"
     },
@@ -1178,7 +1178,7 @@
     "sessions": {
       "title": "Setup sessions",
       "intro": "Two one-hour sessions by video call, with Eric or with Sergio, to get your Digital Brain set up. Monday to Friday from 18:00 to 22:00 and Saturdays from 10:00 to 14:00, Madrid time.",
-      "notGuided": "Setup sessions come with the Guided option. To get them, move to Guided by paying the difference: write to us at info@pymaticlabs.com.",
+      "notGuided": "Setup sessions come with Guided: Duo and Orchestra. To get them, move to Guided by paying the difference: write to us at info@pymaticlabs.com.",
       "bookedTitle": "Your sessions",
       "noneBooked": "You have no sessions booked yet.",
       "number": "Session {number}",

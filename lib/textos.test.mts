@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { companyAlertEmail, paymentFailedEmail, welcomeEmail } from './delivery/emails.ts'
 import { parseOtherTaxId } from './delivery/checkout-tax.ts'
+import { productName, shortProductName } from './delivery/products.ts'
 
 // Los textos de la web (messages/es.json y en.json): los dos idiomas con las mismas claves, marcadores
 // y etiquetas; cada clave que usa el codigo, en los dos; y lo que piden la oferta v1.9 y las
@@ -388,4 +389,32 @@ test('lo que dice cada caso es lo que hace: launch_busy, los 15 dias, la identif
   const alert = companyAlertEmail({ locale: 'es', company: 'Acme SA de CV', product: 'hazlo-tu', date: '2026-11-02' })
   assert.doesNotMatch(`${alert.subject}\n${alert.text}`, /\bNIF\b/)
   assert.match(alert.subject, /^Una compra con vuestra identificación fiscal/)
+})
+
+test('las modalidades, con su nombre propio: lo que se paga, se recibe y se firma se llama como en la web', () => {
+  // Sergio, 29-10-2026: En solitario (Solista y Banda) y Acompanado (Duo y Orquesta). Los ids no
+  // cambian; los nombres, los de lib/delivery/products.ts (Stripe, Holded y los correos).
+  const ids = ['hazlo-tu', 'hazlo-tu-equipo', 'acompanado', 'acompanado-equipo'] as const
+  for (const [o, locale] of [
+    [es, 'es'],
+    [en, 'en'],
+  ] as const) {
+    // El formulario de contacto: cada modalidad, por su nombre y, entre parentesis, su familia.
+    for (const id of ids) assert.ok(str(o, `contact.interestOptions.${id}`).startsWith(`${shortProductName(id, locale)} (`), `${locale}: ${id}`)
+    // El correo de bienvenida y el de una compra con la identificacion de otro cliente, con ese nombre.
+    const base = { company: 'Acme SL', licenseId: 'PML-LIC-2026-5001', supportUntil: '2027-01-29', emitida: '2026-10-29', zoneUrl: 'https://pymaticlabs.com/zona', guided: true, booking: null, termsAttached: true }
+    assert.ok(welcomeEmail({ ...base, locale, product: 'acompanado-equipo' }).text.includes(`${productName('acompanado-equipo', locale)}.`), locale)
+    assert.ok(companyAlertEmail({ locale, company: 'Acme SL', product: 'hazlo-tu', date: '2026-11-02' }).text.includes(productName('hazlo-tu', locale)), locale)
+  }
+  assert.match(welcomeEmail({ company: 'Acme SL', product: 'hazlo-tu', licenseId: null, supportUntil: '2026-10-29', emitida: '2026-10-29', zoneUrl: 'https://pymaticlabs.com/zona', guided: false, booking: null, termsAttached: true, locale: 'es' }).text, /Gracias por comprar Cerebro Digital · Solista\./)
+  // Las sesiones, del Acompanado: Duo y Orquesta (/gracias y la zona, a quien compro Solista o Banda).
+  for (const key of ['thanks.steps.2', 'thanks.stepsManual.2', 'zone.sessions.notGuided']) {
+    assert.match(str(es, key), /Dúo y Orquesta/, key)
+    assert.match(str(en, key), /Duo and Orchestra/, key)
+  }
+  // Fuera de la oferta y los precios (offer.* y pricing.*, los de /precios y la portada), ningun texto
+  // con los nombres de antes.
+  const old = (o: Messages, re: RegExp) => strings(o).filter(([k, v]) => !/^(offer|pricing)\./.test(k) && re.test(v)).map(([k]) => k)
+  assert.deepEqual(old(es, /Hazlo tú|Acompañado con equipo/), [])
+  assert.deepEqual(old(en, /Do it yourself|Guided, team|the Guided option/i), [])
 })

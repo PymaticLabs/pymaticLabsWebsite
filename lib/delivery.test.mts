@@ -96,6 +96,9 @@ test('Hazlo tu: factura, licencia firmada con el pago, cuenta, bienvenida con li
   assert.equal(docs.length, 1)
   assert.equal(docs[0].draft.lines[0].price, 990)
   assert.equal(docs[0].approved, false)
+  // El producto, con el nombre de la web (Solista; el id sigue siendo hazlo-tu).
+  assert.equal(docs[0].draft.lines[0].name, 'Cerebro Digital · Solista')
+  assert.equal(docs[0].draft.reference, `Cerebro Digital · Solista · ${session.payment_intent}`)
 
   // La cuenta: quien compro es titular.
   const members = await w.d.repo.listMembers(purchase.companyId!)
@@ -105,6 +108,7 @@ test('Hazlo tu: factura, licencia firmada con el pago, cuenta, bienvenida con li
   const welcome = w.f.mailer.sent.find((m) => m.to === purchase.email && m.tags?.includes('bienvenida'))
   assert.ok(welcome)
   assert.match(welcome.text, /zona/)
+  assert.match(welcome.text, /Gracias por comprar Cerebro Digital · Solista\./)
   const zip = welcome.attachments!.find((a) => a.name.endsWith('.zip'))!
   const [inside] = unzip(zip.content)
   assert.equal(inside.name, license.fileName)
@@ -1065,7 +1069,7 @@ test('devolucion de una compra repetida: con otra compra vigente, la zona sigue 
   assert.equal((await w.d.repo.getCompany(purchase.companyId!))?.accessRevokedAt, null)
   const mail = w.f.mailer.sent.find((m) => m.to === purchase.email && m.tags?.includes('devolucion'))
   assert.ok(mail)
-  assert.ok(mail.text.includes(`la licencia de esa compra (Cerebro Digital · Hazlo tú, ${license.id}) deja de valer`))
+  assert.ok(mail.text.includes(`la licencia de esa compra (Cerebro Digital · Solista, ${license.id}) deja de valer`))
   assert.match(mail.text, /sigue con su otra compra, con su licencia y tu zona de socio: no hay nada que borrar/)
   assert.doesNotMatch(mail.text, /borra la extensión|se cierra tu zona/)
   assert.match(mail.text, /La factura rectificativa te llega en un correo aparte/)
