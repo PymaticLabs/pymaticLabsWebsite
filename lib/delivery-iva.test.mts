@@ -159,7 +159,10 @@ test('cada caso de IVA de punta a punta: la empresa, la licencia y la factura co
     // La factura en Holded: el impuesto de su caso, la mencion y, sin IVA a la UE, la consulta de VIES en
     // las notas, que salen impresas: solo eso (el pago de Stripe va en la descripcion, la referencia).
     const invoice = (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!
-    assert.equal(invoice.holdReason, null, c.name)
+    // La de la UE sin NIF-IVA nunca se emite sola, tampoco con HOLDED_INVOICE_MODE=emit: la regla de
+    // Verifactu de Holded le pondria NIF/IVA (02) y hay que cambiarlo a mano antes de aprobarla.
+    if (c.name === 'ue-sin-nif-iva') assert.match(invoice.holdReason ?? '', /UE sin NIF-IVA \(FR\): .*«Documento oficial» \(04\)/, c.name)
+    else assert.equal(invoice.holdReason, null, c.name)
     const doc = docOf(w, invoice.providerId)
     assert.deepEqual([doc.draft.taxTreatment, doc.draft.taxRate, doc.draft.lines[0].price], [c.treatment, c.rate, net / 100], c.name)
     if (c.mention) assert.match(doc.draft.body ?? '', c.mention, c.name)
