@@ -1,6 +1,6 @@
 // El IVA del cobro y de cada factura (los socios, 27-10-2026: se vende a todo el mundo, solo a
-// empresas y profesionales y en euros; knowledge/10_Fiscal/iva-en-ventas.md y la seccion «Cuando se
-// abra Europa» de iva-en-el-cobro-automatico.md). Sin Stripe Tax: el IVA lo decide la web antes de
+// empresas y profesionales y en euros; knowledge/10_Fiscal/iva-en-ventas.md y la seccion «El IVA
+// de cada caso» de iva-en-el-cobro-automatico.md). Sin Stripe Tax: el IVA lo decide la web antes de
 // pagar (lib/delivery/checkout-tax.ts) y lo escribe en los metadatos del pago; en las ventas con IVA,
 // con un tipo fijo del 21 % de Stripe (tax_rates), sin IVA dentro del precio. No se bloquea la pagina
 // ni se rechazan tarjetas por su pais (Reglamento (UE) 2018/302).
@@ -388,6 +388,15 @@ export function decideTax(purchase: Purchase, company: Company, details: TaxDeta
       holds.push({ reason: `IVA del ${rate ?? '?'} %: solo se factura sola con el ${SPAIN_VAT_RATE} % (revisar el tipo de IVA de Stripe)`, mode: 'manual' })
     }
     if (noVat) holds.push({ reason: `se cobró el ${SPAIN_VAT_RATE} % a una venta sin IVA español (${where}): devolver el IVA o facturar a mano`, mode: 'manual' })
+    // UE sin NIF-IVA, con el 21 %: la regla de Verifactu de Holded va por pais y le pondria el tipo de
+    // identificacion NIF/IVA (02), que este cliente no tiene. Nunca se emite sola: en borrador, para
+    // cambiarlo a mano antes de aprobar (tambien con HOLDED_INVOICE_MODE=emit).
+    if (!noVat && country && country !== 'ES' && isEuCountry(country)) {
+      holds.push({
+        reason: `UE sin NIF-IVA (${country}): antes de aprobarla, en Holded, Opciones > Verifactu, tipo de identificación «Documento oficial» (04) u «Otro» (06), no NIF/IVA (02)`,
+        mode: 'draft',
+      })
+    }
     return decision('standard', rate)
   }
   if (!country) {

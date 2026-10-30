@@ -1,6 +1,6 @@
 // El pais, la identificacion fiscal y el IVA de cada compra, decididos antes de pagar (los socios,
 // 27-10-2026: se vende a todo el mundo, solo a empresas y profesionales y en euros, con el IVA de
-// cada caso de knowledge/10_Fiscal/iva-en-ventas.md y la seccion «Cuando se abra Europa» de
+// cada caso de knowledge/10_Fiscal/iva-en-ventas.md y la seccion «El IVA de cada caso» de
 // iva-en-el-cobro-automatico.md; sin Stripe Tax). Lo usan la pagina de compra (en el navegador,
 // para ensenar solo los campos que tocan y avisar antes de enviar), /api/checkout y el mensual
 // desde la zona (lib/checkout.ts), con estas mismas funciones. Sin dependencias de Node: se carga
