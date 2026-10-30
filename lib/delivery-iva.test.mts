@@ -529,6 +529,9 @@ test('Holded: el contacto de una empresa de fuera, con su pais, su NIF-IVA y su 
   // Con NIF-IVA, va al 349 y no acumula en el 347 (art. 33.2.i del RD 1065/2007); la de fuera, como siempre.
   assert.equal(eu.defaults.accumulate_in_form_347, false)
   assert.equal('accumulate_in_form_347' in us.defaults, false)
+  // Y el contacto, intracomunitario: Holded lo pide para el 349 (la de fuera, sin tipo de operacion).
+  assert.equal((eu as unknown as { tax_operation?: string }).tax_operation, 'intra')
+  assert.equal('tax_operation' in us, false)
 
   const draft = { contactId: 'ct1', reference: 'r', date: '2026-11-02', currency: 'eur', language: 'en' as const, taxRate: 0, lines: [{ name: 'n', description: null, units: 1, price: 990 }], body: 'm', notes: 'VIES X' }
   await holded.createDocument('invoice', { ...draft, taxTreatment: 'reverse_charge' })

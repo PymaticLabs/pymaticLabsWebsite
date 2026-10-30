@@ -108,6 +108,9 @@ export class HoldedInvoicer implements Invoicer {
         // El NIF-IVA intracomunitario validado en VIES, con su prefijo (EL en Grecia): el de la factura sin IVA.
         vat_number: euVat ? company.taxId : null,
         is_person: false,
+        // Para el 349, Holded pide que el contacto (no solo la factura) sea intracomunitario: tax_operation
+        // 'intra' (una de las del esquema fiscal de la cuenta: general, intra, receq, exento).
+        ...(euVat ? { tax_operation: 'intra' } : {}),
         email: company.email,
         type: 'client',
         bill_address: address
