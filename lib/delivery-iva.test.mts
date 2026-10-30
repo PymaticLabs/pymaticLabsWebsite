@@ -535,6 +535,12 @@ test('Holded: el contacto de una empresa de fuera, con su pais, su NIF-IVA y su 
   // Y el contacto, intracomunitario: Holded lo pide para el 349 (la de fuera, sin tipo de operacion).
   assert.equal((eu as unknown as { tax_operation?: string }).tax_operation, 'intra')
   assert.equal('tax_operation' in us, false)
+  // Monaco, con NIF-IVA frances: el contacto con Francia (el 349 de Holded y el error 1122 de
+  // Verifactu) y Monaco en la direccion; sin NIF-IVA, con su pais.
+  await holded.ensureContact({ ...company, name: 'Riviera SAM', taxId: 'FR40303265045', country: 'MC', address: { line1: '1 avenue de Monte-Carlo', line2: null, city: 'Monaco', postal_code: '98000', state: null, country: 'MC' } })
+  const mc = bodies[2] as { bill_address: { address: string; country: string; country_code: string } }
+  assert.deepEqual([mc.bill_address.country, mc.bill_address.country_code, mc.bill_address.address], ['FR', 'FR', '1 avenue de Monte-Carlo, Monaco'])
+  bodies.pop()
 
   const draft = { contactId: 'ct1', reference: 'r', date: '2026-11-02', currency: 'eur', language: 'en' as const, taxRate: 0, lines: [{ name: 'n', description: null, units: 1, price: 990 }], body: 'm', notes: 'VIES X' }
   await holded.createDocument('invoice', { ...draft, taxTreatment: 'reverse_charge' })
@@ -1346,5 +1352,5 @@ test('un territorio de un Estado de la UE fuera del IVA europeo (ultramar, Aland
   const pDom = await purchaseOf(w, dom)
   assert.deepEqual([pDom.taxTreatment, pDom.amountTax > 0], ['standard', true])
   assert.equal(await w.d.repo.getInvoiceByRef(`invoice:${pDom.id}`), null)
-  assert.match(w.f.mailer.sent.find((m) => /^Facturar a mano/.test(m.subject) && m.text.includes(pDom.paymentRef))!.text, /FR 97100, un departamento de ultramar de Francia; .*se cobró el 21 %: devolver ese IVA o facturarlo con él, con Manel/)
+  assert.match(w.f.mailer.sent.find((m) => /^Facturar a mano/.test(m.subject) && m.text.includes(pDom.paymentRef))!.text, /FR 97100, un departamento de ultramar de Francia; .*se cobró el 21 %, que no toca: devolver ese IVA \(devolución parcial en Stripe\) o lo que diga Manel/)
 })

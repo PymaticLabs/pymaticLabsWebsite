@@ -99,6 +99,7 @@ export class HoldedInvoicer implements Invoicer {
     if (found) return found
     const address = company.address
     const euVat = company.taxIdType === 'eu_vat'
+    const monaco = euVat && address?.country === 'MC'
     const created = await requestJson<{ id: string }>('Holded', `${this.base}/contacts`, {
       method: 'POST',
       headers: this.headers(),
@@ -113,14 +114,16 @@ export class HoldedInvoicer implements Invoicer {
         ...(euVat ? { tax_operation: 'intra' } : {}),
         email: company.email,
         type: 'client',
+        // Monaco, con NIF-IVA frances: el contacto con Francia (Holded lo pide de la UE para el 349 y
+        // Verifactu, que cuadre con el prefijo del NIF-IVA: error 1122), y Monaco en la direccion.
         bill_address: address
           ? {
-              address: [address.line1, address.line2].filter(Boolean).join(', ') || null,
+              address: [address.line1, address.line2, monaco ? 'Monaco' : null].filter(Boolean).join(', ') || null,
               city: address.city,
               postal_code: address.postal_code,
               province: address.state,
-              country: address.country,
-              country_code: address.country,
+              country: monaco ? 'FR' : address.country,
+              country_code: monaco ? 'FR' : address.country,
             }
           : null,
         // Con NIF-IVA, sus ventas van al 349 y no al 347 (art. 33.2.i del RD 1065/2007).
