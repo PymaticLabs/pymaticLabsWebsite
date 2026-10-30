@@ -29,7 +29,7 @@ export default async function ContactoPage({ params }: { params: Promise<{ local
   const t = await getTranslations({ locale, namespace: 'contact' })
 
   return (
-    <section className="pt-32 pb-20">
+    <section className="pt-24 sm:pt-32 pb-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader as="h1" title={t('title')} subtitle={t('subtitle')} />
 
@@ -53,7 +53,7 @@ export default async function ContactoPage({ params }: { params: Promise<{ local
               <p className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-brand" aria-hidden="true" />
                 <span className="text-muted">{t('emailLabel')}</span>
-                <a href="mailto:info@pymaticlabs.com" className="font-medium text-ink hover:text-brand">
+                <a href="mailto:info@pymaticlabs.com" className="inline-flex min-h-11 items-center font-medium text-ink hover:text-brand">
                   info@pymaticlabs.com
                 </a>
               </p>

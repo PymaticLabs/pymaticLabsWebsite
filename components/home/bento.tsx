@@ -44,15 +44,15 @@ export default function Bento() {
   const delay = (s: number) => ({ '--d': `${s}s` }) as React.CSSProperties
 
   return (
-    <section id="documentos" className="bg-paper py-24 sm:py-36">
+    <section id="documentos" className="bg-paper py-16 sm:py-36">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div data-reveal className="max-w-3xl">
           <p className="text-lg font-semibold text-brand">{t('eyebrow')}</p>
-          <h2 className="mt-3 text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h2>
-          <p className="mt-6 text-xl leading-relaxed text-muted sm:text-2xl sm:leading-relaxed">{t('text')}</p>
+          <h2 className="mt-3 text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h2>
+          <p className="mt-5 text-pretty text-xl leading-relaxed text-muted sm:mt-6 sm:text-2xl sm:leading-relaxed">{t('text')}</p>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:mt-14 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
           <Tile title={t('read.title')} className="md:col-span-2">
             <div className="w-full">
               <div className="flex items-center gap-5">
@@ -179,7 +179,7 @@ export default function Bento() {
   )
 }
 
-/** Una baldosa: titulo arriba, su dibujo abajo. */
+/** Una baldosa: titulo arriba, su dibujo abajo. En el movil, sin alto minimo: cada una mide lo que lleva. */
 function Tile({
   title,
   text,
@@ -197,11 +197,11 @@ function Tile({
     <div
       data-reveal
       style={{ '--delay': `${delay}s` } as React.CSSProperties}
-      className={cn('flex min-h-[21rem] flex-col overflow-hidden rounded-[28px] bg-paper-2 p-7 sm:p-9', className)}
+      className={cn('flex flex-col overflow-hidden rounded-[28px] bg-paper-2 p-6 sm:p-9 md:min-h-[21rem]', className)}
     >
-      <h3 className="text-2xl font-bold leading-tight tracking-[-0.025em] text-ink sm:text-[1.75rem]">{title}</h3>
-      {text && <p className="mt-2 text-lg leading-snug text-muted">{text}</p>}
-      <div className="mt-8 flex flex-1 items-end">{children}</div>
+      <h3 className="text-balance text-2xl font-bold leading-tight tracking-[-0.025em] text-ink sm:text-[1.75rem]">{title}</h3>
+      {text && <p className="mt-2 text-pretty text-lg leading-snug text-muted">{text}</p>}
+      <div className="mt-6 flex flex-1 items-end sm:mt-8">{children}</div>
     </div>
   )
 }

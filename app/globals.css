@@ -32,6 +32,11 @@
   --text-xs--line-height: 1.5;
   --text-sm: 0.9375rem;
   --text-sm--line-height: 1.55;
+  /* Los titulares grandes en el movil (home y /precios): crecen con el ancho de la pantalla hasta su tamano,
+     44 px los de seccion y 52 el de la portada. Asi, en los moviles de 360 px, una frase corta como «No solo
+     contesta.» sigue cabiendo en una linea. Desde sm, cada titular lleva su tamano fijo. */
+  --text-section: clamp(2.25rem, 11.2vw, 2.75rem);
+  --text-hero: clamp(2.75rem, 13.4vw, 3.25rem);
 }
 
 /* Modo oscuro: los mismos tokens con otros valores. El azul de marca se queda igual. */
@@ -212,6 +217,13 @@ body::before {
     box-shadow: 0 0 0 7px rgb(4 99 254 / 0.22);
   }
 }
+/* El menu del movil, al abrirse: baja un poco mientras aparece (solo con movimiento permitido). */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
 /* El seguro de las apariciones: todo a la vista, sea cual sea su forma de esperar (ver mas abajo). */
 @keyframes reveal-failsafe {
   to {
@@ -332,16 +344,22 @@ body::before {
 .prose-content > * + * {
   margin-top: 1rem;
 }
+/* Los titulos, con su propio interlineado y equilibrados: con el del texto (1,75), un titulo de dos lineas
+   en el movil se leia como dos titulos. */
 .prose-content h2 {
   margin-top: 2.5rem;
   font-size: 1.375rem;
   font-weight: 700;
+  line-height: 1.3;
+  text-wrap: balance;
   color: var(--color-ink);
 }
 .prose-content h3 {
   margin-top: 1.75rem;
   font-size: 1.125rem;
   font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
   color: var(--color-ink);
 }
 .prose-content ul {

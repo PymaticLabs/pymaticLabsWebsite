@@ -28,9 +28,11 @@ export default function Footer() {
 
   return (
     <footer className="bg-inverse text-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
-          <div className="space-y-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
+        {/* En el movil, Producto y Legal lado a lado (la marca y el contacto, a todo lo ancho): el pie no se
+            alarga el doble. */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4 md:gap-10">
+          <div className="col-span-2 space-y-3 md:col-span-1">
             <Link href={localePath(locale)} className="inline-flex min-h-11 items-center gap-2.5">
               <PymaticMark className="h-8 w-auto text-white" />
               <span className="text-lg font-bold">Pymatic Labs</span>
@@ -41,7 +43,7 @@ export default function Footer() {
           <FooterColumn title={t('product')} links={productLinks} />
           <FooterColumn title={t('legal')} links={legalLinks} />
 
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">
               {t('contact')}
             </h2>
@@ -61,7 +63,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/15 flex flex-col sm:flex-row gap-2 justify-between text-sm text-white/50">
+        <div className="mt-10 sm:mt-12 pt-8 border-t border-white/15 flex flex-col sm:flex-row gap-2 justify-between text-sm text-white/50">
           <p>
             © {new Date().getFullYear()} {t('copyright')}
           </p>
@@ -81,7 +83,7 @@ function FooterColumn({ title, links }: { title: string; links: { href: string; 
       <ul>
         {links.map((link) => (
           <li key={link.href}>
-            <Link href={link.href} className="inline-flex min-h-11 items-center text-sm text-white/60 hover:text-white transition-colors">
+            <Link href={link.href} className="inline-flex min-h-11 items-center py-1.5 text-sm leading-snug text-white/60 hover:text-white transition-colors">
               {link.label}
             </Link>
           </li>

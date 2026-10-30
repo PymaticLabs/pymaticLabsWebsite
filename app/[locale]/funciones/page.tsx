@@ -91,7 +91,7 @@ export default async function FuncionesPage({
 
   return (
     <>
-      <section className="pt-32 pb-10">
+      <section className="pt-24 sm:pt-32 pb-10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <p className="text-sm font-semibold uppercase tracking-wider text-brand">{t('eyebrow')}</p>
           <h1 className="mt-3 max-w-3xl text-5xl sm:text-6xl font-bold tracking-tight text-ink">{t('title')}</h1>
@@ -102,7 +102,7 @@ export default async function FuncionesPage({
         <section key={group.title} className="py-10">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <h2 className="mb-6 border-b border-line pb-3 text-2xl font-bold tracking-tight text-ink">{group.title}</h2>
-            <div className="grid grid-cols-2 gap-x-5 gap-y-7 sm:gap-x-8 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-7 min-[360px]:grid-cols-2 sm:gap-x-8 lg:grid-cols-4">
               {group.items.map((item) => {
                 const Icon = icons[item.icon] ?? BookOpenCheck
                 return (

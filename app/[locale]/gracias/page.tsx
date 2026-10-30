@@ -32,7 +32,7 @@ export default async function GraciasPage({
   const steps = t.raw(manual ? 'stepsManual' : 'steps') as string[]
 
   return (
-    <section className="pt-32 pb-20">
+    <section className="pt-24 sm:pt-32 pb-20">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <CircleCheck className="mx-auto h-16 w-16 text-brand" aria-hidden="true" />
         <h1 className="mt-6 text-3xl sm:text-4xl font-bold tracking-tight text-ink">{t('title')}</h1>

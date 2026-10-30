@@ -81,7 +81,7 @@ export default function StorySteps({ texts }: { texts: StoryTexts }) {
             key={s.title}
             ref={(el) => void (items.current[i] = el)}
             data-step={i}
-            className="py-10 first:pt-4 lg:flex lg:min-h-[78vh] lg:flex-col lg:justify-center lg:py-0"
+            className="py-8 first:pt-4 lg:flex lg:min-h-[78vh] lg:flex-col lg:justify-center lg:py-0"
           >
             <p className="text-sm font-semibold tabular-nums text-brand">{String(i + 1).padStart(2, '0')}</p>
             <h3
@@ -93,9 +93,10 @@ export default function StorySteps({ texts }: { texts: StoryTexts }) {
               {s.title}
             </h3>
             <p className={cn('mt-4 max-w-md text-xl leading-relaxed text-muted transition-opacity duration-500', i !== step && 'lg:opacity-25')}>{s.text}</p>
-            {/* En el movil, su trozo de conversacion debajo */}
-            <div className="mt-8 lg:hidden" aria-hidden="true">
-              <ChatWindow frame={frame}>{i === 0 ? [...parts[0], <Typing key="t" />] : parts[i]}</ChatWindow>
+            {/* En el movil, su trozo de conversacion debajo, sin la fecha ni la caja de escribir: cuatro
+                ventanas enteras seguidas alargaban la pagina sin contar nada mas. */}
+            <div className="mt-6 lg:hidden" aria-hidden="true">
+              <ChatWindow frame={frame} compact>{i === 0 ? [...parts[0], <Typing key="t" />] : parts[i]}</ChatWindow>
             </div>
           </li>
         ))}

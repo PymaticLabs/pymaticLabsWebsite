@@ -20,6 +20,7 @@ export interface ChatFrame {
 export function ChatWindow({
   frame,
   input,
+  compact = false,
   className,
   bodyClassName,
   children,
@@ -27,6 +28,8 @@ export function ChatWindow({
   frame: ChatFrame
   /** Lo que se esta escribiendo en la caja; si no hay nada, se ve el texto de ayuda. */
   input?: string
+  /** Sin la fecha ni la caja de escribir: los trozos de conversacion que van uno tras otro en el movil. */
+  compact?: boolean
   className?: string
   bodyClassName?: string
   children: React.ReactNode
@@ -52,10 +55,10 @@ export function ChatWindow({
         <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-muted">{frame.example}</span>
       </div>
       <div className={cn('flex flex-1 flex-col justify-end gap-3 px-4 py-5 sm:px-5', bodyClassName)}>
-        {frame.today && <p className="mb-auto self-center rounded-full bg-paper-2 px-3 py-0.5 text-xs font-medium text-muted">{frame.today}</p>}
+        {frame.today && !compact && <p className="mb-auto self-center rounded-full bg-paper-2 px-3 py-0.5 text-xs font-medium text-muted">{frame.today}</p>}
         {children}
       </div>
-      <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+      <div className={cn('px-3 pb-3 sm:px-4 sm:pb-4', compact && 'hidden')}>
         <div className="flex items-center gap-2 rounded-full border border-line bg-paper-2/80 py-1.5 pl-4 pr-1.5 sm:pl-5">
           <span className={cn('min-w-0 flex-1 truncate text-[15px] sm:text-base', input ? 'text-ink' : 'text-muted')}>
             {input || frame.placeholder}

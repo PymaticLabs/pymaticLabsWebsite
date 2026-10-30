@@ -35,34 +35,38 @@ export default function Hero({ launchLeft = null }: { launchLeft?: number | null
   }
   const title = t('hero.title').split(' ')
   const accent = t('hero.titleAccent').split(' ')
+  const word = (text: string, i: number, isAccent: boolean) => (
+    <span key={i}>
+      <span
+        className={`inline-block motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] ${isAccent ? 'text-gradient pb-[0.08em]' : ''}`}
+        style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+      >
+        {text}
+      </span>{' '}
+    </span>
+  )
 
+  // En el movil, algo menos de aire arriba y entre bloques: la conversacion asoma ya en la primera pantalla.
   return (
-    <section className="relative overflow-hidden bg-paper pb-20 pt-28 sm:pb-28 sm:pt-36 low:pt-24">
+    <section className="relative overflow-hidden bg-paper pb-16 pt-24 sm:pb-28 sm:pt-36 low:pt-24">
       <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6">
         <p className="inline-flex items-center gap-2.5 text-lg font-semibold text-ink motion-safe:animate-[rise_0.8s_cubic-bezier(0.2,0.7,0.2,1)_both]">
           <CerebroIcon className="h-8 w-8" />
           {t('hero.eyebrow')}
         </p>
-        <h1 className="mt-5 text-[3.25rem] font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:text-7xl lg:text-[6.75rem] low:mt-3 low:text-6xl low:lg:text-[5rem]">
-          {[...title.map((word) => ({ word, accent: false })), ...accent.map((word) => ({ word, accent: true }))].map(({ word, accent }, i) => (
-            <span key={i}>
-              <span
-                className={`inline-block motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] ${accent ? 'text-gradient pb-[0.08em]' : ''}`}
-                style={{ animationDelay: `${0.1 + i * 0.08}s` }}
-              >
-                {word}
-              </span>{' '}
-            </span>
-          ))}
+        <h1 className="mt-4 text-hero font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:mt-5 sm:text-7xl lg:text-[6.75rem] low:mt-3 low:text-6xl low:lg:text-[5rem]">
+          {title.map((text, i) => word(text, i, false))}
+          {/* En el movil, «tu empresa.» entera en su linea, con su color */}
+          <span className="block sm:inline">{accent.map((text, i) => word(text, title.length + i, true))}</span>
         </h1>
         <p
-          className="mx-auto mt-6 max-w-2xl text-xl leading-relaxed text-muted motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:text-2xl sm:leading-relaxed low:mt-4 low:sm:text-xl"
+          className="mx-auto mt-5 max-w-2xl text-pretty text-xl leading-relaxed text-muted motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:mt-6 sm:text-2xl sm:leading-relaxed low:mt-4 low:sm:text-xl"
           style={{ animationDelay: '0.45s' }}
         >
           {t('hero.text')}
         </p>
         <div
-          className="mt-9 flex flex-col items-center justify-center gap-3 motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:flex-row sm:gap-7 low:mt-6"
+          className="mt-7 flex flex-col items-center justify-center gap-2 motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:mt-9 sm:flex-row sm:gap-7 low:mt-6"
           style={{ animationDelay: '0.6s' }}
         >
           <Button size="lg" className="h-13 w-full px-8 text-[17px] sm:w-auto" asChild>
@@ -76,14 +80,14 @@ export default function Hero({ launchLeft = null }: { launchLeft?: number | null
             <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </Link>
         </div>
-        <div className="mt-6 flex flex-col items-center gap-4 motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both]" style={{ animationDelay: '0.7s' }}>
+        <div className="mt-5 flex flex-col items-center gap-4 motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:mt-6" style={{ animationDelay: '0.7s' }}>
           <p className="text-[15px] text-muted">{t('hero.price', { price: formatPrice(from, locale) })}</p>
           <LaunchBadge left={launchLeft} />
         </div>
       </div>
 
       {/* El producto: crece un poco al subirlo a la vista (donde el navegador lo sabe hacer, ver .scroll-zoom) */}
-      <div className="relative mx-auto mt-14 max-w-3xl px-4 sm:mt-20 sm:px-6">
+      <div className="relative mx-auto mt-10 max-w-3xl px-4 sm:mt-20 sm:px-6">
         <svg
           aria-hidden="true"
           viewBox="0 0 1120 1120"

@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -53,10 +54,20 @@ export default async function PreciosPage({
   return (
     <>
       {/* El degradado deja ver el hilo del fondo (ver body::before en globals.css) */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent sm:pt-40">
+      <section className="pt-24 pb-14 bg-gradient-to-b from-brand-soft/70 to-transparent sm:pt-40 sm:pb-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-balance text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h1>
+            {/* En el movil, cada frase en su linea («Pagas una vez.» / «Es tuyo.»), no partida por la mitad */}
+            <h1 className="text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">
+              {t('title')
+                .split(/(?<=\.) /)
+                .map((sentence, i) => (
+                  <Fragment key={i}>
+                    {i > 0 && ' '}
+                    <span className="block sm:inline">{sentence}</span>
+                  </Fragment>
+                ))}
+            </h1>
             <p className="mt-5 text-pretty text-xl leading-relaxed text-muted sm:text-2xl">{t('subtitle')}</p>
           </div>
 
@@ -71,18 +82,19 @@ export default async function PreciosPage({
             />
           </div>
 
-          {/* Lo que llevan las cuatro, en una linea bajo las tarjetas */}
-          <ul className="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2">
+          {/* Lo que llevan las cuatro, en una linea bajo las tarjetas; en el movil, una lista alineada a la
+              izquierda (centrada y partida en varias lineas no se leia) */}
+          <ul className="mx-auto mt-8 flex max-w-md flex-col gap-2.5 sm:max-w-4xl sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-6 sm:gap-y-2">
             <li className="text-sm text-muted">{t('includedTitle')}:</li>
             {included.map((item) => (
-              <li key={item} className="flex items-center gap-1.5 text-sm text-ink">
-                <Check className="h-4 w-4 text-brand" aria-hidden="true" />
+              <li key={item} className="flex items-start gap-2 text-sm text-ink sm:items-center sm:gap-1.5">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand sm:mt-0" aria-hidden="true" />
                 {item}
               </li>
             ))}
           </ul>
 
-          <div className="mt-6 space-y-1 text-center text-sm text-muted">
+          <div className="mx-auto mt-6 max-w-md space-y-2 text-pretty text-sm text-muted sm:max-w-none sm:space-y-1 sm:text-center">
             {!isCheckoutOpen() && <p className="font-medium text-ink">{t('comingSoonNote')}</p>}
             {/* A quien se vende y, debajo, el IVA de cada caso: lo unico que lo dice en la pagina */}
             <p>{t('b2b')}</p>
@@ -210,7 +222,7 @@ export default async function PreciosPage({
               <p className="mt-3 text-body leading-relaxed">{t('apart.custom.text')}</p>
             </div>
             <div className="mt-5 sm:mt-0 sm:shrink-0">
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="w-full sm:w-auto" asChild>
                 <Link href={`${localePath(locale, '/contacto')}?interes=a-medida`}>{t('apart.custom.cta')}</Link>
               </Button>
             </div>

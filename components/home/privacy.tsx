@@ -20,11 +20,11 @@ export default function Privacy() {
   const items = t.raw('items') as { icon: string; title: string; text: string }[]
 
   return (
-    <section id="privacidad" className="relative overflow-hidden bg-inverse py-28 text-white sm:py-40">
+    <section id="privacidad" className="relative overflow-hidden bg-inverse py-20 text-white sm:py-40">
       <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-16 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-brand/35 blur-[130px]" />
       <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
         <div data-reveal="zoom" className="mx-auto w-fit">
-          <svg viewBox="6.4 5.1 19.2 22.2" fill="none" aria-hidden="true" className="h-36 w-36 drop-shadow-[0_0_18px_rgb(106_164_255/0.55)] sm:h-44 sm:w-44">
+          <svg viewBox="6.4 5.1 19.2 22.2" fill="none" aria-hidden="true" className="h-28 w-28 drop-shadow-[0_0_18px_rgb(106_164_255/0.55)] sm:h-44 sm:w-44">
             <defs>
               <linearGradient id="privacy-thread" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0" stopColor="#BFDBFE" />
@@ -44,14 +44,15 @@ export default function Privacy() {
             />
           </svg>
         </div>
-        <h2 data-reveal className="mt-10 text-[3rem] font-bold leading-[1.02] tracking-[-0.045em] sm:text-7xl lg:text-8xl">
-          {t('title')} <span className="text-gradient">{t('titleAccent')}</span>
+        {/* En el movil, «es tuya.» en su propia linea: no queda una palabra suelta bajo un renglon lleno */}
+        <h2 data-reveal className="mt-8 text-balance text-[clamp(2.5rem,12.3vw,3rem)] font-bold leading-[1.02] tracking-[-0.045em] sm:mt-10 sm:text-7xl lg:text-8xl">
+          {t('title')} <span className="text-gradient block sm:inline">{t('titleAccent')}</span>
         </h2>
         <p data-reveal className="mx-auto mt-6 max-w-2xl text-xl leading-relaxed text-white/70 sm:text-2xl sm:leading-relaxed" style={{ '--delay': '0.1s' } as React.CSSProperties}>
           {t('subtitle')}
         </p>
 
-        <ul className="mt-16 grid gap-x-10 gap-y-10 text-left sm:mt-24 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-12 grid gap-x-10 gap-y-8 text-left sm:mt-24 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-4">
           {items.map((item, i) => {
             const Icon = icons[item.icon] ?? ShieldCheck
             return (
@@ -64,7 +65,7 @@ export default function Privacy() {
           })}
         </ul>
 
-        <div data-reveal className="mt-16 flex flex-col items-center gap-3 border-t border-white/15 pt-10 sm:mt-20">
+        <div data-reveal className="mt-12 flex flex-col items-center gap-3 border-t border-white/15 pt-8 sm:mt-20 sm:pt-10">
           <p className="max-w-2xl text-base leading-relaxed text-white/65">{t('claude')}</p>
           <Link
             href={localePath(locale, '/seguridad')}

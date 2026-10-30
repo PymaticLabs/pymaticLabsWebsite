@@ -41,7 +41,7 @@ export default async function SeguridadPage({
   return (
     <>
       {/* El degradado deja ver el hilo del fondo (ver body::before en globals.css) */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent">
+      <section className="pt-24 sm:pt-32 pb-16 bg-gradient-to-b from-brand-soft/70 to-transparent">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader as="h1" eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} className="mb-0" />
         </div>
@@ -75,7 +75,7 @@ export default async function SeguridadPage({
             <p className="mt-4 text-sm text-muted leading-relaxed">{t('behindNote')}</p>
             <Link
               href={localePath(locale, '/privacidad-producto')}
-              className="mt-3 inline-block text-sm font-semibold text-brand underline-offset-4 hover:underline"
+              className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
             >
               {t('privacyLink')}
             </Link>
@@ -98,7 +98,7 @@ export default async function SeguridadPage({
               <h2 className="text-lg font-semibold text-ink">{t('reportTitle')}</h2>
               <p className="mt-1 text-body">{t('reportText')}</p>
             </div>
-            <Button className="mt-4 sm:mt-0 shrink-0" asChild>
+            <Button className="mt-4 w-full shrink-0 sm:mt-0 sm:w-auto" asChild>
               <a href={`mailto:info@pymaticlabs.com?subject=${locale === 'en' ? 'Security' : 'Seguridad'}`}>
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 {t('reportCta')}

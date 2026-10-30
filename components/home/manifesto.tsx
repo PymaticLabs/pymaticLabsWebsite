@@ -37,7 +37,7 @@ export default function Manifesto({ problem, promise }: { problem: string; promi
   }, [])
 
   return (
-    <section className="bg-paper py-24 sm:py-40">
+    <section className="bg-paper py-16 sm:py-40">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <p
           ref={ref}

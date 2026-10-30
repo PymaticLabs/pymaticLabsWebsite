@@ -33,6 +33,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
   const locale = useLocale()
   const barePath = useBarePath()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isHidden, setIsHidden] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [account, setAccount] = useState<Account>(zone ? 'guest' : 'hidden')
   const [accountOpen, setAccountOpen] = useState(false)
@@ -41,7 +42,9 @@ export default function Navbar({ zone }: { zone: boolean }) {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const mobileMenuId = useId()
 
-  // Con el menu del movil abierto, Escape lo cierra y devuelve el foco al boton que lo abrio.
+  // Con el menu del movil abierto (ocupa la pantalla): Escape lo cierra y devuelve el foco al boton que lo
+  // abrio, y la pagina de detras ni se desplaza ni se alcanza con el teclado (inert). Si la pantalla se
+  // ensancha hasta la barra completa (el movil en horizontal), se cierra.
   useEffect(() => {
     if (!isMobileOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -49,15 +52,44 @@ export default function Navbar({ zone }: { zone: boolean }) {
       setIsMobileOpen(false)
       menuButtonRef.current?.focus()
     }
+    const wide = window.matchMedia('(min-width: 768px)')
+    const onWide = () => {
+      if (wide.matches) setIsMobileOpen(false)
+    }
+    const root = document.documentElement
+    const behind = Array.from(document.querySelectorAll<HTMLElement>('body > main, body > footer'))
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    wide.addEventListener('change', onWide)
+    root.style.overflow = 'hidden'
+    behind.forEach((el) => el.setAttribute('inert', ''))
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      wide.removeEventListener('change', onWide)
+      root.style.overflow = ''
+      behind.forEach((el) => el.removeAttribute('inert'))
+    }
   }, [isMobileOpen])
 
+  // La barra se vuelve opaca al bajar. Con poca altura (el movil en horizontal), ademas se esconde al bajar
+  // y vuelve al subir: deja sitio a lo que se lee.
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10)
+    const low = window.matchMedia('(max-height: 500px)')
+    let lastY = window.scrollY
+    const handleScroll = () => {
+      const y = window.scrollY
+      setIsScrolled(y > 10)
+      if (Math.abs(y - lastY) < 8) return
+      setIsHidden(low.matches && y > lastY && y > 64)
+      lastY = y
+    }
+    const onLow = () => setIsHidden(false)
     handleScroll()
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    low.addEventListener('change', onLow)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      low.removeEventListener('change', onLow)
+    }
   }, [])
 
   // Las paginas son estaticas: la sesion de la zona se pregunta desde el navegador. Mientras no se
@@ -134,19 +166,23 @@ export default function Navbar({ zone }: { zone: boolean }) {
 
   const isActive = (href: string) => current === href
   const loginHref = localePath(locale, '/zona/entrar')
+  // Escondida solo al bajar en las pantallas bajas, y nunca con un menu abierto o con el foco dentro.
+  const hidden = isHidden && !isMobileOpen && !accountOpen
 
   return (
     <header
+      onFocusCapture={() => setIsHidden(false)}
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
-        isScrolled || isMobileOpen ? 'bg-surface/90 backdrop-blur-md border-b border-line' : 'bg-transparent'
+        'fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,translate] duration-300 motion-reduce:transition-none',
+        isMobileOpen ? 'bg-surface border-b border-line' : isScrolled ? 'bg-surface/90 backdrop-blur-md border-b border-line' : 'bg-transparent',
+        hidden && '-translate-y-full'
       )}
     >
-      <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* La empresa, con su simbolo, y debajo el producto. */}
-        <Link href={localePath(locale)} onClick={closeMobile} className="flex min-h-11 items-center gap-2.5" aria-label={t('home')}>
+      <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        {/* La empresa, con su simbolo, y debajo el producto: siempre en una linea cada uno. */}
+        <Link href={localePath(locale)} onClick={closeMobile} className="flex min-h-11 shrink-0 items-center gap-2.5" aria-label={t('home')}>
           <PymaticMark className="h-9 w-auto text-ink" />
-          <span className="flex flex-col">
+          <span className="flex flex-col whitespace-nowrap">
             <span className="text-[17px] font-bold leading-tight tracking-[-0.01em] text-ink">Pymatic Labs</span>
             <span className="text-xs leading-tight text-muted">{t('brand')}</span>
           </span>
@@ -193,7 +229,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
             <div className="grid items-center justify-items-end">
               <span aria-hidden="true" className={cn(LOGIN_PILL, 'invisible col-start-1 row-start-1')}>
                 <UserRound className="h-4 w-4" />
-                {t('login')}
+                <span className={LOGIN_LABEL}>{t('login')}</span>
               </span>
               {account === 'guest' ? (
                 <>
@@ -213,7 +249,7 @@ export default function Navbar({ zone }: { zone: boolean }) {
                     )}
                   >
                     <UserRound className="h-4 w-4" aria-hidden="true" />
-                    {t('login')}
+                    <span className={LOGIN_LABEL}>{t('login')}</span>
                   </Link>
                 </>
               ) : (
@@ -226,7 +262,8 @@ export default function Navbar({ zone }: { zone: boolean }) {
 
           <button
             ref={menuButtonRef}
-            className="md:hidden p-2.5 text-ink"
+            type="button"
+            className="-mr-2 flex h-11 w-11 items-center justify-center text-ink md:hidden"
             onClick={() => {
               setIsMobileOpen(!isMobileOpen)
               setAccountOpen(false)
@@ -235,41 +272,58 @@ export default function Navbar({ zone }: { zone: boolean }) {
             aria-expanded={isMobileOpen}
             aria-controls={isMobileOpen ? mobileMenuId : undefined}
           >
-            {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {/* Las rayas y la cruz, una en lugar de la otra con un fundido corto */}
+            <span className="relative h-6 w-6" aria-hidden="true">
+              <Menu className={cn(MENU_ICON, isMobileOpen && MENU_ICON_OFF)} />
+              <X className={cn(MENU_ICON, !isMobileOpen && MENU_ICON_OFF)} />
+            </span>
           </button>
         </div>
       </nav>
 
-      {/* Con el movil en horizontal (o con la letra muy grande) puede no caber: se desplaza dentro */}
+      {/* El menu del movil: toda la pantalla bajo la barra, los enlaces en grande arriba y, abajo, al alcance
+          del pulgar, Ver precios, el tema y el idioma. Si no cabe (en horizontal o con la letra muy grande),
+          se desplaza dentro. */}
       {isMobileOpen && (
-        <div id={mobileMenuId} className="md:hidden max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-surface border-t border-line px-4 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={isActive(link.href) ? 'page' : undefined}
-              className={cn('block text-base hover:text-brand py-3', isActive(link.href) ? 'text-brand font-medium' : 'text-ink')}
-              onClick={closeMobile}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <div className="pt-3 flex items-center gap-3">
-            <ThemeToggle />
-            <Link
-              href={altHref}
-              hrefLang={altLocale}
-              lang={altLocale}
-              aria-label={t('langLabel')}
-              className="inline-flex h-11 items-center text-sm font-medium text-muted border border-line rounded-full px-4"
-            >
-              {t('langSwitch')}
-            </Link>
-            <Button className="h-11 px-5" asChild>
+        <div
+          id={mobileMenuId}
+          className="absolute inset-x-0 top-full flex h-[calc(100dvh-4rem)] flex-col overflow-y-auto overscroll-contain bg-surface px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 motion-safe:animate-[menu-in_0.3s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:px-6 md:hidden"
+        >
+          <ul>
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  aria-current={isActive(link.href) ? 'page' : undefined}
+                  className={cn(
+                    'flex min-h-14 items-center text-[1.75rem] font-semibold tracking-[-0.025em] transition-opacity active:opacity-60',
+                    isActive(link.href) ? 'text-brand' : 'text-ink'
+                  )}
+                  onClick={closeMobile}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-auto space-y-4 pt-8">
+            <Button size="lg" className="h-13 w-full text-[17px]" asChild>
               <Link href={localePath(locale, '/precios')} onClick={closeMobile}>
                 {t('cta')}
               </Link>
             </Button>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <Link
+                href={altHref}
+                hrefLang={altLocale}
+                lang={altLocale}
+                aria-label={t('langLabel')}
+                className="inline-flex h-11 items-center rounded-full border border-line px-4 text-sm font-medium text-muted"
+              >
+                {t('langSwitch')}
+              </Link>
+            </div>
           </div>
         </div>
       )}
@@ -277,8 +331,18 @@ export default function Navbar({ zone }: { zone: boolean }) {
   )
 }
 
-/** La forma del boton Entrar (y de su copia invisible, que da el ancho del hueco), siempre en una linea. */
-const LOGIN_PILL = 'inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-medium'
+/**
+ * La forma del boton Entrar (y de su copia invisible, que da el ancho del hueco), siempre en una linea. En
+ * los moviles mas estrechos, solo el icono en un circulo (el nombre lo lleva su aria-label): asi caben la
+ * marca y el menu sin partirse.
+ */
+const LOGIN_PILL =
+  'inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-medium max-[379px]:w-11 max-[379px]:justify-center max-[379px]:px-0'
+const LOGIN_LABEL = 'max-[379px]:hidden'
+
+/** El icono del boton del menu: el que no toca, encogido, transparente y desenfocado. */
+const MENU_ICON = 'absolute inset-0 h-6 w-6 transition-[opacity,scale,filter] duration-200 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none'
+const MENU_ICON_OFF = 'scale-25 opacity-0 blur-[4px]'
 
 const SHORTCUT_ICONS = { licencia: KeyRound, descargas: Download, facturas: Receipt }
 
@@ -406,14 +470,14 @@ function AccountMenu({
         className={cn(
           // Del ancho de Entrar (llena su hueco) y con su mismo contorno; las iniciales, en un azul suave,
           // no lleno: el boton azul lleno de la barra es solo el de Ver precios.
-          'inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border bg-surface/70 px-2 text-ink transition-colors hover:border-brand dark:bg-transparent',
+          'inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border bg-surface/70 px-2 text-ink transition-colors hover:border-brand dark:bg-transparent max-[379px]:px-0',
           open ? 'border-brand ring-2 ring-brand/30' : 'border-field/50'
         )}
       >
         <span aria-hidden="true" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold tracking-wide text-brand dark:bg-brand/20">
           {initials}
         </span>
-        <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted transition-transform', open && 'rotate-180')} aria-hidden="true" />
+        <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted transition-transform max-[379px]:hidden', open && 'rotate-180')} aria-hidden="true" />
       </button>
 
       {open && (

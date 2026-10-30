@@ -34,7 +34,7 @@ export default async function EntrarPage({ params, searchParams }: { params: Par
   if (await zoneUser()) redirect(returnTo)
 
   return (
-    <section className="pt-32 pb-20">
+    <section className="pt-24 sm:pt-32 pb-20">
       <div className="max-w-xl mx-auto px-4 sm:px-6">
         <KeyRound className="h-12 w-12 text-brand" aria-hidden="true" />
         <h1 className="mt-5 text-3xl sm:text-4xl font-bold tracking-tight text-ink">{t('title')}</h1>
