@@ -14,13 +14,15 @@
 // - Al facturar (decideTax): el 21 %, la inversion del sujeto pasivo (UE con NIF-IVA validado en
 //   VIES antes de pagar) o sin IVA espanol (fuera de la UE, y Canarias, Ceuta y Melilla), segun la
 //   empresa. Con otro tipo, o importes y paises que no cuadran, ni se crea: aviso para hacerla a
-//   mano (un IVA mal puesto en Verifactu no se deshace).
+//   mano (un IVA mal puesto en Verifactu no se deshace). Lo mismo con la direccion en un territorio
+//   de un Estado de la UE fuera del IVA europeo (outsideEuVatTerritory: Aland, Helgoland...).
 
 import { parseSpanishTaxId } from './checkout-nif.ts'
 import {
   isEuCountry,
   isSaleCountry,
   isSpainTerritory,
+  outsideEuVatTerritory,
   parseEuVatId,
   parseOtherTaxId,
   territoryOfPostalCode,
@@ -39,7 +41,7 @@ export const TAX_RATE_TAG = 'iva-21'
 /**
  * Las ventas con el 21 % a empresas de otros paises de la UE sin NIF-IVA (como a particulares) por
  * encima de las que el IVA pasa a ser el del pais del cliente, por la ventanilla unica (OSS): 10.000
- * euros al ano, en centimos (arts. 70.Uno.8.o y 73 LIVA). Lo vigila la comprobacion de produccion.
+ * euros al ano, en centimos (arts. 70.Uno.8.o y 73 LIVA). El pago se para antes (lib/delivery/eu-sales.ts).
  */
 export const EU_DISTANCE_SALES_LIMIT = 1_000_000
 
@@ -351,6 +353,19 @@ export function decideTax(purchase: Purchase, company: Company, details: TaxDeta
   }
   if (purchase.currency !== 'eur') {
     holds.push({ reason: `cobrada en ${purchase.currency.toUpperCase()}: solo se vende en euros (devolverla o facturarla a mano con el cambio de Stripe)`, mode: 'manual' })
+  }
+
+  // Un territorio de un Estado de la UE fuera del IVA europeo (los departamentos de ultramar, Aland,
+  // Helgoland...): ni la inversion del sujeto pasivo ni el 21 %, sino no sujeta y sin 349. Muy raro:
+  // la factura, a mano (el cobro no se toca; con el 21 % cobrado, verlo con Manel).
+  const outside = outsideEuVatTerritory(country, company.address?.postal_code)
+  if (outside) {
+    holds.push({
+      reason: `territorio fuera del IVA de la UE: s_iva_nosujeto, sin 349 (${country} ${company.address?.postal_code}, ${outside}; art. 6 de la Directiva 2006/112/CE)${
+        purchase.amountTax > 0 ? `; se cobró el ${SPAIN_VAT_RATE} %: devolver ese IVA o facturarlo con él, con Manel` : ''
+      }`,
+      mode: 'manual',
+    })
   }
 
   const territory = country === 'ES' ? companyTerritory(company.address) : null

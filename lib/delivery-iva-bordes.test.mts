@@ -22,7 +22,7 @@ afterEach(() => {
   globalThis.fetch = realFetch
 })
 
-const TAXES = { HOLDED_TAX_REVERSE_CHARGE: 's_iva_isp', HOLDED_TAX_EXPORT: 's_iva_export' }
+const TAXES = { HOLDED_TAX_REVERSE_CHARGE: 's_iva_intras', HOLDED_TAX_EXPORT: 's_iva_nosujeto' }
 const HOUR = 3600_000
 
 function world() {

@@ -95,32 +95,36 @@ export interface FakeDocument extends ProviderDocument {
 
 export class FakeInvoicer implements Invoicer {
   readonly name = 'fake'
-  contacts = new Map<string, { id: string; name: string; taxId: string }>()
+  /** Por la identificacion de la empresa; code, la que va al contacto (la de fuera, sin el pais que pone la web). */
+  contacts = new Map<string, { id: string; name: string; taxId: string; code: string }>()
   documents = new Map<string, FakeDocument>()
   counters: Record<InvoiceKind, number> = { invoice: 0, credit_note: 0 }
   calls = 0
   failures = new Failures()
   /** Centimos de mas en el total que "calcula" Holded (para probar que no se emite si no cuadra). */
   skewCents = 0
+  /** Lo que dice Verifactu de las aprobadas (Holded: verifactu_status): accepted, o lo que se ponga para probar el aviso. */
+  verifactuStatus: string | null = 'accepted'
 
   private use(operation: string) {
     this.calls += 1
     this.failures.check(operation)
   }
 
-  async ensureContact(company: Company) {
+  async ensureContact(company: Company, code?: string | null) {
     this.use('ensureContact')
     const existing = this.contacts.get(company.taxId)
     if (existing) return existing.id
-    const contact = { id: `ct_${this.contacts.size + 1}`, name: company.name, taxId: company.taxId }
+    const contact = { id: `ct_${this.contacts.size + 1}`, name: company.name, taxId: company.taxId, code: code || company.taxId }
     this.contacts.set(company.taxId, contact)
     return contact.id
   }
 
+  // Como Holded: por la descripcion (la referencia, con el pago de Stripe), que la contiene.
   async findDocument(kind: InvoiceKind, contactId: string, reference: string) {
     this.use('findDocument')
     for (const doc of this.documents.values()) {
-      if (doc.kind === kind && doc.draft.contactId === contactId && doc.draft.reference === reference) return this.public(doc)
+      if (doc.kind === kind && doc.draft.contactId === contactId && doc.draft.reference.includes(reference)) return this.public(doc)
     }
     return null
   }
@@ -169,7 +173,7 @@ export class FakeInvoicer implements Invoicer {
     // El total y el IVA como los calcula Holded: base de las lineas y el impuesto del borrador.
     const net = doc.draft.lines.reduce((sum, line) => sum + Math.round(line.price * line.units * 100), 0)
     const tax = doc.draft.taxTreatment === 'standard' ? Math.round((net * (doc.draft.taxRate ?? 21)) / 100) : 0
-    return { id: doc.id, number: doc.number, approved: doc.approved, total: (net + tax + this.skewCents) / 100, tax: tax / 100 }
+    return { id: doc.id, number: doc.number, approved: doc.approved, total: (net + tax + this.skewCents) / 100, tax: tax / 100, ...(doc.approved ? { verifactu: this.verifactuStatus } : {}) }
   }
 }
 

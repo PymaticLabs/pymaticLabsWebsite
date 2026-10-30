@@ -25,8 +25,8 @@ const ENV: Record<string, string> = {
   SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_PruebaSecretaDeSupabase',
   BREVO_API_KEY: 'xkeysib-PruebaDeBrevo',
   HOLDED_API_KEY: 'holded-PruebaDeClaveDeHolded',
-  HOLDED_TAX_REVERSE_CHARGE: 's_iva_0_isp',
-  HOLDED_TAX_EXPORT: 's_iva_0_export',
+  HOLDED_TAX_REVERSE_CHARGE: 's_iva_intras',
+  HOLDED_TAX_EXPORT: 's_iva_nosujeto',
   CALCOM_API_KEY: 'cal_live_PruebaDeCalcom',
   CALCOM_EVENT_TYPES: '{"eric": 11, "sergio": 22}',
   RESEND_API_KEY: 're_PruebaDeResend',
@@ -67,6 +67,8 @@ interface World {
   vies: 'valid' | 'invalid' | 'down' | 'requester'
   /** Las ventas con el 21 % a la UE sin NIF-IVA que devuelve Supabase (base y fecha). */
   euSales: { net: number; paidAt: string; refunded?: number; status?: string }[]
+  /** Las que esperan revision sin empresa (con el 21 %), con el pais declarado. */
+  euPending: { net: number; paidAt: string; country: string }[]
   /** Lo que ensena /precios con la venta abierta: enlaces a /comprar o el formulario de antes. */
   pricingLinks: boolean
   /** El cupon de lanzamiento: del producto de su modalidad, o de otro (un producto duplicado por stripe-setup). */
@@ -94,6 +96,7 @@ function services(overrides: Partial<World> = {}) {
     productNames: 'ok',
     vies: 'valid',
     euSales: [],
+    euPending: [],
     ...overrides,
   }
   const prices = PRICES.filter((p) => p.period !== 'year' || w.annualPrices !== 'none').map(({ product, period }) => {
@@ -134,7 +137,42 @@ function services(overrides: Partial<World> = {}) {
           const listed = /^in\.\((.*)\)$/.exec(filter)?.[1].split(',')
           const excluded = /^neq\.(.*)$/.exec(filter)?.[1]
           const rows = w.euSales.filter((x) => (listed ? listed.includes(x.status ?? 'paid') : excluded ? (x.status ?? 'paid') !== excluded : true))
-          return json(rows.map((x) => ({ amount_subtotal: x.net, amount_discount: 0, amount_total: Math.round(x.net * 1.21), amount_refunded: x.refunded ?? 0, paid_at: x.paidAt, companies: { country: 'DE' } })))
+          // Solo las de vivo (o las de prueba) y desde el ano anterior (con un dia de margen por la hora de Madrid).
+          assert.equal(url.searchParams.get('livemode'), `eq.${w.live}`)
+          assert.equal(url.searchParams.get('paid_at'), 'gte.2024-12-31T00:00:00.000Z')
+          return json(
+            rows.map((x) => ({
+              id: `p-${x.paidAt}`,
+              status: x.status ?? 'paid',
+              livemode: w.live,
+              tax_treatment: 'standard',
+              amount_subtotal: x.net,
+              amount_discount: 0,
+              amount_total: Math.round(x.net * 1.21),
+              amount_refunded: x.refunded ?? 0,
+              paid_at: x.paidAt,
+              companies: { country: 'DE' },
+            }))
+          )
+        }
+        // Las que esperan revision sin empresa (ya cobradas con el 21 %): con el pais declarado.
+        if (table === 'purchases' && url.searchParams.get('company_id') === 'is.null') {
+          assert.deepEqual([url.searchParams.get('status'), url.searchParams.get('tax_treatment')], ['eq.needs_review', 'eq.standard'])
+          return json(
+            w.euPending.map((x) => ({
+              id: `r-${x.paidAt}`,
+              company_id: null,
+              status: 'needs_review',
+              livemode: w.live,
+              tax_treatment: 'standard',
+              amount_subtotal: x.net,
+              amount_discount: 0,
+              amount_total: Math.round(x.net * 1.21),
+              amount_refunded: 0,
+              paid_at: x.paidAt,
+              review_data: { reason: 'country_mismatch', declared: { country: x.country } },
+            }))
+          )
         }
         if (method === 'HEAD') return new Response(null, { status: 200, headers: { 'content-range': '*/0' } })
         // Dos versiones: la ultima es la 1.10.0 (no la 1.9.0 por orden de texto), con Mac y Windows.
@@ -197,7 +235,7 @@ function services(overrides: Partial<World> = {}) {
     if (url.host === 'api.holded.com') {
       // Un 401 que repite la clave en el mensaje: el informe no la puede ensenar.
       if (w.holdedStatus !== 200) return json({ message: `invalid key ${ENV.HOLDED_API_KEY}` }, w.holdedStatus)
-      if (path.endsWith('/taxes')) return json({ items: [{ id: 's_iva_21' }, { id: 's_iva_0_isp' }, { id: 's_iva_0_export' }] })
+      if (path.endsWith('/taxes')) return json({ items: [{ id: 's_iva_21' }, { id: 's_iva_intras' }, { id: 's_iva_nosujeto' }] })
       return json({ items: [] })
     }
     if (url.host === 'ec.europa.eu' && path === '/taxation_customs/vies/rest-api/check-vat-number' && method === 'POST') {
@@ -425,6 +463,11 @@ test('comprobacion de produccion: VIES con el NIF-IVA de PymaticLabs; caido, sol
   assert.equal(invalid.ready, false)
   services({ vies: 'requester' })
   assert.equal(find(await productionCheck(ENV, at), 'NIF-IVA de PymaticLabs').status, 'falta')
+  // En vivo, otro NIF-IVA (aunque valga en VIES) saldria impreso como el del proveedor: FALTA.
+  services()
+  const other = find(await productionCheck({ ...ENV, VIES_REQUESTER: 'ESB12345674' }, at), 'NIF-IVA de PymaticLabs')
+  assert.equal(other.status, 'falta')
+  assert.match(other.detail!, /no es el NIF-IVA de PymaticLabs \(ESB88781745\)/)
 })
 
 test('comprobacion de produccion: los impuestos de Holded de las ventas sin IVA son obligatorios; un id que no esta en la cuenta, aviso', async () => {
@@ -433,17 +476,49 @@ test('comprobacion de produccion: los impuestos de Holded de las ventas sin IVA 
   const report = await productionCheck({ ...ENV, HOLDED_TAX_REVERSE_CHARGE: '', HOLDED_TAX_EXPORT: 's_otro' }, at)
   assert.equal(find(report, 'HOLDED_TAX_REVERSE_CHARGE').status, 'falta')
   assert.match(find(report, 'HOLDED_TAX_REVERSE_CHARGE').detail!, /inversión del sujeto pasivo/)
+  assert.equal(find(report, 'HOLDED_TAX_EXPORT').status, 'falta')
   assert.equal(find(report, 'Impuesto sin IVA español (HOLDED_TAX_EXPORT)').status, 'aviso')
   assert.match(find(report, 'Impuesto sin IVA español (HOLDED_TAX_EXPORT)').detail!, /«s_otro» no aparece/)
   assert.equal(report.ready, false)
 })
 
-test('comprobacion de produccion: las ventas con el 21 % a la UE sin NIF-IVA, aviso al pasar de 10.000 € al año (este o el anterior)', async () => {
+test('comprobacion de produccion: los impuestos de Holded, exactamente s_iva_intras y s_iva_nosujeto; los que se confunden con ellos, FALTA con el porque', async () => {
   const at = { now: new Date('2026-11-02T10:00:00Z') }
-  services({ euSales: [{ net: 600_000, paidAt: '2026-03-01T10:00:00Z' }, { net: 300_000, paidAt: '2026-10-01T10:00:00Z', refunded: 121_000 }, { net: 200_000, paidAt: '2025-06-01T10:00:00Z' }] })
+  services()
+  const good = await productionCheck(ENV, at)
+  assert.deepEqual([find(good, 'HOLDED_TAX_REVERSE_CHARGE').status, find(good, 'HOLDED_TAX_EXPORT').status], ['ok', 'ok'])
+  const cases: [Record<string, string>, string, RegExp][] = [
+    // La inversion del sujeto pasivo interior: S2, casilla 122 y fuera del 349.
+    [{ HOLDED_TAX_REVERSE_CHARGE: 's_iva_invsuj' }, 'HOLDED_TAX_REVERSE_CHARGE', /^es s_iva_invsuj, .*casilla 122 del 303 y se quedaría fuera del 349: tiene que ser s_iva_intras$/],
+    // La exportacion: casilla 60 y la clave 02 de Verifactu, que exige una operacion exenta.
+    [{ HOLDED_TAX_EXPORT: 's_iva_export' }, 'HOLDED_TAX_EXPORT', /^es s_iva_export, .*casilla 60 del 303 y a Verifactu con la clave 02.*: tiene que ser s_iva_nosujeto$/],
+    [{ HOLDED_TAX_EXPORT: 's_iva_exento' }, 'HOLDED_TAX_EXPORT', /^es s_iva_exento, .*no están exentas, sino no sujetas.*: tiene que ser s_iva_nosujeto$/],
+    [{ HOLDED_TAX_REVERSE_CHARGE: 's_iva_exento' }, 'HOLDED_TAX_REVERSE_CHARGE', /: tiene que ser s_iva_intras$/],
+    // Cambiados entre si.
+    [{ HOLDED_TAX_REVERSE_CHARGE: 's_iva_nosujeto', HOLDED_TAX_EXPORT: 's_iva_intras' }, 'HOLDED_TAX_EXPORT', /^es s_iva_intras, el de las ventas a empresas de la UE con NIF-IVA .*: tiene que ser s_iva_nosujeto$/],
+  ]
+  for (const [env, item, why] of cases) {
+    const report = await productionCheck({ ...ENV, ...env }, at)
+    const check = find(report, item)
+    assert.equal(check.status, 'falta', `${item}=${env[item]}`)
+    assert.match(check.detail!, why)
+    assert.match(check.fix!, item === 'HOLDED_TAX_EXPORT' ? /HOLDED_TAX_EXPORT=s_iva_nosujeto/ : /HOLDED_TAX_REVERSE_CHARGE=s_iva_intras/)
+    assert.equal(report.ready, false)
+  }
+})
+
+test('comprobacion de produccion: las ventas con el 21 % a la UE sin NIF-IVA, aviso desde 8.000 € este año (el pago se para) y al pasar de 10.000 € (este o el anterior)', async () => {
+  const at = { now: new Date('2026-11-02T10:00:00Z') }
+  const plain = (text: string) => text.replace(/ /g, ' ')
+  services({ euSales: [{ net: 500_000, paidAt: '2026-03-01T10:00:00Z' }, { net: 300_000, paidAt: '2026-10-01T10:00:00Z', refunded: 121_000 }, { net: 200_000, paidAt: '2025-06-01T10:00:00Z' }] })
   const below = find(await productionCheck(ENV, at), 'Ventas con el 21 % a la UE sin NIF-IVA')
   assert.equal(below.status, 'ok')
-  assert.equal(below.detail!.replace(/\u00a0/g, ' '), '8.000,00 € este año y 2.000,00 € el anterior, sin IVA')
+  assert.equal(plain(below.detail!), '7.000,00 € este año y 2.000,00 € el anterior, sin IVA')
+  // En 8.000 €: el pago ya no abre ventas asi, pero los mensuales siguen con el 21 %.
+  services({ euSales: [{ net: 600_000, paidAt: '2026-03-01T10:00:00Z' }, { net: 200_000, paidAt: '2026-10-01T10:00:00Z' }] })
+  const stop = find(await productionCheck(ENV, at), 'Ventas con el 21 % a la UE sin NIF-IVA')
+  assert.equal(stop.status, 'aviso')
+  assert.match(plain(stop.detail!), /^8\.000,00 € este año .*: desde 8\.000,00 € la web ya no abre pagos así .*los mensuales que ya hay siguen cobrando el 21 % español$/)
   services({ euSales: [{ net: 900_000, paidAt: '2026-03-01T10:00:00Z' }, { net: 200_000, paidAt: '2026-10-01T10:00:00Z' }] })
   const over = await productionCheck(ENV, at)
   const check = find(over, 'Ventas con el 21 % a la UE sin NIF-IVA')
@@ -453,24 +528,34 @@ test('comprobacion de produccion: las ventas con el 21 % a la UE sin NIF-IVA, av
   // Uno del ano anterior por encima tambien cuenta (el limite mira este y el anterior).
   services({ euSales: [{ net: 1_100_000, paidAt: '2025-05-01T10:00:00Z' }] })
   assert.equal(find(await productionCheck(ENV, at), 'Ventas con el 21 % a la UE sin NIF-IVA').status, 'aviso')
+  // Si Supabase no contesta a esa consulta: aviso, sin parar la comprobacion.
+  services({ missingTables: ['purchases'] })
+  const failed = find(await productionCheck(ENV, at), 'Ventas con el 21 % a la UE sin NIF-IVA')
+  assert.deepEqual([failed.status, /no se pudieron sumar/.test(failed.detail!)], ['aviso', true])
 })
 
-test('comprobacion de produccion: las ventas a la UE sin NIF-IVA cuentan como el aviso de cada venta (pagadas, devueltas en parte o con contracargo abierto)', async () => {
+test('comprobacion de produccion: las ventas a la UE sin NIF-IVA cuentan como en el pago y en el aviso de cada venta (pagadas, devueltas en parte, con contracargo abierto o a revisar ya cobradas)', async () => {
   const at = { now: new Date('2026-11-02T10:00:00Z') }
-  // Ni la que espera revision (sin factura), ni el contracargo perdido (ya rectificado), ni la devuelta.
+  // La que espera revision cuenta (ya cobrada con el 21 %), tambien sin empresa (con el pais
+  // declarado, si es de la UE); el contracargo perdido (ya rectificado) y la devuelta, no.
   services({
     euSales: [
       { net: 300_000, paidAt: '2026-03-01T10:00:00Z' },
       { net: 200_000, paidAt: '2026-04-01T10:00:00Z', status: 'partially_refunded', refunded: 121_000 },
       { net: 100_000, paidAt: '2026-05-01T10:00:00Z', status: 'disputed' },
-      { net: 900_000, paidAt: '2026-06-01T10:00:00Z', status: 'needs_review' },
+      { net: 50_000, paidAt: '2026-06-01T10:00:00Z', status: 'needs_review' },
       { net: 900_000, paidAt: '2026-07-01T10:00:00Z', status: 'dispute_lost' },
       { net: 900_000, paidAt: '2026-08-01T10:00:00Z', status: 'refunded', refunded: 1_089_000 },
+    ],
+    euPending: [
+      { net: 100_000, paidAt: '2026-09-01T10:00:00Z', country: 'IT' },
+      { net: 900_000, paidAt: '2026-09-02T10:00:00Z', country: 'US' },
+      { net: 900_000, paidAt: '2026-09-03T10:00:00Z', country: 'ES' },
     ],
   })
   const check = find(await productionCheck(ENV, at), 'Ventas con el 21 % a la UE sin NIF-IVA')
   assert.equal(check.status, 'ok')
-  assert.equal(check.detail!.replace(/ /g, ' '), '5.000,00 € este año y 0,00 € el anterior, sin IVA')
+  assert.equal(check.detail!.replace(/ /g, ' '), '6.500,00 € este año y 0,00 € el anterior, sin IVA')
 })
 
 test('comprobacion de produccion: con el servicio de prueba de VIES puesto (Preview), el NIF-IVA propio se mira en el de verdad, y aviso', async () => {

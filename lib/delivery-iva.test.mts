@@ -10,14 +10,17 @@ import { cifWithControl } from './delivery/checkout-nif.ts'
 import { HoldedInvoicer } from './delivery/adapters/holded-invoicer.ts'
 import { StripePayments } from './delivery/adapters/stripe-payments.ts'
 import { checkPaidTax, declaredTax, sameVatCountry, viesNameMismatch } from './delivery/tax.ts'
+import { outsideEuVatTerritory, taxMetadata, writtenOtherTaxId, type CheckoutTax } from './delivery/checkout-tax.ts'
+import { EU_NO_VAT_STOP, euNoVatLevel, euNoVatSales, euNoVatStop } from './delivery/eu-sales.ts'
+import { taxMention } from './delivery/tax-check.ts'
 import { SupabaseRepository } from './delivery/adapters/supabase-repository.ts'
-import { createCheckout, type CheckoutRequest } from './checkout.ts'
+import { CheckoutError, createCheckout, type CheckoutRequest } from './checkout.ts'
 import { downloadLink, termsFile, zoneOverview } from './delivery/zone.ts'
 import { monthlyState } from './zone-view.ts'
 import { verifyLicense } from './license.ts'
 import { LEGAL_VERSIONS } from './legal-versions.ts'
 import { madridDate } from './delivery/util.ts'
-import { PermanentError, RetryableError, type Company } from './delivery/types.ts'
+import { PermanentError, RetryableError, type Company, type PurchaseStatus } from './delivery/types.ts'
 import type { ModalityId } from './offer.ts'
 
 // La entrega con el IVA de cada caso (se vende a todo el mundo, solo a empresas y profesionales, en
@@ -31,7 +34,8 @@ afterEach(() => {
   globalThis.fetch = realFetch
 })
 
-const TAXES = { HOLDED_TAX_REVERSE_CHARGE: 's_iva_isp', HOLDED_TAX_EXPORT: 's_iva_export' }
+// Los de la cuenta de verdad (revision fiscal del 30-10-2026): la casilla 59 y el 349, y la 120.
+const TAXES = { HOLDED_TAX_REVERSE_CHARGE: 's_iva_intras', HOLDED_TAX_EXPORT: 's_iva_nosujeto' }
 
 function world(env: Record<string, string> = {}) {
   let now = new Date('2026-11-02T10:00:00Z')
@@ -108,7 +112,8 @@ const CASES = [
     rate: 0,
     country: 'ES',
     type: 'es_cif',
-    mention: /^Operación no sujeta a IVA por reglas de localización \(art\. 69\.Uno\.1\.º de la Ley 37\/1992 del IVA\)\.$/,
+    // En Canarias (codigo postal 35001), ademas, que el IGIC lo liquida el cliente.
+    mention: /^Operación no sujeta a IVA por reglas de localización \(art\. 69\.Uno\.1\.º de la Ley 37\/1992 del IVA\)\. IGIC a liquidar por el destinatario \(art\. 19\.1\.2\.º a\) de la Ley 20\/1991\)\.$/,
   },
   {
     name: 'ue-con-nif-iva',
@@ -119,7 +124,7 @@ const CASES = [
     type: 'eu_vat',
     taxId: 'DE123456789',
     mention:
-      /^Inversión del sujeto pasivo\. Operación no sujeta a IVA español por reglas de localización \(art\. 69\.Uno\.1\.º de la Ley 37\/1992, del IVA\)\. IVA a liquidar por el destinatario \(art\. 196 de la Directiva 2006\/112\/CE\)\.\nNIF-IVA del destinatario: DE123456789$/,
+      /^Inversión del sujeto pasivo\. Operación no sujeta a IVA español por reglas de localización \(art\. 69\.Uno\.1\.º de la Ley 37\/1992, del IVA\)\. IVA a liquidar por el destinatario \(art\. 196 de la Directiva 2006\/112\/CE\)\. \nNIF-IVA del destinatario: DE123456789\. \nNIF-IVA del proveedor: ESB88781745\.$/,
   },
   { name: 'ue-sin-nif-iva', tax: () => ({ country: 'FR', otherTaxId: '552 100 554' }), treatment: 'standard', rate: 21, country: 'FR', type: 'other', taxId: 'FR552100554', mention: null },
   {
@@ -130,7 +135,7 @@ const CASES = [
     country: 'US',
     type: 'other',
     taxId: 'US12-3456789',
-    mention: /^Operación no sujeta a IVA por localización en destino \(art\. 69 de la Ley 37\/1992 del IVA\)\.$/,
+    mention: /^Operación no sujeta al IVA español por reglas de localización \(art\. 69\.Uno\.1\.º de la Ley 37\/1992, del IVA\)\.$/,
   },
 ] as const
 
@@ -151,15 +156,20 @@ test('cada caso de IVA de punta a punta: la empresa, la licencia y la factura co
     const license = (await w.d.repo.getLicenseByPurchase(purchase.id))!
     assert.equal(verifyLicense(license.content, await w.f.signer.publicKey()).nif, taxId, c.name)
     assert.ok(w.f.mailer.sent.some((m) => m.to === purchase.email && m.tags?.includes('bienvenida')), c.name)
-    // La factura en Holded: el impuesto de su caso, la mencion y, sin IVA a la UE, la consulta de VIES en las notas.
+    // La factura en Holded: el impuesto de su caso, la mencion y, sin IVA a la UE, la consulta de VIES en
+    // las notas, que salen impresas: solo eso (el pago de Stripe va en la descripcion, la referencia).
     const invoice = (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!
     assert.equal(invoice.holdReason, null, c.name)
     const doc = docOf(w, invoice.providerId)
     assert.deepEqual([doc.draft.taxTreatment, doc.draft.taxRate, doc.draft.lines[0].price], [c.treatment, c.rate, net / 100], c.name)
     if (c.mention) assert.match(doc.draft.body ?? '', c.mention, c.name)
     else assert.equal(doc.draft.body, null, c.name)
-    if (c.treatment === 'reverse_charge') assert.match(doc.draft.notes ?? '', /· VIES WAPIFALSO\d+ \(2026-11-02T10:00:00\.000Z\)$/)
-    else assert.doesNotMatch(doc.draft.notes ?? '', /VIES/, c.name)
+    if (c.treatment === 'reverse_charge') assert.match(doc.draft.notes ?? '', /^VIES WAPIFALSO\d+ \(2026-11-02T10:00:00\.000Z\)$/)
+    else assert.equal(doc.draft.notes, null, c.name)
+    assert.ok(doc.draft.reference.endsWith(` · ${purchase.paymentRef}`), c.name)
+    // El contacto de Holded: la identificacion de fuera, tal como la escribio (sin el pais que pone la web).
+    const contact = w.f.invoicer.contacts.get(taxId)!
+    assert.equal(contact.code, { 'ue-sin-nif-iva': '552100554', 'fuera-de-la-ue': '12-3456789' }[c.name as string] ?? taxId, c.name)
     // El aviso de la venta: el IVA, el 349 y la consulta de VIES; las de la UE sin NIF-IVA, cuanto llevan este ano.
     const notice = w.f.mailer.sent.find((m) => /^Venta: /.test(m.subject) && m.text.includes(purchase.paymentRef))!
     assert.match(notice.text, c.treatment === 'reverse_charge' ? /IVA: sin IVA: inversión del sujeto pasivo; va al modelo 349/ : c.rate ? /IVA: IVA del 21 %/ : /IVA: sin IVA español: no sujeta/, c.name)
@@ -174,14 +184,14 @@ test('cada caso de IVA de punta a punta: la empresa, la licencia y la factura co
   const pGreek = await purchaseOf(w, greek)
   const cGreek = (await w.d.repo.getCompany(pGreek.companyId!))!
   assert.deepEqual([cGreek.country, cGreek.taxId, pGreek.taxTreatment], ['GR', 'EL094259216', 'reverse_charge'])
-  assert.match(docOf(w, (await w.d.repo.getInvoiceByRef(`invoice:${pGreek.id}`))!.providerId).draft.body ?? '', /NIF-IVA del destinatario: EL094259216$/)
+  assert.match(docOf(w, (await w.d.repo.getInvoiceByRef(`invoice:${pGreek.id}`))!.providerId).draft.body ?? '', /NIF-IVA del destinatario: EL094259216\. \nNIF-IVA del proveedor: ESB88781745\.$/)
 
   // En ingles, la mencion en ingles y, debajo, la de la ley en castellano.
   const { session: english } = await buy(w, 'hazlo-tu', () => ({ country: 'AT', vatId: 'ATU12345678' }), { locale: 'en' })
   await runJobs(w.d)
   const pEnglish = await purchaseOf(w, english)
   const body = docOf(w, (await w.d.repo.getInvoiceByRef(`invoice:${pEnglish.id}`))!.providerId).draft.body ?? ''
-  assert.deepEqual(body.split('\n').map((l) => l.slice(0, 32)), ['Reverse charge. Not subject to S', 'Inversión del sujeto pasivo. Ope', 'Customer VAT number: ATU12345678'])
+  assert.deepEqual(body.split('\n').map((l) => l.slice(0, 32)), ['Reverse charge. Not subject to S', 'Inversión del sujeto pasivo. Ope', 'Customer VAT number: ATU12345678', 'Supplier VAT number: ESB88781745'])
 })
 
 test('lo que no cuadra tras el pago, a revisar antes de crear la empresa, la licencia, la factura o la bienvenida', async () => {
@@ -477,10 +487,14 @@ test('Supabase: los pasos pendientes dejan de esperar a uno parado, uno a uno y 
 
 test('Holded: el contacto de una empresa de fuera, con su pais, su NIF-IVA y su direccion; el impuesto de cada caso, o un aviso claro si falta', async () => {
   const bodies: Record<string, unknown>[] = []
+  const lookups: string[] = []
   globalThis.fetch = (async (input: string | URL, init: RequestInit = {}) => {
     const url = String(input)
     if (init.body) bodies.push(JSON.parse(String(init.body)))
-    if (url.includes('/contacts?')) return new Response(JSON.stringify({ items: [] }), { status: 200 })
+    if (url.includes('/contacts?')) {
+      lookups.push(new URL(url).searchParams.get('code')!)
+      return new Response(JSON.stringify({ items: [] }), { status: 200 })
+    }
     return new Response(JSON.stringify({ id: 'x1' }), { status: 200 })
   }) as typeof fetch
   const company: Company = {
@@ -505,19 +519,68 @@ test('Holded: el contacto de una empresa de fuera, con su pais, su NIF-IVA y su 
   }
   const holded = new HoldedInvoicer({ HOLDED_API_KEY: 'hk', ...TAXES })
   await holded.ensureContact(company)
-  await holded.ensureContact({ ...company, name: 'Acme Inc', taxId: 'US12-3456789', taxIdType: 'other', country: 'US', address: { ...company.address!, country: 'US', state: 'NY' } })
-  const [eu, us] = bodies as { code: string; vat_number: string | null; bill_address: { country_code: string; city: string } }[]
+  // La de fuera, tal como la escribio el cliente (sin el US que le pone la web): se busca asi y, por si
+  // es un contacto de antes, con el prefijo (companies.tax_id); se crea sin el.
+  await holded.ensureContact({ ...company, name: 'Acme Inc', taxId: 'US12-3456789', taxIdType: 'other', country: 'US', address: { ...company.address!, country: 'US', state: 'NY' } }, '12-3456789')
+  const [eu, us] = bodies as { code: string; vat_number: string | null; bill_address: { country_code: string; city: string }; defaults: Record<string, unknown> }[]
   assert.deepEqual([eu.code, eu.vat_number, eu.bill_address.country_code, eu.bill_address.city], ['DE123456789', 'DE123456789', 'DE', 'Berlin'])
-  assert.deepEqual([us.code, us.vat_number, us.bill_address.country_code], ['US12-3456789', null, 'US'])
+  assert.deepEqual([us.code, us.vat_number, us.bill_address.country_code], ['12-3456789', null, 'US'])
+  assert.deepEqual(lookups, ['DE123456789', '12-3456789', 'US12-3456789'])
+  // Con NIF-IVA, va al 349 y no acumula en el 347 (art. 33.2.i del RD 1065/2007); la de fuera, como siempre.
+  assert.equal(eu.defaults.accumulate_in_form_347, false)
+  assert.equal('accumulate_in_form_347' in us.defaults, false)
 
   const draft = { contactId: 'ct1', reference: 'r', date: '2026-11-02', currency: 'eur', language: 'en' as const, taxRate: 0, lines: [{ name: 'n', description: null, units: 1, price: 990 }], body: 'm', notes: 'VIES X' }
   await holded.createDocument('invoice', { ...draft, taxTreatment: 'reverse_charge' })
   await holded.createDocument('invoice', { ...draft, taxTreatment: 'export' })
   const taxes = bodies.slice(2).map((b) => (b as { items: { taxes: string[] }[] }).items[0].taxes[0])
-  assert.deepEqual(taxes, ['s_iva_isp', 's_iva_export'])
+  assert.deepEqual(taxes, ['s_iva_intras', 's_iva_nosujeto'])
   assert.deepEqual([(bodies[2] as { body: string }).body, (bodies[2] as { notes: string }).notes], ['m', 'VIES X'])
   const missing = new HoldedInvoicer({ HOLDED_API_KEY: 'hk' })
   await assert.rejects(missing.createDocument('invoice', { ...draft, taxTreatment: 'export' }), (e: unknown) => e instanceof PermanentError && /HOLDED_TAX_EXPORT/.test(e.message))
+})
+
+test('Holded: la identificacion escrita no es unica entre paises: por ella solo vale el contacto de esa empresa (su pais o, sin direccion, su nombre); si no, el de antes con el prefijo o uno nuevo', async () => {
+  let items: Record<string, unknown[]> = {}
+  const lookups: string[] = []
+  const created: { code: string }[] = []
+  globalThis.fetch = (async (input: string | URL, init: RequestInit = {}) => {
+    const url = new URL(String(input))
+    if (url.pathname.endsWith('/contacts') && url.searchParams.has('code')) {
+      lookups.push(url.searchParams.get('code')!)
+      return new Response(JSON.stringify({ items: items[url.searchParams.get('code')!] ?? [] }), { status: 200 })
+    }
+    created.push(JSON.parse(String(init.body)))
+    return new Response(JSON.stringify({ id: 'ct_nuevo' }), { status: 200 })
+  }) as typeof fetch
+  const acme = {
+    id: 'c2',
+    name: 'Acme Inc',
+    taxId: 'US12-3456789',
+    taxIdType: 'other',
+    country: 'US',
+    address: { line1: '1 Main St', line2: null, city: 'New York', postal_code: '10001', state: 'NY', country: 'US' },
+    email: 'ap@acme.test',
+    locale: 'en',
+    currency: 'eur',
+    holdedContactId: null,
+  } as unknown as Company
+  const holded = new HoldedInvoicer({ HOLDED_API_KEY: 'hk', ...TAXES })
+  const canada = { id: 'ct_ca', name: 'Maple Ltd', bill_address: { country_code: 'CA' } }
+  // Una empresa de Canada escribio el mismo numero: su contacto no es el de Acme (iria su factura a otra empresa).
+  items = { '12-3456789': [canada] }
+  assert.equal(await holded.ensureContact(acme, '12-3456789'), 'ct_nuevo')
+  assert.deepEqual(lookups, ['12-3456789', 'US12-3456789'])
+  assert.deepEqual(created.map((c) => c.code), ['12-3456789'])
+  // El de Acme, por su pais (aunque venga detras) o, sin direccion, por su nombre.
+  items = { '12-3456789': [canada, { id: 'ct_us', name: 'Acme Inc', bill_address: { country_code: 'us' } }] }
+  assert.equal(await holded.ensureContact(acme, '12-3456789'), 'ct_us')
+  items = { '12-3456789': [{ id: 'ct_sin', name: 'Acme Inc', bill_address: null }] }
+  assert.equal(await holded.ensureContact(acme, '12-3456789'), 'ct_sin')
+  // Uno de antes, con el prefijo de la web en code (companies.tax_id, unico): vale.
+  items = { 'US12-3456789': [{ id: 'ct_antes', name: 'Acme Inc.', bill_address: null }] }
+  assert.equal(await holded.ensureContact(acme, '12-3456789'), 'ct_antes')
+  assert.equal(created.length, 1)
 })
 
 test('zona: la copia de las condiciones aceptadas lleva el <base> de la web, como la de la bienvenida', async () => {
@@ -601,7 +664,7 @@ test('el nombre que da VIES frente a la razon social: sin forma juridica, signos
   assert.deepEqual([declared.viesName, declared.viesAddress], [null, 'Hauptstraße 5, Berlin'])
 })
 
-test('VIES da el NIF-IVA a otro nombre: la venta sale igual; la factura, en borrador con ese nombre en sus notas, y el aviso lo dice', async () => {
+test('VIES da el NIF-IVA a otro nombre: la venta sale igual; la factura, en borrador con ese nombre en el motivo (no en sus notas, que salen impresas), y el aviso lo dice', async () => {
   const w = world()
   w.f.vies.holders.set('DE701000001', { name: 'OTRA FIRMA HANDELS GMBH', address: 'Hauptstraße 5\n10115 Berlin' })
   const { session, outcome } = await buy(w, 'hazlo-tu', () => ({ country: 'DE', vatId: 'DE701000001' }))
@@ -624,11 +687,13 @@ test('VIES da el NIF-IVA a otro nombre: la venta sale igual; la factura, en borr
     invoice.holdReason ?? '',
     /si no lo es, le tocaba el 21 % \(cobrar la diferencia o devolver el pago, y la factura, a mano\); corregir tax_id y tax_id_type de la empresa en companies, pedir una licencia nueva con la identificación buena y, si tiene el mensual, pasarlo al 21 % \(el tipo de IVA de la suscripción y sus metadatos tax_\*\)$/
   )
-  // En las notas del borrador (las ve quien lo emite en Holded): el nombre y que hay que comprobarlo.
-  assert.match(
-    docOf(w, invoice.providerId).draft.notes ?? '',
-    /· VIES WAPIFALSO\d+ \(2026-11-02T10:00:00\.000Z\), a nombre de «OTRA FIRMA HANDELS GMBH» · Antes de emitirla, comprobar que el NIF-IVA es de la empresa \(el nombre de VIES no se parece a la razón social\) y quitar esta frase$/
-  )
+  // Las notas del borrador salen impresas en el PDF («Observaciones»): solo la consulta de VIES. El
+  // nombre y que hay que comprobarlo, en el motivo y en el aviso de la factura retenida (con el pago y la compra).
+  assert.match(docOf(w, invoice.providerId).draft.notes ?? '', /^VIES WAPIFALSO\d+ \(2026-11-02T10:00:00\.000Z\)$/)
+  assert.doesNotMatch(invoice.holdReason ?? '', /quitar/)
+  const heldNotice = w.f.mailer.sent.find((m) => /^Factura en borrador, sin emitir/.test(m.subject) && m.text.includes(purchase.paymentRef))!
+  assert.match(heldNotice.text, /comprobar con la empresa que es suyo antes de emitirla/)
+  assert.ok(heldNotice.text.includes(`Compra: ${purchase.id}`))
   const notice = w.f.mailer.sent.find((m) => /^Venta: /.test(m.subject) && m.text.includes(purchase.paymentRef))!
   assert.match(notice.text, /Factura retenida: VIES da el NIF-IVA DE701000001 a nombre de «OTRA FIRMA HANDELS GMBH»/)
   assert.match(notice.text, /VIES: consulta WAPIFALSO\d+, a nombre de «OTRA FIRMA HANDELS GMBH», que no se parece a la razón social \(ver Qué hacer\)/)
@@ -660,7 +725,7 @@ test('VIES da el NIF-IVA a otro nombre: la venta sale igual; la factura, en borr
   assert.ok(await w.d.repo.getLicenseByPurchase(renewal.id))
   const iRenewal = (await w.d.repo.getInvoiceByRef(`invoice:${renewal.id}`))!
   assert.match(iRenewal.holdReason ?? '', /^VIES da el NIF-IVA DE701000003 a nombre de «GANZ ANDERE AG» \(Ringstraße 1, 10115 Berlin\), que no se parece a/)
-  assert.match(docOf(w, iRenewal.providerId).draft.notes ?? '', /a nombre de «GANZ ANDERE AG» · Antes de emitirla, comprobar que el NIF-IVA es de la empresa/)
+  assert.match(docOf(w, iRenewal.providerId).draft.notes ?? '', /^VIES WAPIFALSO\d+ \([^)]+\)$/)
   // Con «---» (como Espana o Alemania): ni nombre que comparar, ni retenida por eso.
   w.f.vies.holders.set('DE701000003', { name: '---', address: '---' })
   const { invoice: plain } = await charge(w, m, '2027-01-02')
@@ -807,7 +872,7 @@ test('Monaco va con Francia en el IVA: con su NIF-IVA frances, la direccion de M
   assert.deepEqual([purchase.taxTreatment, company.country, company.taxId, company.taxIdType], ['reverse_charge', 'MC', 'FR22123456789', 'eu_vat'])
   const invoice = (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!
   assert.equal(invoice.holdReason, null)
-  assert.match(docOf(w, invoice.providerId).draft.body ?? '', /NIF-IVA del destinatario: FR22123456789$/)
+  assert.match(docOf(w, invoice.providerId).draft.body ?? '', /NIF-IVA del destinatario: FR22123456789\. \nNIF-IVA del proveedor: ESB88781745\.$/)
 
   // Con NIF-IVA frances, declarada Francia y la direccion en Monaco, o al reves: se entrega.
   assert.equal((await buy(w, 'hazlo-tu', () => ({ country: 'FR', vatId: 'FR33123456789' }), { patch: (s) => void (addressOf(s).country = 'MC') })).outcome, 'purchase')
@@ -853,7 +918,7 @@ test('una compra a revisar con NIF-IVA que se entrega a mano lleva a su factura 
   await runJobs(w.d)
   const invoice = (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!
   assert.equal(invoice.holdReason, null)
-  assert.match(docOf(w, invoice.providerId).draft.notes ?? '', new RegExp(`· VIES ${String(session.metadata.vies_request)} \\(`))
+  assert.match(docOf(w, invoice.providerId).draft.notes ?? '', new RegExp(`^VIES ${String(session.metadata.vies_request)} \\(`))
   assert.ok(await w.d.repo.getLicenseByPurchase(purchase.id))
 
   // Con la consulta de hace 3 dias (por eso quedo a revisar): no vale para la factura, en borrador para mirar VIES otra vez.
@@ -905,7 +970,7 @@ test('IVA cobrado de mas: el aviso pide devolver solo el IVA y, entregada a mano
   // Con el IVA devuelto, la venta es sin IVA (la de su caso), no con el 21 %: asi la guarda y lo dice el aviso.
   const after = (await w.d.repo.getPurchase(delivered.id))!
   assert.deepEqual([after.taxTreatment, after.taxRate], ['export', 0])
-  assert.match(sent.find((m) => /^Venta: /.test(m.subject))!.text, /IVA: sin IVA español: no sujeta \(art\. 69 LIVA\)\n/)
+  assert.match(sent.find((m) => /^Venta: /.test(m.subject))!.text, /IVA: sin IVA español: no sujeta por reglas de localización \(art\. 69\.Uno\.1\.º LIVA\)\n/)
 })
 
 test('IVA cobrado de mas a una empresa de la UE con NIF-IVA: devuelto y entregada a mano, ni cuenta para los 10.000 € ni sale del 349', async () => {
@@ -1000,4 +1065,280 @@ test('entrega a mano con la consulta de VIES: la empresa que compro antes sin NI
   const params = w.f.payments.sessions.get(checkout.sessionId)!.params as Record<string, any>
   assert.equal(params.subscription_data.metadata.tax_treatment, 'reverse_charge')
   assert.equal(params.subscription_data.default_tax_rates, undefined)
+})
+
+// --- Revision fiscal del 30-10-2026 ------------------------------------------------------------------
+
+/** Una venta con el 21 % apuntada tal cual en la base de datos (de una empresa, o a revisar sin ella). */
+async function seedSale(
+  w: World,
+  net: number,
+  options: { country?: string; paidAt?: string; status?: PurchaseStatus; revoked?: boolean; withoutCompany?: boolean; livemode?: boolean; refunded?: boolean } = {}
+) {
+  const n = ++counter
+  const country = options.country ?? 'IT'
+  const company = options.withoutCompany
+    ? null
+    : await w.d.repo.upsertCompany({ name: `Vendida ${n} SRL`, taxId: `${country}CF${n}0000`, taxIdType: 'other', country, address: null, email: `ue${n}@ue.test`, locale: 'es', currency: 'eur', stripeCustomerId: `cus_ue_${n}` })
+  if (company && options.revoked) await w.d.repo.updateCompany(company.id, { accessRevokedAt: '2026-06-01T10:00:00Z' })
+  const tax = Math.round(net * 0.21)
+  const { purchase } = await w.d.repo.createPurchase({
+    companyId: company?.id ?? null,
+    kind: 'one_time',
+    product: 'hazlo-tu',
+    paymentRef: `pi_ue_${n}`,
+    stripeCheckoutSessionId: null,
+    stripePaymentIntentId: `pi_ue_${n}`,
+    stripeInvoiceId: null,
+    stripeSubscriptionId: null,
+    stripeCustomerId: null,
+    email: `ue${n}@ue.test`,
+    locale: 'es',
+    currency: 'eur',
+    amountSubtotal: net,
+    amountDiscount: 0,
+    amountTax: tax,
+    amountTotal: net + tax,
+    taxTreatment: 'standard',
+    taxRate: 21,
+    launch: false,
+    seats: 1,
+    termsVersion: null,
+    termsSha256: null,
+    termsAcceptedAt: null,
+    marketingOptIn: false,
+    sessionHost: null,
+    sessionStart: null,
+    calendarReservation: null,
+    supportUntil: null,
+    status: options.status ?? 'paid',
+    livemode: options.livemode ?? false,
+    reviewData: options.withoutCompany ? { reason: 'country_mismatch', declared: { country } } : null,
+    paidAt: options.paidAt ?? '2026-06-01T10:00:00Z',
+  })
+  if (options.refunded) await w.d.repo.recordRefund(purchase.id, net + tax, true)
+  return { company, purchase }
+}
+
+test('las ventas a la UE sin NIF-IVA se suman de todas las compras: tambien de empresas sin acceso y las que esperan revision ya cobradas; ni devueltas, ni de Espana, ni del otro modo', async () => {
+  const w = world()
+  await seedSale(w, 300_000, { paidAt: '2026-03-01T10:00:00Z' })
+  // Una empresa con el acceso cerrado (listActiveCompanies no la da): su venta cuenta igual.
+  await seedSale(w, 200_000, { country: 'FR', revoked: true, paidAt: '2026-04-01T10:00:00Z' })
+  // A revisar sin empresa: con el pais declarado (de la UE, cuenta; de fuera, no).
+  await seedSale(w, 100_000, { withoutCompany: true, status: 'needs_review', paidAt: '2026-05-01T10:00:00Z' })
+  await seedSale(w, 900_000, { withoutCompany: true, status: 'needs_review', country: 'US' })
+  await seedSale(w, 900_000, { country: 'DE', refunded: true })
+  await seedSale(w, 900_000, { country: 'ES' })
+  await seedSale(w, 900_000, { livemode: true })
+  await seedSale(w, 900_000, { status: 'dispute_lost' })
+  await seedSale(w, 500_000, { paidAt: '2025-06-01T10:00:00Z' })
+  // El 31 de diciembre a las 23:30 UTC ya es 1 de enero en Madrid; uno de hace dos anos, fuera.
+  await seedSale(w, 10_000, { paidAt: '2025-12-31T23:30:00Z' })
+  await seedSale(w, 900_000, { paidAt: '2024-06-01T10:00:00Z' })
+  assert.deepEqual(await euNoVatSales(w.d.repo, w.now(), false), { year: 2026, current: 610_000, previous: 500_000 })
+  assert.deepEqual(await euNoVatSales(w.d.repo, w.now(), true), { year: 2026, current: 900_000, previous: 0 })
+
+  // Los umbrales: el pago se para con las de este ano y la de ahora por encima de 8.000 €, o con el
+  // ano anterior por encima de 10.000 €; el aviso, urgente desde 8.000 € (stop) o pasado el limite (over).
+  const t = (current: number, previous = 0) => ({ year: 2026, current, previous })
+  assert.deepEqual([euNoVatStop(t(700_000), 100_000), euNoVatStop(t(700_000), 100_001), euNoVatStop(t(0, 1_000_000), 1), euNoVatStop(t(0, 1_000_001), 1)], [null, 'current', null, 'previous'])
+  assert.deepEqual([euNoVatLevel(t(799_999)), euNoVatLevel(t(800_000)), euNoVatLevel(t(1_000_001)), euNoVatLevel(t(0, 1_000_001)), euNoVatLevel(t(0, 1_000_000))], [null, 'stop', 'over', 'over', null])
+  assert.equal(EU_NO_VAT_STOP, 800_000)
+})
+
+test('la UE sin NIF-IVA cerca del limite: el pago no se abre (ni plaza ni hueco) y el mensual de la zona tampoco; los mensuales que ya hay siguen, con aviso urgente', async () => {
+  const w = world()
+  const blocked = (e: unknown) => e instanceof CheckoutError && e.code === 'eu_no_vat_limit'
+  // Una empresa de Italia sin NIF-IVA con su mensual (el pago unico, 500 € con el de lanzamiento).
+  const m = await monthlyFor(w, () => ({ country: 'IT', otherTaxId: 'RSSMRA80A01H501U' }))
+  await w.d.repo.updateCompany(m.company.id, { subscriptionId: 'sub_it', subscriptionStatus: 'active', subscriptionPlan: 'plan-pro' })
+  const { company: other } = await seedSale(w, 300_000, { paidAt: '2026-03-01T10:00:00Z' })
+  await seedSale(w, 200_000, { country: 'FR', revoked: true, paidAt: '2026-04-01T10:00:00Z' })
+  await seedSale(w, 100_000, { withoutCompany: true, status: 'needs_review', paidAt: '2026-05-01T10:00:00Z' })
+  assert.equal((await euNoVatSales(w.d.repo, w.now(), false)).current, 650_000)
+
+  // 6.500 € y una Solista (990 € de lista): 7.490 €, se abre. Una Banda (1.990 €): 8.490 €, no.
+  const tax = { country: 'IT', otherTaxId: 'VRDLGU80A01H501X' }
+  assert.ok(await createCheckout(w.d, { product: 'hazlo-tu', locale: 'es', ...tax, clientIp: '10.9.0.1' }))
+  const sessions = w.f.payments.sessions.size
+  const slots = Object.keys(w.f.repo.state.launchSlots).length
+  await assert.rejects(createCheckout(w.d, { product: 'hazlo-tu-equipo', locale: 'es', ...tax, clientIp: '10.9.0.2' }), blocked)
+  // La Orquesta tampoco, y antes de mirar o apartar su hueco.
+  await assert.rejects(createCheckout(w.d, { product: 'acompanado-equipo', locale: 'en', ...tax, clientIp: '10.9.0.3' }), blocked)
+  assert.deepEqual([w.f.payments.sessions.size, Object.keys(w.f.repo.state.launchSlots).length, w.f.calendar.reservations.size], [sessions, slots, 0])
+  // Con NIF-IVA (sin IVA), en Espana o fuera de la UE, no cuenta: se abre.
+  for (const [i, other2] of [{ country: 'IT', vatId: 'IT12345678901' }, { taxId: buyer().taxId }, { country: 'US', otherTaxId: '12-3456789' }].entries()) {
+    assert.ok(await createCheckout(w.d, { product: 'hazlo-tu-equipo', locale: 'es', ...other2, clientIp: `10.9.1.${i}` }))
+  }
+  // El mensual desde la zona, igual: el Premium al ano (2.990 €), no; el Esencial al mes (99 €), si.
+  const company = (await w.d.repo.updateCompany(other!.id, { stripeCustomerId: 'cus_otra' }))!
+  await assert.rejects(createCheckout(w.d, { product: 'plan-premium', period: 'year', locale: 'es', company }), blocked)
+  assert.ok(await createCheckout(w.d, { product: 'plan-esencial', locale: 'es', company }))
+
+  // Con las del ano anterior por encima de 10.000 €, ni una Solista.
+  const { purchase: big } = await seedSale(w, 1_000_100, { paidAt: '2025-06-01T10:00:00Z' })
+  await assert.rejects(createCheckout(w.d, { product: 'hazlo-tu', locale: 'es', ...tax, clientIp: '10.9.0.4' }), (e: unknown) => blocked(e) && /ano anterior/.test((e as Error).message))
+  // Devuelta, deja de contar.
+  await w.d.repo.recordRefund(big.id, big.amountTotal, true)
+
+  // Los cobros del mensual que ya hay no se cortan: el de la empresa de Italia sale (licencia y
+  // factura) y, con las de este ano ya en 8.000 €, el aviso es urgente y dice que siguen cobrando.
+  await seedSale(w, 150_000, { paidAt: '2026-07-01T10:00:00Z' })
+  const before = w.f.mailer.sent.length
+  const { invoice, outcome } = await charge(w, m, '2026-12-02')
+  assert.equal(outcome, 'renewal')
+  await runJobs(w.d)
+  const renewal = (await w.d.repo.getPurchaseByPaymentRef(String(invoice.id)))!
+  assert.deepEqual([renewal.status, renewal.taxTreatment], ['paid', 'standard'])
+  assert.ok(await w.d.repo.getLicenseByPurchase(renewal.id))
+  assert.ok(await w.d.repo.getInvoiceByRef(`invoice:${renewal.id}`))
+  const notice = w.f.mailer.sent.slice(before).find((x) => /Cobro del mensual/.test(x.subject))!
+  assert.match(notice.subject, /^URGENTE · Cobro del mensual: /)
+  const text = notice.text.replace(/ /g, ' ')
+  assert.match(text, /van por 8\.199,00 € este año: desde 8\.000,00 € la web ya no abre pagos nuevos así \(piden escribir a info@pymaticlabs\.com\), pero los mensuales que ya hay siguen cobrando el 21 %/)
+  assert.ok(text.includes(`${m.company.name} (IT, Cerebro Digital`), text)
+  assert.match(text, /ventanilla única \(OSS, modelo 035\)/)
+})
+
+test('el contacto de Holded con una identificacion de fuera: la que escribio el cliente (tax_id_written, en los metadatos del pago) o, sin ella, sin el pais que pone la web', async () => {
+  // Lo que deduce sin los metadatos: el prefijo fuera si detras hay cifras; con letras, se deja.
+  assert.equal(writtenOtherTaxId('US', 'US12-3456789'), '12-3456789')
+  assert.equal(writtenOtherTaxId('FR', 'FR552100554'), '552100554')
+  assert.equal(writtenOtherTaxId('CH', 'CHE-123456789'), 'CHE-123456789')
+  assert.equal(writtenOtherTaxId('IT', 'ITRSSMRA80A01H501U'), 'ITRSSMRA80A01H501U')
+  assert.equal(writtenOtherTaxId('IT', 'ITRSSMRA80A01H501U', 'rssmra 80a01 h501u'), 'RSSMRA80A01H501U')
+  // Una escrita que no da esa identificacion no vale (y se deduce).
+  assert.equal(writtenOtherTaxId('US', 'US12-3456789', '99-9999999'), '12-3456789')
+  assert.equal(writtenOtherTaxId(null, 'X1234'), 'X1234')
+  // En los metadatos del pago, solo con una de fuera, limpia y solo si da la misma.
+  const it: CheckoutTax = { country: 'IT', territory: null, taxId: 'ITRSSMRA80A01H501U', taxIdType: 'other', treatment: 'standard', vies: null }
+  assert.equal(taxMetadata(it, null, ' rssmra 80a01 h501u ').tax_id_written, 'RSSMRA80A01H501U')
+  assert.equal(taxMetadata(it, null, 'otra cosa').tax_id_written, undefined)
+  assert.equal(taxMetadata({ ...it, taxIdType: 'es_cif', country: 'ES', taxId: 'B12345674' }, null, 'B12345674').tax_id_written, undefined)
+
+  // De punta a punta: el pago lleva tax_id_written y el contacto sale con ella; la empresa, con el prefijo.
+  const w = world()
+  const { session } = await buy(w, 'hazlo-tu', () => ({ country: 'CH', otherTaxId: '123.456.789' }))
+  assert.equal(session.metadata.tax_id_written, '123456789')
+  await runJobs(w.d)
+  const purchase = await purchaseOf(w, session)
+  const company = (await w.d.repo.getCompany(purchase.companyId!))!
+  assert.equal(company.taxId, 'CH123456789')
+  assert.deepEqual([w.f.invoicer.contacts.get('CH123456789')!.code, company.holdedContactId], ['123456789', w.f.invoicer.contacts.get('CH123456789')!.id])
+
+  // Sin el pago de Stripe (un cobro del mensual de una empresa sin contacto): se deduce.
+  const m = await monthlyFor(w, () => ({ country: 'US', otherTaxId: '98-7654321' }))
+  w.f.invoicer.contacts.delete('US98-7654321')
+  await w.d.repo.updateCompany(m.company.id, { holdedContactId: null })
+  await charge(w, m, '2026-12-02')
+  await runJobs(w.d)
+  assert.equal(w.f.invoicer.contacts.get('US98-7654321')!.code, '98-7654321')
+})
+
+test('las notas de la factura (salen impresas) solo llevan la consulta de VIES; el pago de Stripe va en la descripcion, y con ella un reintento encuentra la factura sin repetirla', async () => {
+  const w = world({ HOLDED_INVOICE_MODE: 'emit' })
+  // Holded crea la factura y no contesta al leerla para cruzar los totales: el paso se reintenta.
+  w.f.invoicer.failures.failNext('getDocument', 1)
+  const { session } = await buy(w, 'hazlo-tu', (b) => ({ taxId: b.taxId }))
+  await runJobs(w.d)
+  const purchase = await purchaseOf(w, session)
+  assert.equal((await w.d.repo.getJobByKey(`invoice:${purchase.id}`))!.status, 'pending')
+  assert.equal(w.f.invoicer.documents.size, 1)
+  w.advance(HOUR)
+  await runJobs(w.d)
+  // La encuentra por la descripcion (con el pago de Stripe) y la emite: una sola.
+  assert.equal(w.f.invoicer.documents.size, 1)
+  const invoice = (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!
+  assert.equal(invoice.status, 'sent')
+  const doc = docOf(w, invoice.providerId)
+  assert.equal(doc.draft.reference, `Cerebro Digital · Solista · ${purchase.paymentRef}`)
+  assert.equal(doc.draft.notes, null)
+})
+
+test('emitida sola (HOLDED_INVOICE_MODE=emit): si Verifactu no la da por aceptada, aviso urgente; aceptada, nada', async () => {
+  const w = world({ HOLDED_INVOICE_MODE: 'emit' })
+  w.f.invoicer.verifactuStatus = 'rejected'
+  const { session } = await buy(w, 'hazlo-tu', (b) => ({ taxId: b.taxId }))
+  await runJobs(w.d)
+  const purchase = await purchaseOf(w, session)
+  const invoice = (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!
+  // Ya esta aprobada: sale igual al cliente y a su zona; el aviso pide mirarla en Holded.
+  assert.equal(invoice.status, 'sent')
+  const alert = w.f.mailer.sent.find((m) => /^URGENTE · Verifactu: factura /.test(m.subject))!
+  assert.equal(alert.subject, `URGENTE · Verifactu: factura ${invoice.number} sin aceptar`)
+  assert.match(alert.text, /su estado en Verifactu es «rejected», no «accepted»/)
+  assert.ok(alert.text.includes(`Compra: ${purchase.id}`))
+  // Holded sin el estado: tambien (no se sabe si se registro).
+  w.f.invoicer.verifactuStatus = null
+  await buy(w, 'hazlo-tu', (b) => ({ taxId: b.taxId }))
+  await runJobs(w.d)
+  assert.ok(w.f.mailer.sent.some((m) => /^URGENTE · Verifactu: /.test(m.subject) && /«sin dar»/.test(m.text)))
+  // Aceptada: ningun aviso mas.
+  w.f.invoicer.verifactuStatus = 'accepted'
+  const alerts = w.f.mailer.sent.filter((m) => /Verifactu/.test(m.subject)).length
+  await buy(w, 'hazlo-tu', (b) => ({ taxId: b.taxId }))
+  await runJobs(w.d)
+  assert.equal(w.f.mailer.sent.filter((m) => /Verifactu/.test(m.subject)).length, alerts)
+  // En borrador (lo de hoy) no se aprueba ni se mira.
+  const draft = world()
+  draft.f.invoicer.verifactuStatus = 'rejected'
+  await buy(draft, 'hazlo-tu', (b) => ({ taxId: b.taxId }))
+  await runJobs(draft.d)
+  assert.ok(!draft.f.mailer.sent.some((m) => /Verifactu/.test(m.subject)))
+})
+
+test('las menciones: el NIF-IVA de PymaticLabs (el de VIES_REQUESTER) en la inversion del sujeto pasivo; el IGIC solo en Canarias, no en Ceuta ni Melilla', async () => {
+  const at = (postal_code: string) => ({ country: 'ES', taxId: 'B12345674', address: { line1: null, line2: null, city: null, postal_code, state: null, country: 'ES' } })
+  const igic = /IGIC a liquidar por el destinatario \(art\. 19\.1\.2\.º a\) de la Ley 20\/1991\)\./
+  assert.match(taxMention('export', at('38001'), 'es', 'ESB88781745')!, igic)
+  for (const postal of ['51001', '52001']) assert.doesNotMatch(taxMention('export', at(postal), 'es', 'ESB88781745')!, /IGIC/, postal)
+  // En ingles, cada linea con la suya.
+  assert.deepEqual(taxMention('export', at('35001'), 'en', 'ESB88781745')!.split('\n').map((l) => /IGIC/.test(l)), [true, true])
+  assert.match(taxMention('export', at('35001'), 'en', 'ESB88781745')!, /IGIC to be accounted for by the recipient \(Article 19\.1\.2\.a of Law 20\/1991\)\./)
+  // Fuera de la UE: no sujeta al IVA espanol, con el articulo exacto.
+  assert.equal(
+    taxMention('export', { country: 'US', taxId: 'US12-3456789', address: null }, 'en', 'ESB88781745'),
+    'Not subject to Spanish VAT under the place-of-supply rules (Article 69.One.1 of Spanish VAT Law 37/1992). \nOperación no sujeta al IVA español por reglas de localización (art. 69.Uno.1.º de la Ley 37/1992, del IVA).'
+  )
+  assert.equal(taxMention('standard', at('12001'), 'es', 'ESB88781745'), null)
+
+  // El de PymaticLabs sale de VIES_REQUESTER (el mismo que pregunta a VIES), no escrito dos veces.
+  const w = world({ VIES_REQUESTER: 'ESB12345674' })
+  const { session } = await buy(w, 'hazlo-tu', () => ({ country: 'DE', vatId: 'DE701000040' }))
+  await runJobs(w.d)
+  const purchase = await purchaseOf(w, session)
+  const body = docOf(w, (await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`))!.providerId).draft.body ?? ''
+  assert.match(body, /\nNIF-IVA del destinatario: DE701000040\. \nNIF-IVA del proveedor: ESB12345674\.$/)
+})
+
+test('un territorio de un Estado de la UE fuera del IVA europeo (ultramar, Aland, Helgoland...): la factura, retenida para hacerla a mano (s_iva_nosujeto, sin 349); el cobro no se toca', async () => {
+  // Por el pais y el codigo postal de la direccion de facturacion (la de Stripe da el del Estado).
+  const yes: [string, string][] = [['FR', '97100'], ['FR', '97400'], ['FI', '22100'], ['FI', '22999'], ['DE', '27498'], ['DE', '78266'], ['IT', '23041'], ['IT', '22061'], ['GR', '63086'], ['GR', '630 86'], ['FI', 'AX-22100']]
+  const no: [string, string | null][] = [['FR', '75001'], ['FI', '22000'], ['FI', '23000'], ['DE', '27499'], ['IT', '23030'], ['GR', '63085'], ['ES', '35001'], ['MC', '98000'], ['DE', null]]
+  for (const [country, postal] of yes) assert.ok(outsideEuVatTerritory(country, postal), `${country} ${postal}`)
+  for (const [country, postal] of no) assert.equal(outsideEuVatTerritory(country, postal), null, `${country} ${postal}`)
+
+  const w = world()
+  const postal = (code: string) => (s: Record<string, any>) => void (s.customer_details.address.postal_code = code)
+  // Helgoland, con NIF-IVA aleman valido: se entrega (licencia, zona), pero la factura no se hace sola.
+  const { session, outcome } = await buy(w, 'hazlo-tu', () => ({ country: 'DE', vatId: 'DE701000050' }), { patch: postal('27498') })
+  assert.equal(outcome, 'purchase')
+  await runJobs(w.d)
+  const purchase = await purchaseOf(w, session)
+  assert.deepEqual([purchase.taxTreatment, purchase.amountTax], ['reverse_charge', 0])
+  assert.ok(await w.d.repo.getLicenseByPurchase(purchase.id))
+  assert.equal((await w.d.repo.getJobByKey(`invoice:${purchase.id}`))!.result?.status, 'held')
+  assert.equal(await w.d.repo.getInvoiceByRef(`invoice:${purchase.id}`), null)
+  const held = w.f.mailer.sent.find((m) => /^Facturar a mano/.test(m.subject) && m.text.includes(purchase.paymentRef))!
+  assert.match(held.text, /territorio fuera del IVA de la UE: s_iva_nosujeto, sin 349 \(DE 27498, Helgoland; art\. 6 de la Directiva 2006\/112\/CE\)/)
+  // Y no va al 349 mientras no se aclare.
+  assert.match(w.f.mailer.sent.find((m) => /^Venta: /.test(m.subject) && m.text.includes(purchase.paymentRef))!.text, /no va al modelo 349 hasta aclararla/)
+  // Guadalupe sin NIF-IVA, con el 21 % cobrado: lo mismo, y el motivo dice que se cobro el IVA.
+  const { session: dom } = await buy(w, 'hazlo-tu', () => ({ country: 'FR', otherTaxId: '552 100 555' }), { patch: postal('97100') })
+  await runJobs(w.d)
+  const pDom = await purchaseOf(w, dom)
+  assert.deepEqual([pDom.taxTreatment, pDom.amountTax > 0], ['standard', true])
+  assert.equal(await w.d.repo.getInvoiceByRef(`invoice:${pDom.id}`), null)
+  assert.match(w.f.mailer.sent.find((m) => /^Facturar a mano/.test(m.subject) && m.text.includes(pDom.paymentRef))!.text, /FR 97100, un departamento de ultramar de Francia; .*se cobró el 21 %: devolver ese IVA o facturarlo con él, con Manel/)
 })

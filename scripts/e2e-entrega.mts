@@ -11,7 +11,9 @@
 // cobrado que no toca o una venta de fuera de la UE con tarjeta espanola va a revisar; con las
 // plazas de lanzamiento apartadas por pagos a medias, launch_busy. Despues entra en la zona con el
 // codigo del buzon, publica una version, cobra el mensual (tambien el de la empresa de la UE, con
-// VIES otra vez), devuelve un pago y concilia.
+// VIES otra vez); con las ventas a la UE sin NIF-IVA en 7.901 euros, lo que pasaria de 8.000 no abre
+// el pago (ni en /comprar ni en la zona) y el mensual que ya hay sigue cobrando con aviso urgente;
+// devuelve un pago, concilia y mira que las notas de las facturas solo lleven la consulta de VIES.
 //
 //   pnpm build && node scripts/e2e-entrega.mts --start
 //
@@ -382,7 +384,8 @@ async function main() {
   assert.equal(icSale.company.address.postal_code, '35001')
   assert.equal(icSale.invoice.draft.taxTreatment, 'export')
   assert.ok(icSale.invoice.draft.body.includes('Operación no sujeta a IVA por reglas de localización (art. 69.Uno.1.º de la Ley 37/1992 del IVA).'))
-  log('Canarias: NIF espanol, sin IVA (sin el tipo del 21 %) y la factura con la no sujecion por localizacion')
+  assert.ok(icSale.invoice.draft.body.includes('IGIC a liquidar por el destinatario (art. 19.1.2.º a) de la Ley 20/1991).'))
+  log('Canarias: NIF espanol, sin IVA (sin el tipo del 21 %) y la factura con la no sujecion por localizacion y el IGIC a cargo del cliente')
 
   // 4b. Una empresa de otro pais de la UE con NIF-IVA valido en VIES, en ingles: inversion del sujeto
   //     pasivo; VIES se pregunta antes de abrir el pago y su numero de consulta va con el pedido.
@@ -401,7 +404,10 @@ async function main() {
   assert.deepEqual([deSale.company.taxId, deSale.company.taxIdType, deSale.company.country], [deVat, 'eu_vat', 'DE'])
   const deBody = String(deSale.invoice.draft.body)
   assert.ok(deBody.startsWith('Reverse charge.') && deBody.includes('Inversión del sujeto pasivo.') && deBody.includes(`Customer VAT number: ${deVat}`), deBody)
-  assert.ok(String(deSale.invoice.draft.notes).includes(`VIES ${deSale.params.metadata.vies_request}`))
+  assert.ok(deBody.endsWith('Supplier VAT number: ESB88781745.'), deBody)
+  // Las notas salen impresas: solo la consulta de VIES (el pago de Stripe, en la descripcion).
+  assert.match(String(deSale.invoice.draft.notes), new RegExp(`^VIES ${deSale.params.metadata.vies_request} \\([^)]+\\)$`))
+  assert.ok(String(deSale.invoice.draft.reference).endsWith(` · ${deSale.purchase.paymentRef}`))
   assert.match(deSale.notice.text, /IVA: sin IVA: inversión del sujeto pasivo; va al modelo 349/)
   log(`UE con NIF-IVA (${deVat}): VIES antes de pagar (${deSale.params.metadata.vies_request}), sin IVA, factura con la inversion del sujeto pasivo y aviso del modelo 349`)
 
@@ -413,7 +419,7 @@ async function main() {
   assert.deepEqual([itSale.params.metadata.tax_id, itSale.params.metadata.tax_id_type, itSale.params.metadata.tax_treatment], [`ITRSSMRA${run}H501U`, 'other', 'standard'])
   assert.deepEqual([itSale.purchase.taxTreatment, itSale.purchase.amountTax], ['standard', vat21(itSale.purchase)])
   assert.deepEqual([itSale.company.taxIdType, itSale.company.country], ['other', 'IT'])
-  assert.deepEqual([itSale.invoice.draft.taxTreatment, itSale.invoice.draft.body], ['standard', null])
+  assert.deepEqual([itSale.invoice.draft.taxTreatment, itSale.invoice.draft.body, itSale.invoice.draft.notes], ['standard', null, null])
   assert.match(itSale.notice.text, /Ventas a la UE sin NIF-IVA: .* este año \(límite: 10\.000,00\s€ al año\)/)
   log('UE sin NIF-IVA: con el 21 % de IVA espanol, su identificacion fiscal y la cuenta del limite de 10.000 € en el aviso')
 
@@ -423,7 +429,7 @@ async function main() {
   assert.deepEqual(taxRatesOf(usSale.params), [])
   assert.deepEqual([usSale.params.metadata.tax_id, usSale.params.metadata.tax_treatment], [`US${run.slice(0, 2)}-${run}9`, 'export'])
   assert.deepEqual([usSale.purchase.taxTreatment, usSale.purchase.amountTax, usSale.company.country], ['export', 0, 'US'])
-  assert.ok(String(usSale.invoice.draft.body).includes('Operación no sujeta a IVA por localización en destino (art. 69 de la Ley 37/1992 del IVA).'))
+  assert.ok(String(usSale.invoice.draft.body).includes('Operación no sujeta al IVA español por reglas de localización (art. 69.Uno.1.º de la Ley 37/1992, del IVA).'))
   log('fuera de la UE: sin IVA, su identificacion fiscal y la factura con la no sujecion en destino')
 
   // 4e. Monaco va como Francia en el IVA: con su NIF-IVA frances (FR), que se pregunta al VIES de
@@ -443,7 +449,8 @@ async function main() {
   log(`Monaco con NIF-IVA frances (${mcVat}): VIES de Francia antes de pagar, sin IVA, inversion del sujeto pasivo y modelo 349`)
 
   // 4f. VIES da por valido el NIF-IVA, pero a nombre de otra empresa: la venta sale igual (licencia,
-  //     bienvenida y zona); la factura queda en borrador con ese nombre en sus notas, y el aviso lo dice.
+  //     bienvenida y zona); la factura queda en borrador con ese nombre en el motivo (sus notas salen
+  //     impresas: solo la consulta), y el aviso lo dice.
   const at: Buyer = { company: `Werkstatt Elf ${ts} GmbH`, country: 'AT', vatId: `ATU${run}12`, email: `at-${ts}@e2e.test` }
   await setVies({ vatId: at.vatId!, name: 'ALPENBLICK HANDELS GMBH', address: 'Ringstraße 1\n1010 Wien' })
   const atSale = await sale(at)
@@ -454,9 +461,10 @@ async function main() {
   const atInvoice = Object.values(atSale.s.db.invoices).find((x) => x.purchaseId === atSale.purchase.id)!
   assert.deepEqual([atInvoice.status, atSale.invoice.approved], ['draft', false])
   assert.match(atInvoice.holdReason, new RegExp(`^VIES da el NIF-IVA ATU${run}12 a nombre de «ALPENBLICK HANDELS GMBH» \\(Ringstraße 1, 1010 Wien\\), que no se parece a «${at.company}»`))
-  assert.match(String(atSale.invoice.draft.notes), /a nombre de «ALPENBLICK HANDELS GMBH» · Antes de emitirla, comprobar que el NIF-IVA es de la empresa \(el nombre de VIES no se parece a la razón social\) y quitar esta frase$/)
+  assert.match(atInvoice.holdReason, /: comprobar con la empresa que es suyo antes de emitirla; si no lo es,/)
+  assert.match(String(atSale.invoice.draft.notes), /^VIES WAPIFALSO\d+ \([^)]+\)$/)
   assert.match(atSale.notice.text, /VIES: consulta WAPIFALSO\d+, a nombre de «ALPENBLICK HANDELS GMBH», que no se parece a la razón social \(ver Qué hacer\)/)
-  log('NIF-IVA valido en VIES a nombre de otra empresa: se entrega igual; la factura, en borrador con el nombre en sus notas, y el aviso lo dice')
+  log('NIF-IVA valido en VIES a nombre de otra empresa: se entrega igual; la factura, en borrador con el nombre en el motivo, y el aviso lo dice')
 
   // 5. VIES dice que el NIF-IVA no vale: de vuelta a /comprar sin pago; sin el NIF-IVA, con el 21 %.
   const fr: Buyer = { company: `Atelier Sept ${ts} SARL`, country: 'FR', vatId: `FR12${run}789`, email: `fr-${ts}@e2e.test` }
@@ -699,6 +707,79 @@ async function main() {
   assert.ok(!portal.includes('otra.example'))
   log('compra con el NIF de otro cliente desde otro correo: a revisar, sin acceso y con aviso a su titular')
 
+  // 11d. La UE sin NIF-IVA (con el 21 %) cerca del limite de 10.000 euros (los socios, 30-10-2026): con
+  //      las ventas asi de este ano y la de ahora por encima de 8.000, ni la licencia en /comprar ni el
+  //      mensual en la zona abren el pago (eu_no_vat_limit: que escriba a info@pymaticlabs.com); con
+  //      NIF-IVA, si. Los mensuales que ya hay no se cortan: desde 8.000, cada cobro con aviso urgente.
+  //      Las ventas de antes, por el aviso de Stripe, con importes a medida para quedar en 7.901 euros:
+  //      cabe el Esencial al mes (99 euros, justo hasta 8.000) y nada mas.
+  const euTotal = (text: string) => {
+    const found = /Ventas a la UE sin NIF-IVA: ([\d.]+,\d\d)\s€ este año/.exec(text)?.[1]
+    assert.ok(found, text)
+    return Number(found.replace(/\./g, '').replace(',', ''))
+  }
+  const euSale = async (n: number, amount: number) => {
+    const buyer = { company: `Bottega ${n} ${ts} SRL`, taxId: '', email: `bottega-${n}-${ts}@e2e.test`, country: 'IT' }
+    const metadata = { locale: 'es', tax_country: 'IT', tax_id: `ITBTG${n}${run}`, tax_id_type: 'other', tax_treatment: 'standard', terms_version: LEGAL_VERSIONS.condiciones }
+    const sold = fakeCheckoutSession({ product: 'hazlo-tu', buyer, amountSubtotal: amount, metadata })
+    assert.equal((await sendEvent('checkout.session.completed', sold)).body.outcome, 'purchase')
+    return until(`aviso de la venta de ${buyer.company}`, (s) => s.mail.find((m) => /^(URGENTE · )?Venta:/.test(m.subject) && m.subject.includes(buyer.company)))
+  }
+  const soFar = euTotal((await euSale(1, prices.list)).text)
+  const topped = await euSale(2, 790_100 - soFar)
+  assert.equal(euTotal(topped.text), 790_100)
+  assert.match(topped.subject, /^Venta:/, 'por debajo de 8.000 euros, aviso normal')
+  // /comprar: una Solista (990 euros) desde Italia sin NIF-IVA pasaria de 8.000: de vuelta con el error, sin pago ni plaza.
+  const itStop: Buyer = { company: `Officina Quattordici ${ts} SRL`, country: 'IT', vatId: '', otherTaxId: `bnchgv ${run} f205x`, email: `it-limite-${ts}@e2e.test` }
+  const beforeStop = await state()
+  const stopped = await openCheckout('hazlo-tu', itStop)
+  assert.equal(stopped.back?.search, '?error=eu_no_vat_limit&pais=IT')
+  const afterStop = await state()
+  assert.deepEqual([afterStop.payments.sessions.length, launchFree(afterStop)], [beforeStop.payments.sessions.length, launchFree(beforeStop)], 'ni pago ni plaza apartada')
+  const stopPage = await (await fetch(stopped.back!)).text()
+  assert.ok(stopPage.includes('Ahora no podemos vender con IVA español a empresas de otros países de la UE'), '/comprar dice el error')
+  assert.ok(stopPage.includes('escríbenos a info@pymaticlabs.com y lo resolvemos'), 'y pide escribir a info@pymaticlabs.com')
+  assert.match(stopPage, /<option value="IT" selected="">/, 'con Italia elegida')
+  const itWithVat = await openCheckout('hazlo-tu', { ...itStop, vatId: `IT${run}54321`, otherTaxId: '' })
+  assert.ok(itWithVat.id, 'con NIF-IVA se vende')
+  assert.equal(sessionParams(await state(), itWithVat.id).metadata.tax_treatment, 'reverse_charge')
+  await cancelOnStripe(itWithVat.id, itStop)
+  // La zona: el Esencial al ano (990 euros) pasaria de 8.000, de vuelta a /zona/mensual con el error; al mes (99), justo.
+  const zoneIt = await zoneLogin(it.email)
+  const subscribeIt = (period: string) =>
+    zoneIt('/api/checkout', { method: 'POST', headers: { 'X-Forwarded-For': it.ip! }, body: new URLSearchParams({ product: 'plan-esencial', locale: 'es', company: itSale.company.id, period }) })
+  const yearStop = await subscribeIt('year')
+  assert.equal(yearStop.status, 303)
+  const yearBack = new URL(yearStop.headers.get('location')!, site)
+  assert.equal(`${yearBack.pathname}${yearBack.search}`, '/zona/mensual?error=eu_no_vat_limit')
+  assert.ok((await (await zoneIt(`${yearBack.pathname}${yearBack.search}`)).text()).includes('Escríbenos a info@pymaticlabs.com y lo resolvemos'), '/zona/mensual dice el error')
+  const monthOpen = await subscribeIt('month')
+  assert.equal(monthOpen.status, 303)
+  const itPlanId = new URL(monthOpen.headers.get('location')!, site).searchParams.get('id')
+  assert.match(itPlanId ?? '', /^cs_fake_/, 'el Esencial al mes, justo hasta 8.000 euros, abre el pago')
+  const itPlan = sessionParams(await state(), itPlanId!)
+  assert.deepEqual([itPlan.subscription_data.default_tax_rates, itPlan.subscription_data.metadata.tax_treatment], [['txr_fake_iva_21'], 'standard'])
+  await payOnStripe(itPlanId!, it, {}, /\/zona\?mensual=ok$/)
+  // Cada cobro del mensual desde los 8.000 euros: entregado (su licencia) y con aviso urgente, que
+  // dice que la web ya no abre pagos asi y que mensuales siguen cobrando.
+  const itCharge = async (n: number) => {
+    const s = await until(`cobro ${n} del mensual de ${it.company}`, (s) =>
+      s.mail.filter((m) => m.to === it.email && m.tags.includes('mensual')).length >= n && s.mail.filter((m) => m.subject.startsWith(`URGENTE · Cobro del mensual:`) && m.subject.includes(it.company)).length >= n ? s : null
+    )
+    return s.mail.filter((m) => m.subject.startsWith(`URGENTE · Cobro del mensual:`) && m.subject.includes(it.company))[n - 1]
+  }
+  const firstCharge = await itCharge(1)
+  assert.equal(euTotal(firstCharge.text), 800_000)
+  assert.match(firstCharge.text, /desde 8\.000,00\s€ la web ya no abre pagos nuevos así \(piden escribir a info@pymaticlabs\.com\)/)
+  const itNow = Object.values((await state()).db.companies).find((x) => x.id === itSale.company.id)!
+  assert.ok(itNow.subscriptionId, 'con su mensual')
+  const nextIt = await sendEvent('invoice.paid', fakeInvoice({ customer: itNow.stripeCustomerId, amount: priceCents('plan-esencial').list, periodEnd: Math.floor(Date.now() / 1000) + 62 * 86400, metadata: itPlan.metadata, subscription: itNow.subscriptionId }))
+  assert.equal(nextIt.body.outcome, 'renewal', 'el mensual que ya hay no se corta')
+  const secondCharge = await itCharge(2)
+  assert.equal(euTotal(secondCharge.text), 809_900)
+  assert.ok(secondCharge.text.includes(`siguen cobrando el 21 % (${it.company} (IT, `), secondCharge.text)
+  log('UE sin NIF-IVA en 7.901 €: una Solista o el Esencial al ano pasarian de 8.000 y no abren el pago (piden escribir a info@pymaticlabs.com); con NIF-IVA si; el Esencial al mes, justo; cada cobro desde 8.000, entregado con aviso URGENTE')
+
   // 12. Devolucion del primero: licencia anulada y zona cerrada.
   const purchaseA = Object.values(s2.db.purchases).find((p) => p.paymentRef === session.payment_intent)!
   const refund = await sendEvent('charge.refunded', fakeCharge({ paymentIntent: String(session.payment_intent), amount: purchaseA.amountTotal, refunded: purchaseA.amountTotal }))
@@ -714,6 +795,20 @@ async function main() {
   assert.deepEqual(report.orphans, [])
   assert.equal(report.deadJobs, 0)
   log(`conciliacion: ${report.checkedLicenses} licencias, todas con su pago cobrado`)
+
+  // 13b. Las notas de Holded salen impresas en el PDF (Observaciones): en todas las facturas (y las
+  //      rectificativas, si las hay: con las facturas en borrador, la devolucion se rectifica a mano),
+  //      solo la consulta de VIES (la inversion del sujeto pasivo) o nada. El pago de Stripe va en la
+  //      descripcion, por la que un reintento la encuentra (findDocument).
+  const docs = (await state()).invoicer.documents
+  for (const doc of docs) {
+    const { notes, reference, taxTreatment } = doc.draft
+    if (taxTreatment === 'reverse_charge' && doc.kind === 'invoice') assert.match(String(notes), /^VIES WAPIFALSO\d+ \([^)]+\)$/, String(reference))
+    else assert.equal(notes, null, `${reference}: ${notes}`)
+    assert.match(String(reference), / · (pi|in)_\S+( · \S+)?$/, 'la descripcion lleva el pago de Stripe')
+  }
+  const viesNotes = docs.filter((x) => x.draft.notes).length
+  log(`notas de las ${docs.length} facturas: solo la consulta de VIES (${viesNotes}) o nada; el pago de Stripe, en la descripcion`)
 
   // 14. La zona de muestra (para verla y sacar capturas sin Supabase): entra como la titular.
   const demo = await fetch(`${base}/api/dev/zona-demo`, { redirect: 'manual' })

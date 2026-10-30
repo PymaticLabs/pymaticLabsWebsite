@@ -18,10 +18,11 @@ import { compareVersions } from './adapters/memory-repository.ts'
 import { isSpainTaxRate } from './adapters/stripe-payments.ts'
 import { readConfig, type DeliveryConfig } from './config.ts'
 import { SESSION_HOSTS, WEBHOOK_EVENTS, launchCouponId, lookupKey, priceCents, productName, type PlanPeriod, type ProductId } from './products.ts'
-import { EU_DISTANCE_SALES_LIMIT, SPAIN_VAT_RATE, TAX_RATE_TAG } from './tax.ts'
-import { SALE_COUNTRIES, isEuCountry } from './checkout-tax.ts'
-import { errorMessage, formatMoney, madridDate } from './util.ts'
-import { viesRequester } from './vies.ts'
+import { SupabaseRepository } from './adapters/supabase-repository.ts'
+import { SPAIN_VAT_RATE, TAX_RATE_TAG } from './tax.ts'
+import { EU_NO_VAT_STOP, euNoVatLevel, euNoVatSales, type EuNoVatTotals } from './eu-sales.ts'
+import { errorMessage, formatMoney } from './util.ts'
+import { PYMATICLABS_VAT_ID, viesRequester } from './vies.ts'
 
 type Env = Record<string, string | undefined>
 
@@ -92,6 +93,30 @@ interface Variable {
   optional?: boolean
 }
 
+/**
+ * Los impuestos de Holded de las ventas sin IVA, exactos: s_iva_intras (inversion del sujeto pasivo
+ * a la UE: casilla 59 del 303, modelo 349, N2 en Verifactu) y s_iva_nosujeto (no sujeta por reglas de
+ * localizacion: casilla 120).
+ */
+export const HOLDED_TAXES = { reverse_charge: 's_iva_intras', export: 's_iva_nosujeto' } as const
+
+// Por que no vale cada uno de los que se confunden con ellos.
+const WRONG_HOLDED_TAXES: Record<string, string> = {
+  s_iva_invsuj: 'la inversión del sujeto pasivo interior: iría como S2 a la casilla 122 del 303 y se quedaría fuera del 349',
+  s_iva_export: 'la exportación exenta: iría a la casilla 60 del 303 y a Verifactu con la clave 02, que exige una operación exenta',
+  s_iva_exento: 'una operación exenta: estas ventas no están exentas, sino no sujetas por reglas de localización',
+  s_iva_intras: 'el de las ventas a empresas de la UE con NIF-IVA (casilla 59 del 303 y modelo 349)',
+  s_iva_nosujeto: 'el de las ventas no sujetas de Canarias, Ceuta, Melilla y fuera de la UE (casilla 120 del 303, sin 349)',
+}
+
+/** Lo que no vale del impuesto de Holded puesto para ese caso (null si es el bueno). */
+export function wrongHoldedTax(value: string, treatment: keyof typeof HOLDED_TAXES): string | null {
+  const want = HOLDED_TAXES[treatment]
+  if (value === want) return null
+  const why = Object.hasOwn(WRONG_HOLDED_TAXES, value) ? WRONG_HOLDED_TAXES[value] : 'no es el de este caso'
+  return `es ${value}, ${why}: tiene que ser ${want}`
+}
+
 function variables(config: DeliveryConfig | null, expectLive: boolean): Variable[] {
   const secret = (what: string) => (v: string) => (v.length < 32 ? `${what} corto: mejor de 32 caracteres o mas (openssl rand -hex 32)` : null)
   const list: Variable[] = [
@@ -132,9 +157,20 @@ function variables(config: DeliveryConfig | null, expectLive: boolean): Variable
         }
       },
     },
-    // Los impuestos de Holded de las ventas sin IVA: sin ellos, esas facturas no se crean (holded-invoicer.ts).
-    { name: 'HOLDED_TAX_REVERSE_CHARGE', what: 'el impuesto de Holded de la inversión del sujeto pasivo (UE con NIF-IVA)', fix: `${GUIDE}, 3.5, paso 2 (sin él, esas ventas no se facturan solas)` },
-    { name: 'HOLDED_TAX_EXPORT', what: 'el impuesto de Holded de las ventas sin IVA español (fuera de la UE, Canarias, Ceuta y Melilla)', fix: `${GUIDE}, 3.5, paso 2 (sin él, esas ventas no se facturan solas)` },
+    // Los impuestos de Holded de las ventas sin IVA: sin ellos, esas facturas no se crean (holded-invoicer.ts);
+    // con otro, irian a otra casilla del 303 y a Verifactu con otra clave (revision fiscal, 30-10-2026).
+    {
+      name: 'HOLDED_TAX_REVERSE_CHARGE',
+      what: 'el impuesto de Holded de la inversión del sujeto pasivo (UE con NIF-IVA)',
+      fix: `HOLDED_TAX_REVERSE_CHARGE=${HOLDED_TAXES.reverse_charge} (${GUIDE}, 3.5, paso 2)`,
+      invalid: (v) => wrongHoldedTax(v, 'reverse_charge'),
+    },
+    {
+      name: 'HOLDED_TAX_EXPORT',
+      what: 'el impuesto de Holded de las ventas sin IVA español (fuera de la UE, Canarias, Ceuta y Melilla)',
+      fix: `HOLDED_TAX_EXPORT=${HOLDED_TAXES.export} (${GUIDE}, 3.5, paso 2)`,
+      invalid: (v) => wrongHoldedTax(v, 'export'),
+    },
     { name: 'RESEND_API_KEY', what: 'el correo del formulario de contacto', fix: 'Resend (no es de la venta)', optional: true },
   ]
   if (config?.licenseMode === 'kms') {
@@ -300,53 +336,36 @@ async function checkSupabase(env: Env, config: DeliveryConfig, expectLive: boole
     const late = await db.from('license_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').lt('created_at', cutoff)
     if (!late.error) add(`Licencias a mano sin firmar desde hace más de ${config.licensePendingAlertHours} h`, (late.count ?? 0) > 0 ? 'aviso' : 'ok', `${late.count ?? 0}`, 'scripts/subir-licencia.mts --pendientes')
   }
-  await checkEuDistanceSales(db, expectLive, now, add)
+  await checkEuDistanceSales(env, expectLive, now, add)
 }
-
-/** Las ventas que cuentan para el limite: cobradas y entregadas, como en el aviso de cada venta. */
-const EU_SALE_STATUSES = ['paid', 'partially_refunded', 'disputed']
 
 /**
  * Las ventas con el 21 % a empresas de otros paises de la UE sin NIF-IVA: como a particulares, con
  * IVA espanol mientras no pasen de 10.000 euros al ano, este o el anterior (arts. 70.Uno.8.o y 73
- * LIVA). Pasado, el IVA es el del pais del cliente por la ventanilla unica (OSS) y la web no lo sabe
- * cobrar: aviso para hablarlo con Manel. La base sin IVA, menos lo devuelto; solo las de vivo (o
- * las de prueba, en un entorno de pruebas). Solo las cobradas y entregadas (EU_SALE_STATUSES), como
- * el aviso de cada venta (euNoVatSales, en steps.ts): ni las que esperan revision (sin factura) ni
- * los contracargos perdidos (ya con su rectificativa).
+ * LIVA). Sumadas igual que en el pago y en el aviso de cada venta (lib/delivery/eu-sales.ts, con el
+ * repositorio de Supabase): de todas las compras, tambien las que esperan revision ya cobradas. Desde
+ * 8.000 euros este ano (o con el anterior por encima del limite) el pago ya no abre ventas asi, pero
+ * los mensuales que ya hay siguen con el 21 %: aviso, para hablarlo con Manel. Solo las de vivo (o las
+ * de prueba, en un entorno de pruebas).
  */
-async function checkEuDistanceSales(db: SupabaseClient, expectLive: boolean, now: Date, add: Add) {
-  const year = Number(madridDate(now).slice(0, 4))
-  // Los de la UE en el IVA, como el aviso de cada venta (isEuNoVatSale): los 26 y Monaco, con Francia.
-  const others = SALE_COUNTRIES.filter((c) => c !== 'ES' && isEuCountry(c))
-  const sales = await db
-    .from('purchases')
-    .select('amount_subtotal, amount_discount, amount_total, amount_refunded, paid_at, companies!inner(country)')
-    .eq('tax_treatment', 'standard')
-    .eq('livemode', expectLive)
-    .in('status', EU_SALE_STATUSES)
-    .gte('paid_at', `${year - 1}-01-01T00:00:00Z`)
-    .in('companies.country', others)
+async function checkEuDistanceSales(env: Env, expectLive: boolean, now: Date, add: Add) {
   const item = 'Ventas con el 21 % a la UE sin NIF-IVA (límite de 10.000 € al año)'
-  if (sales.error) {
-    add(item, 'aviso', `no se pudieron sumar: ${sales.error.message}`, 'Mirarlas en Supabase (purchases con tax_treatment standard y la empresa de otro país de la UE)')
+  let totals: EuNoVatTotals
+  try {
+    totals = await euNoVatSales(new SupabaseRepository(env), now, expectLive)
+  } catch (error) {
+    add(item, 'aviso', `no se pudieron sumar: ${errorMessage(error)}`, 'Mirarlas en Supabase (purchases con tax_treatment standard y la empresa, o lo declarado, de otro país de la UE)')
     return
   }
-  const total: Record<number, number> = { [year]: 0, [year - 1]: 0 }
-  for (const row of (sales.data ?? []) as { amount_subtotal: number; amount_discount: number; amount_total: number; amount_refunded: number; paid_at: string }[]) {
-    const net = Number(row.amount_subtotal) - Number(row.amount_discount)
-    const refunded = Number(row.amount_total) > 0 ? Math.round((Number(row.amount_refunded) * net) / Number(row.amount_total)) : 0
-    const at = Number(madridDate(new Date(row.paid_at)).slice(0, 4))
-    if (at in total) total[at] += net - refunded
-  }
-  const over = Math.max(total[year], total[year - 1]) > EU_DISTANCE_SALES_LIMIT
-  const detail = `${formatMoney(total[year], 'eur', 'es')} este año y ${formatMoney(total[year - 1], 'eur', 'es')} el anterior, sin IVA`
-  add(
-    item,
-    over ? 'aviso' : 'ok',
-    over ? `${detail}: pasado el límite, el IVA es el del país del cliente (ventanilla única, OSS) y la web sigue cobrando el 21 % español` : detail,
-    'Hablarlo con Manel antes de seguir vendiendo así a la UE (alta en la ventanilla única, modelo 035)'
-  )
+  const level = euNoVatLevel(totals)
+  const detail = `${formatMoney(totals.current, 'eur', 'es')} este año y ${formatMoney(totals.previous, 'eur', 'es')} el anterior, sin IVA`
+  const why =
+    level === 'over'
+      ? `${detail}: pasado el límite, el IVA es el del país del cliente (ventanilla única, OSS); la web ya no abre pagos así, pero los mensuales que ya hay siguen cobrando el 21 % español`
+      : level === 'stop'
+        ? `${detail}: desde ${formatMoney(EU_NO_VAT_STOP, 'eur', 'es')} la web ya no abre pagos así (piden escribir a info@pymaticlabs.com), pero los mensuales que ya hay siguen cobrando el 21 % español`
+        : null
+  add(item, why ? 'aviso' : 'ok', why ?? detail, 'Hablarlo con Manel antes de pasar de 10.000 € (alta en la ventanilla única, modelo 035)')
 }
 
 // --- Stripe ------------------------------------------------------------------------------------
@@ -555,6 +574,12 @@ async function checkVies(env: Env, config: DeliveryConfig, add: Add) {
   const result = await new ViesChecker(env, { ...config.vies, testService: false }).check({ countryCode: memberState, vatNumber: number })
   const item = `NIF-IVA de PymaticLabs (${own})`
   const fix = 'VIES_REQUESTER con el NIF-IVA de PymaticLabs, de alta en el ROI (o sin poner: ESB88781745)'
+  // Va impreso como «NIF-IVA del proveedor» en las facturas con inversion del sujeto pasivo, que no se
+  // corrigen una vez aprobadas: en vivo, solo el de PymaticLabs.
+  if (config.stripeLive && own !== PYMATICLABS_VAT_ID) {
+    add(item, 'falta', `no es el NIF-IVA de PymaticLabs (${PYMATICLABS_VAT_ID}): saldría impreso como el del proveedor en las facturas con inversión del sujeto pasivo`, fix)
+    return
+  }
   if (result.status === 'valid') add(item, 'ok', `válido en VIES (consulta ${result.requestIdentifier})`)
   else if (result.status === 'invalid') add(item, 'falta', 'VIES dice que no es válido: sin él no se puede vender sin IVA a empresas de la UE', fix)
   else if (/INVALID_REQUESTER_INFO|requestIdentifier/.test(result.reason)) add(item, 'falta', `VIES no lo acepta como solicitante (${result.reason}): las ventas sin IVA a la UE no se abrirían`, fix)
@@ -606,8 +631,11 @@ const MANUAL: [string, string][] = [
   ['Supabase: plan Pro (el gratuito se pausa y no tiene copias)', `${GUIDE}, 3.1, paso 1`],
   ['Stripe: la URL de las condiciones y de la privacidad en Public details (la pide la casilla del pago)', `${GUIDE}, 3.4, paso 2`],
   ['Stripe: cobros del mensual fallidos, con reintentos durante 3 semanas (más de los 15 días del aviso) y, al acabar, la suscripción marcada como impagada', `${GUIDE}, 3.4, paso 6`],
-  ['Holded: Verifactu activo; las facturas quedan en borrador hasta confirmar que aprobar por la API lo registra', `${GUIDE}, 3.5`],
-  ['Holded: con Manel, una factura en borrador de cada caso sin IVA (inversión del sujeto pasivo, N2 en Verifactu; fuera de la UE; Canarias) con su mención', `${GUIDE}, 3.5`],
+  ['Holded: Verifactu activo; las facturas quedan en borrador hasta confirmar por escrito con Holded que aprobar por la API lo registra igual', `${GUIDE}, 3.5`],
+  [
+    'Holded: en Conformidad, la regla de Verifactu de cada caso (S1 en España y en la UE sin NIF-IVA; N2 en la UE con NIF-IVA, en Canarias, Ceuta y Melilla y fuera de la UE; nunca «Exportación»), mirada con «Verificar» antes de aprobar la primera de cada caso',
+    `${GUIDE}, 3.5, paso 6`,
+  ],
   ['Cal.com: los dos eventos sin «requiere confirmación», con videollamada', `${GUIDE}, 3.6`],
   ['Vercel: región dub1 (Dublín, junto a Supabase) y los secretos de producción Sensitive y solo en Production', `${GUIDE}, 3.7`],
 ]

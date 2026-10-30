@@ -6,6 +6,7 @@
 // medias, asi que es tan atomico como una funcion de SQL.
 
 import { WEB_LICENSE_FIRST } from '../license-issue.ts'
+import { reviewCountry } from '../eu-sales.ts'
 import { newId } from '../util.ts'
 import { SeatLimitError } from '../types.ts'
 import type {
@@ -223,6 +224,16 @@ export class MemoryRepository implements Repository {
 
   async listPurchasesByCompany(companyId: string) {
     return copy(Object.values(this.state.purchases).filter((p) => p.companyId === companyId))
+  }
+
+  async listEuNoVatSales(sinceIso: string, livemode: boolean) {
+    const since = Date.parse(sinceIso)
+    return Object.values(this.state.purchases)
+      .filter((p) => p.taxTreatment === 'standard' && p.livemode === livemode && Date.parse(p.paidAt) >= since)
+      .map((p) => {
+        const company = p.companyId ? this.state.companies[p.companyId] : null
+        return { purchase: copy(p), country: company ? company.country : reviewCountry(p.reviewData) }
+      })
   }
 
   async nextLicenseNumber(year: number) {

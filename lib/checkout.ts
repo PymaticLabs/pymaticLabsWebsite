@@ -4,8 +4,9 @@
 //   territorio en Espana y la identificacion fiscal se piden en /comprar antes de pagar, se
 //   comprueban alli y aqui (lib/delivery/checkout-tax.ts) y deciden el IVA, que viaja en los
 //   metadatos del pago con lo declarado (tax_country, tax_territory, tax_id, tax_id_type,
-//   tax_treatment y, con NIF-IVA, vies_request y vies_checked_at, y vies_name y vies_address si VIES
-//   los da: la entrega los compara con la razon social). En Stripe, la razon social y la
+//   tax_treatment; con una identificacion de fuera, tax_id_written, la escrita, sin el pais que le
+//   pone delante la web; y, con NIF-IVA, vies_request y vies_checked_at, y vies_name y vies_address si
+//   VIES los da: la entrega los compara con la razon social). En Stripe, la razon social y la
 //   direccion de facturacion, obligatorias. Sin tax_id_collection ni Stripe Tax: Stripe solo mira la
 //   forma del NIF-IVA y dejaria a 0 % uno que VIES rechaza (iva-en-el-cobro-automatico.md);
 // - el IVA, decidido aqui: el 21 % (un tipo fijo de Stripe sin IVA dentro) en Espana peninsular y
@@ -16,6 +17,9 @@
 //   (other_tax_id_is_vat): con el, sin IVA. Que la direccion de facturacion y el IVA cobrado
 //   cuadran se mira al llegar el aviso (lib/delivery/tax.ts, checkPaidTax): no se rechazan tarjetas
 //   ni se bloquea la pagina por pais (Reglamento (UE) 2018/302);
+// - la UE sin NIF-IVA (con el 21 %), solo lejos del limite de 10.000 euros de esas ventas: con las
+//   del ano anterior por encima, o las de este ano y la de ahora por encima de 8.000, no se abre el
+//   pago (eu_no_vat_limit: que escriba a info@pymaticlabs.com; lib/delivery/eu-sales.ts);
 // - solo con tarjeta: un pago diferido (SEPA) dejaria la plaza de lanzamiento y el hueco sin apartar;
 // - la casilla de las condiciones, con la version que se acepta (y su copia guardada);
 // - el precio de lanzamiento para los 10 primeros: cupon de Stripe, con la plaza reservada
@@ -53,6 +57,7 @@ import {
   lookupKey,
   planMonthly,
   planProductName,
+  priceCents,
   productName,
   seatsFor,
   type OneTimeProductId,
@@ -74,6 +79,7 @@ import {
   type ViesProof,
 } from './delivery/checkout-tax.ts'
 import { spainTaxRateId, territoryOf } from './delivery/tax.ts'
+import { euNoVatSales, euNoVatStop } from './delivery/eu-sales.ts'
 import { ensureTermsSnapshot } from './delivery/terms.ts'
 import { abandonCheckout, clientRef, noteLaunchBusy, releaseOwnSlotHold, reserveLaunchPlace, type LaunchClient } from './delivery/launch.ts'
 import { zoneUrl } from './delivery/emails.ts'
@@ -103,6 +109,11 @@ export type CheckoutErrorCode =
   | 'other_tax_id_is_vat'
   /** Las plazas de lanzamiento que quedan, apartadas por pagos a medias: ni plaza ni precio de lista. */
   | 'launch_busy'
+  /**
+   * La UE sin NIF-IVA (con el 21 % espanol), con esas ventas ya cerca del limite de 10.000 euros
+   * (lib/delivery/eu-sales.ts): no se abre el pago; que escriba a info@pymaticlabs.com.
+   */
+  | 'eu_no_vat_limit'
 
 export class CheckoutError extends Error {
   code: CheckoutErrorCode
@@ -218,6 +229,8 @@ export function oneTimeSessionParams(input: {
   tax: CheckoutTax
   /** Con NIF-IVA: la consulta a VIES que lo confirmo. */
   vies?: ViesProof | null
+  /** La identificacion de fuera (other) tal como se escribio: tax_id_written, la del contacto de Holded. */
+  writtenTaxId?: string | null
   locale: Locale
   expiresAt: number
   terms: { version: string; sha256: string }
@@ -235,7 +248,7 @@ export function oneTimeSessionParams(input: {
     product: input.product,
     seats: String(seatsFor(input.product)),
     locale: input.locale,
-    ...taxMetadata(input.tax, vies),
+    ...taxMetadata(input.tax, vies, input.writtenTaxId ?? null),
     terms_version: input.terms.version,
     terms_sha256: input.terms.sha256,
   }
@@ -411,6 +424,26 @@ async function vatWrittenAsOther(d: Delivery, tax: CheckoutTax, otherTaxId: stri
 }
 
 /**
+ * El caso 3 (otro pais de la UE sin NIF-IVA, con el 21 % espanol): el pago no se abre si esas ventas
+ * pasaron de 10.000 euros el ano anterior, o si las de este ano con esta pasan de 8.000
+ * (lib/delivery/eu-sales.ts; los socios, 30-10-2026). La de ahora, al precio de lista: con el de
+ * lanzamiento seria menos, y asi nunca se queda corto. Las de vivo con Stripe en vivo; si no, las de prueba.
+ */
+async function stopEuNoVat(d: Delivery, tax: CheckoutTax, amount: number): Promise<void> {
+  if (tax.treatment !== 'standard' || tax.country === 'ES' || !isEuCountry(tax.country)) return
+  const totals = await euNoVatSales(d.repo, d.clock(), d.config.stripeLive === true)
+  const why = euNoVatStop(totals, amount)
+  if (!why) return
+  console.warn(`[pago] UE sin NIF-IVA parada (${tax.country}): ${totals.current} y ${totals.previous} céntimos (${why})`)
+  throw new CheckoutError(
+    'eu_no_vat_limit',
+    why === 'previous'
+      ? 'las ventas con IVA espanol a la UE sin NIF-IVA pasaron de 10.000 euros el ano anterior: hay que cobrar el IVA del pais del cliente'
+      : 'las ventas con IVA espanol a la UE sin NIF-IVA de este ano, con esta, pasan de 8.000 euros'
+  )
+}
+
+/**
  * Cuando empieza a cobrarse el mensual: al acabar los meses incluidos (el dia despues de lo pagado o
  * incluido, coveringPlan), si quedan mas de 48 horas (el minimo de Stripe para una prueba).
  */
@@ -470,6 +503,8 @@ export async function createCheckout(d: Delivery, req: CheckoutRequest): Promise
     // El IVA de su empresa; con NIF-IVA, VIES otra vez (pudo darse de baja desde la compra).
     const planTax = companyTax(company)
     const vies = await confirmVat(d, planTax, req.clientIp)
+    // De la UE sin NIF-IVA, con esas ventas cerca del limite: no se contrata (lo que ya hay sigue cobrando).
+    await stopEuNoVat(d, planTax, priceCents(req.product, period).list)
     const covering = await coveringPlan(d, company)
     // Los meses que ya tiene, gratis con ese plan o uno menor (se pague al mes o al ano); uno mayor se cobra desde ya.
     const latest = covering && planMonthly(req.product) <= planMonthly(covering.plan) ? covering.supportUntil : null
@@ -502,6 +537,8 @@ export async function createCheckout(d: Delivery, req: CheckoutRequest): Promise
   if (await vatWrittenAsOther(d, saleTax, req.otherTaxId, req.clientIp)) {
     throw new CheckoutError('other_tax_id_is_vat', 'la identificacion fiscal es un NIF-IVA valido en VIES: que lo escriba como NIF-IVA')
   }
+  // Sin NIF-IVA desde la UE, con esas ventas cerca del limite de 10.000 euros: ni pago, ni plaza, ni hueco.
+  await stopEuNoVat(d, saleTax, priceCents(product).list)
 
   // El cliente: su conexion (la IPv4, o el /56 en IPv6) para el tope de plazas, con la huella de la
   // sal de la web, y su IP tal cual para reconocer sus pagos a medias (lib/delivery/launch.ts).
@@ -583,6 +620,7 @@ export async function createCheckout(d: Delivery, req: CheckoutRequest): Promise
         taxRateId: saleTax.treatment === 'standard' ? await spainTaxRateId(d.payments) : null,
         tax: saleTax,
         vies,
+        writtenTaxId: saleTax.taxIdType === 'other' ? (req.otherTaxId ?? null) : null,
         locale: req.locale,
         expiresAt,
         terms,
