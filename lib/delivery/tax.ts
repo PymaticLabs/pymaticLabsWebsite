@@ -362,7 +362,7 @@ export function decideTax(purchase: Purchase, company: Company, details: TaxDeta
   if (outside) {
     holds.push({
       reason: `territorio fuera del IVA de la UE: s_iva_nosujeto, sin 349 (${country} ${company.address?.postal_code}, ${outside}; art. 6 de la Directiva 2006/112/CE)${
-        purchase.amountTax > 0 ? `; se cobró el ${SPAIN_VAT_RATE} %: devolver ese IVA o facturarlo con él, con Manel` : ''
+        purchase.amountTax > 0 ? `; se cobró el ${SPAIN_VAT_RATE} %, que no toca: devolver ese IVA (devolución parcial en Stripe) o lo que diga Manel` : ''
       }`,
       mode: 'manual',
     })
