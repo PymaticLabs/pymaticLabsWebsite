@@ -16,13 +16,14 @@ import { monthlyState, planName } from '@/lib/zone-view'
 // portal de cliente de Stripe (tarjeta, plan, pago mensual o anual, cancelar) o los tres planes para
 // contratarlo, al mes o por ano adelantado (el precio de 10 meses: oferta v1.9). Si aun le quedan
 // meses incluidos, el primer cobro llega cuando acaban (lib/checkout.ts, trialEndFor). El IVA, el de
-// su empresa (con NIF-IVA, VIES otra vez al contratar: si no vale o no contesta, el error aqui).
+// su empresa (con NIF-IVA, VIES otra vez al contratar: si no vale o no contesta, el error aqui; de la
+// UE sin NIF-IVA, con esas ventas cerca del limite de 10.000 euros, eu_no_vat_limit: que nos escriba).
 
 export const dynamic = 'force-dynamic'
 
 type Params = Promise<{ locale: string }>
 
-const ERRORS = ['closed', 'company_required', 'already_subscribed', 'unavailable', 'product', 'rate_limited', 'vat_invalid', 'vat_unavailable', 'country_invalid'] as const
+const ERRORS = ['closed', 'company_required', 'already_subscribed', 'unavailable', 'product', 'rate_limited', 'vat_invalid', 'vat_unavailable', 'country_invalid', 'eu_no_vat_limit'] as const
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale } = await params

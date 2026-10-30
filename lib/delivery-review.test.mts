@@ -269,7 +269,7 @@ test('[21] un pago que queda pendiente (no tarjeta) no entrega ni gasta plaza: a
 })
 
 test('[4, 22] el IVA cobrado tiene que ser el esperado: sin el 21 %, a revisar antes de entregar; un pago de antes con NIF-IVA europeo, como entonces (solo Espana)', async () => {
-  const w = world({ HOLDED_INVOICE_MODE: 'emit', HOLDED_TAX_REVERSE_CHARGE: 's_iva_isp' })
+  const w = world({ HOLDED_INVOICE_MODE: 'emit', HOLDED_TAX_REVERSE_CHARGE: 's_iva_intras' })
   // Espana con 0 de IVA (el tipo del 21 % sin poner): ni licencia, ni factura, ni zona.
   const spain = paidSession('hazlo-tu', { taxRate: 0 })
   assert.equal((await pay(w, spain)).outcome, 'needs-review')
@@ -305,7 +305,7 @@ test('[4, 22] el IVA cobrado tiene que ser el esperado: sin el 21 %, a revisar a
 })
 
 test('[22, 28] antes de emitir, Holded tiene que dar el total de Stripe; en dolares no se entrega (solo se vende en euros)', async () => {
-  const w = world({ HOLDED_INVOICE_MODE: 'emit', HOLDED_TAX_EXPORT: 's_export' })
+  const w = world({ HOLDED_INVOICE_MODE: 'emit', HOLDED_TAX_EXPORT: 's_iva_nosujeto' })
   w.f.invoicer.skewCents = 500
   const skewed = paidSession('hazlo-tu')
   await pay(w, skewed)

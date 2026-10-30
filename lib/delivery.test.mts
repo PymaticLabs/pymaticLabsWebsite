@@ -790,7 +790,7 @@ test('conciliacion: un pago devuelto con la licencia sin anular es una licencia 
 
 test('100 compras seguidas, de cada caso de IVA: precio de lanzamiento solo para 10 (con las plazas apartadas, espera), 100 licencias con ids unicos y 100 bienvenidas', async () => {
   // Las 50 del Acompanado abren su pago casi a la vez: sin el tope de huecos apartados a la vez.
-  const w = world({ LIMIT_HOLDS_TOTAL: '1000', HOLDED_TAX_REVERSE_CHARGE: 's_iva_isp', HOLDED_TAX_EXPORT: 's_iva_export' })
+  const w = world({ LIMIT_HOLDS_TOTAL: '1000', HOLDED_TAX_REVERSE_CHARGE: 's_iva_intras', HOLDED_TAX_EXPORT: 's_iva_nosujeto' })
   assert.equal(await launchPlacesLeft(w.d), 10)
   const products: ModalityId[] = ['hazlo-tu', 'hazlo-tu-equipo', 'acompanado', 'acompanado-equipo']
   const free = await w.d.calendar.availability(new Date(w.now().getTime() + 24 * HOUR).toISOString(), new Date(w.now().getTime() + 21 * 24 * HOUR).toISOString())

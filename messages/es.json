@@ -775,7 +775,8 @@
       "other_tax_id_invalid": "Esa identificación fiscal no vale: usa letras, números y guiones, de 4 a 30 caracteres.",
       "vat_invalid": "VIES, el registro europeo, dice que ese NIF-IVA no es válido. Revísalo o, para pagar con el 21 % de IVA español, déjalo vacío y escribe la identificación fiscal de tu empresa.",
       "vat_unavailable": "No hemos podido comprobar tu NIF-IVA en VIES, el registro europeo, que ahora no contesta. Inténtalo en unos minutos.",
-      "other_tax_id_is_vat": "Ese número es un NIF-IVA válido en VIES, el registro europeo. Escríbelo en el campo del NIF-IVA y no se cobra IVA."
+      "other_tax_id_is_vat": "Ese número es un NIF-IVA válido en VIES, el registro europeo. Escríbelo en el campo del NIF-IVA y no se cobra IVA.",
+      "eu_no_vat_limit": "Ahora no podemos vender con IVA español a empresas de otros países de la UE: hemos llegado al límite anual de esas ventas. Si tu empresa tiene NIF-IVA, escríbelo y no se cobra IVA; si no, escríbenos a info@pymaticlabs.com y lo resolvemos."
     },
     "taxId": {
       "label": "NIF de la empresa",
@@ -1111,7 +1112,8 @@
         "rate_limited": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.",
         "vat_invalid": "VIES, el registro europeo, ya no da por válido el NIF-IVA de tu empresa, y sin él no podemos facturar sin IVA. Escríbenos a info@pymaticlabs.com y lo vemos.",
         "vat_unavailable": "No hemos podido comprobar el NIF-IVA de tu empresa en VIES, el registro europeo, que ahora no contesta. Inténtalo en unos minutos.",
-        "country_invalid": "No tenemos un país válido de tu empresa y sin él no podemos calcular el IVA. Escríbenos a info@pymaticlabs.com y lo arreglamos."
+        "country_invalid": "No tenemos un país válido de tu empresa y sin él no podemos calcular el IVA. Escríbenos a info@pymaticlabs.com y lo arreglamos.",
+        "eu_no_vat_limit": "Ahora no puedes contratar el mensual con IVA español: hemos llegado al límite anual de ventas a empresas de otros países de la UE sin NIF-IVA. Escríbenos a info@pymaticlabs.com y lo resolvemos."
       },
       "statusTitle": "Tu mantenimiento y soporte",
       "subscribed": "Tienes el Mensual {plan}.",

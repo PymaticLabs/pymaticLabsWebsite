@@ -25,11 +25,14 @@ function errorPage(product: string): string {
   return isOneTimeProduct(product) ? `/comprar/${product}` : '/precios'
 }
 
-/** HTTP de cada error, en JSON: limites, 429; lo que hay que esperar (VIES caido, demasiados huecos), 503; lo ocupado, 409. */
+/**
+ * HTTP de cada error, en JSON: limites, 429; lo que hay que esperar (VIES caido, demasiados huecos), 503;
+ * lo ocupado y lo que no se vende ahora (la UE sin NIF-IVA cerca del limite), 409.
+ */
 function statusOf(code: string): number {
   if (code === 'rate_limited') return 429
   if (code === 'busy' || code === 'vat_unavailable') return 503
-  if (code === 'slot_taken' || code === 'already_subscribed' || code === 'launch_busy') return 409
+  if (code === 'slot_taken' || code === 'already_subscribed' || code === 'launch_busy' || code === 'eu_no_vat_limit') return 409
   return 400
 }
 

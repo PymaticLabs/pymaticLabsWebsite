@@ -26,7 +26,8 @@
 //
 // Lo que se guarda en tax_id: el NIF espanol sin prefijo (como siempre); el NIF-IVA con su prefijo
 // (EL en Grecia, FR en Monaco); cualquier otra, con el codigo del pais delante si no lo trae: asi no
-// choca con el NIF de otra empresa (companies.tax_id es unico).
+// choca con el NIF de otra empresa (companies.tax_id es unico). Esa, tal como la escribio el cliente,
+// va tambien en los metadatos del pago (tax_id_written): es la del contacto de Holded (writtenOtherTaxId).
 
 import { parseSpanishTaxId } from './checkout-nif.ts'
 
@@ -128,6 +129,16 @@ export function parseEuVatId(country: string, value: string | null | undefined):
   return rule.pattern.test(id) ? { vatId: `${rule.prefix}${id}`, viesCountry: rule.prefix, number: id } : null
 }
 
+/** Lo escrito como identificacion fiscal, limpio: letras sin tildes, cifras y guiones (sin el pais que pone la web). */
+export function otherTaxIdBody(value: string | null | undefined): string {
+  return (value ?? '')
+    .normalize('NFKD')
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 /**
  * La identificacion fiscal de una empresa de fuera de la UE (o de la UE sin NIF-IVA): letras sin
  * tildes, cifras y guiones (como la acepta firmar_licencia.py), de 4 a 30, con el codigo del pais
@@ -135,14 +146,48 @@ export function parseEuVatId(country: string, value: string | null | undefined):
  */
 export function parseOtherTaxId(country: string, value: string | null | undefined): string | null {
   if (!value || !/^[A-Z]{2}$/.test(country)) return null
-  const body = value
-    .normalize('NFKD')
-    .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+  const body = otherTaxIdBody(value)
   if (body.replace(/-/g, '').length < 4 || body.length > 30) return null
   return body.startsWith(country) ? body : `${country}${body}`
+}
+
+/**
+ * La identificacion de fuera de la UE (o de la UE sin NIF-IVA) tal como la escribio el cliente, sin
+ * el codigo del pais que le pone delante la web (companies.tax_id lo sigue llevando: es la clave
+ * interna). Es la que va al contacto de Holded: con el prefijo parece un NIF-IVA, en la factura y en
+ * Verifactu. written: la escrita (tax_id_written, en los metadatos del pago), si da esa misma
+ * identificacion. Sin ella, se quita el prefijo si lo que queda empieza por una cifra (US12-3456789:
+ * 12-3456789); con letras detras (la suiza CHE-123456789, un codice fiscale) no se sabe si lo puso
+ * el cliente, y se deja.
+ */
+export function writtenOtherTaxId(country: string | null | undefined, taxId: string, written?: string | null): string {
+  if (!country || !/^[A-Z]{2}$/.test(country)) return taxId
+  const body = otherTaxIdBody(written)
+  if (body && parseOtherTaxId(country, body) === taxId) return body
+  if (!taxId.startsWith(country)) return taxId
+  const rest = taxId.slice(country.length).replace(/^-/, '')
+  return /^\d/.test(rest) && rest.replace(/-/g, '').length >= 4 ? rest : taxId
+}
+
+/**
+ * Los territorios de un Estado de la UE que estan fuera del IVA europeo (art. 6 de la Directiva
+ * 2006/112/CE; art. 3.Dos LIVA), por el pais y el codigo postal de la direccion de facturacion
+ * (Stripe da el del Estado): los departamentos de ultramar de Francia (97xxx), Aland (22100 a 22999),
+ * Helgoland (27498) y Busingen (78266), Livigno (23041) y Campione d'Italia (22061), y el Monte
+ * Athos (63086). Su nombre, o null. Canarias, Ceuta y Melilla van aparte (el territorio de Espana).
+ */
+export function outsideEuVatTerritory(country: string | null | undefined, postalCode: string | null | undefined): string | null {
+  const postal = (postalCode ?? '').replace(/\D/g, '')
+  if (postal.length !== 5) return null
+  const code = Number(postal)
+  if (country === 'FR' && postal.startsWith('97')) return 'un departamento de ultramar de Francia'
+  if (country === 'FI' && code >= 22100 && code <= 22999) return 'Åland'
+  if (country === 'DE' && postal === '27498') return 'Helgoland'
+  if (country === 'DE' && postal === '78266') return 'Büsingen'
+  if (country === 'IT' && postal === '23041') return 'Livigno'
+  if (country === 'IT' && postal === '22061') return "Campione d'Italia"
+  if (country === 'GR' && postal === '63086') return 'el Monte Athos'
+  return null
 }
 
 /** El territorio de Espana por el codigo postal: 35 y 38, Canarias; 51, Ceuta; 52, Melilla. null si no es un codigo de Espana. */
@@ -271,17 +316,21 @@ export function viesText(value: string | null | undefined): string | null {
  * subscription_data): los lee la entrega tras el pago para comprobar que la direccion de
  * facturacion y el IVA cobrado cuadran con lo declarado (lib/delivery/tax.ts, checkPaidTax). Con
  * inversion del sujeto pasivo, la consulta a VIES: vies_request y vies_checked_at y, si VIES los da,
- * vies_name y vies_address (viesText), que la entrega compara con la razon social y pone en la factura.
+ * vies_name y vies_address (viesText), que la entrega compara con la razon social. Con una
+ * identificacion de fuera (other), written: la escrita, sin el pais que le pone delante la web
+ * (tax_id_written: la del contacto de Holded, writtenOtherTaxId).
  */
-export function taxMetadata(tax: CheckoutTax, vies: ViesProof | null): Record<string, string> {
+export function taxMetadata(tax: CheckoutTax, vies: ViesProof | null, written: string | null = null): Record<string, string> {
   const proof = tax.treatment === 'reverse_charge' ? vies : null
   const name = viesText(proof?.name)
   const address = viesText(proof?.address)
+  const body = tax.taxIdType === 'other' ? otherTaxIdBody(written) : ''
   return {
     tax_country: tax.country,
     ...(tax.territory ? { tax_territory: tax.territory } : {}),
     tax_id: tax.taxId,
     tax_id_type: tax.taxIdType,
+    ...(body && parseOtherTaxId(tax.country, body) === tax.taxId ? { tax_id_written: body } : {}),
     tax_treatment: tax.treatment,
     ...(proof ? { vies_request: proof.request, vies_checked_at: proof.checkedAt } : {}),
     ...(name ? { vies_name: name } : {}),

@@ -79,6 +79,7 @@ const ERRORS = [
   'vat_unavailable',
   'other_tax_id_is_vat',
   'launch_busy',
+  'eu_no_vat_limit',
 ] as const
 
 /** Todos los paises (se vende a cualquiera), por su nombre en ese idioma, con Espana el primero. */

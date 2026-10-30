@@ -775,7 +775,8 @@
       "other_tax_id_invalid": "That tax ID is not valid: use letters, digits and hyphens, 4 to 30 characters.",
       "vat_invalid": "VIES, the EU register, says that VAT number is not valid. Check it or, to pay with 21% Spanish VAT, leave it empty and enter your company’s tax ID.",
       "vat_unavailable": "We could not check your VAT number in VIES, the EU register, which is not responding right now. Try again in a few minutes.",
-      "other_tax_id_is_vat": "That number is a valid VAT number in VIES, the EU register. Enter it in the VAT number field and no VAT is charged."
+      "other_tax_id_is_vat": "That number is a valid VAT number in VIES, the EU register. Enter it in the VAT number field and no VAT is charged.",
+      "eu_no_vat_limit": "Right now we cannot sell with Spanish VAT to companies in other EU countries: we have reached the yearly limit for those sales. If your company has a VAT number, enter it and no VAT is charged; if not, write to info@pymaticlabs.com and we will sort it out."
     },
     "taxId": {
       "label": "Company tax ID (Spanish NIF)",
@@ -1111,7 +1112,8 @@
         "rate_limited": "Too many attempts in a row. Wait a few minutes and try again.",
         "vat_invalid": "VIES, the EU register, no longer confirms your company’s VAT number, and without it we cannot invoice without VAT. Write to info@pymaticlabs.com and we will look into it.",
         "vat_unavailable": "We could not check your company’s VAT number in VIES, the EU register, which is not responding right now. Try again in a few minutes.",
-        "country_invalid": "We do not have a valid country for your company, and without it we cannot work out the VAT. Write to info@pymaticlabs.com and we will fix it."
+        "country_invalid": "We do not have a valid country for your company, and without it we cannot work out the VAT. Write to info@pymaticlabs.com and we will fix it.",
+        "eu_no_vat_limit": "Right now you cannot subscribe to the monthly plan with Spanish VAT: we have reached the yearly limit for sales to companies in other EU countries without a VAT number. Write to info@pymaticlabs.com and we will sort it out."
       },
       "statusTitle": "Your maintenance and support",
       "subscribed": "You have Monthly {plan}.",

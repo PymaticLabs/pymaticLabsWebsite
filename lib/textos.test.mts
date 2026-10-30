@@ -391,6 +391,20 @@ test('lo que dice cada caso es lo que hace: launch_busy, los 15 dias, la identif
   assert.match(alert.subject, /^Una compra con vuestra identificación fiscal/)
 })
 
+test('la UE sin NIF-IVA cerca del limite (eu_no_vat_limit): /comprar y el mensual de la zona lo dicen y piden escribir a info@pymaticlabs.com', () => {
+  // Los socios, 30-10-2026: el pago se para (lib/delivery/eu-sales.ts); el cliente sabe que hacer. En
+  // /comprar, ademas, que con NIF-IVA si puede comprar (sin IVA); en la zona la empresa ya es la que es.
+  // A quien no se vende es a las empresas de otro pais de la UE (no «desde» otro pais, que parece el nuestro).
+  assert.match(str(es, 'purchase.errors.eu_no_vat_limit'), /^Ahora no podemos vender con IVA español a empresas de otros países de la UE: .*Si tu empresa tiene NIF-IVA, escríbelo y no se cobra IVA; si no, escríbenos a info@pymaticlabs\.com/)
+  assert.match(str(en, 'purchase.errors.eu_no_vat_limit'), /^Right now we cannot sell with Spanish VAT to companies in other EU countries: .*If your company has a VAT number, enter it and no VAT is charged; if not, write to info@pymaticlabs\.com/)
+  assert.match(str(es, 'zone.monthly.errors.eu_no_vat_limit'), /^Ahora no puedes contratar el mensual con IVA español: .*Escríbenos a info@pymaticlabs\.com/)
+  assert.match(str(en, 'zone.monthly.errors.eu_no_vat_limit'), /^Right now you cannot subscribe to the monthly plan with Spanish VAT: .*Write to info@pymaticlabs\.com/)
+  // Las dos paginas lo ensenan (su lista de errores).
+  for (const page of ['app/[locale]/comprar/[producto]/page.tsx', 'app/[locale]/zona/mensual/page.tsx']) {
+    assert.match(fs.readFileSync(path.join(ROOT, page), 'utf-8'), /'eu_no_vat_limit'/, page)
+  }
+})
+
 test('las modalidades, con su nombre propio: lo que se paga, se recibe y se firma se llama como en la web', () => {
   // Sergio, 29-10-2026: En solitario (Solista y Banda) y Acompanado (Duo y Orquesta). Los ids no
   // cambian; los nombres, los de lib/delivery/products.ts (Stripe, Holded y los correos).

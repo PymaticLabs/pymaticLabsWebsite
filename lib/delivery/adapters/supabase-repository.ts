@@ -9,12 +9,15 @@ import { createClient, type PostgrestError, type SupabaseClient } from '@supabas
 import { compareVersions } from './memory-repository.ts'
 import { requireEnv } from './http.ts'
 import { WEB_LICENSE_FIRST } from '../license-issue.ts'
+import { SALE_COUNTRIES, isEuCountry } from '../checkout-tax.ts'
+import { EU_SALE_STATUSES, reviewCountry } from '../eu-sales.ts'
 import {
   RetryableError,
   SeatLimitError,
   type Booking,
   type Company,
   type CompanyInput,
+  type EuSaleRow,
   type InvoiceInput,
   type InvoiceRecord,
   type Job,
@@ -203,6 +206,37 @@ export class SupabaseRepository implements Repository {
 
   async listPurchasesByCompany(companyId: string) {
     return this.many<Purchase>('purchases', this.db.from('purchases').select('*').eq('company_id', companyId).order('paid_at'))
+  }
+
+  // Dos consultas: las de empresas de otro pais de la UE (los 26 y Monaco, con Francia) y las que
+  // esperan revision sin empresa (con el pais declarado). Las demas con el 21 % (las de Espana, que
+  // son casi todas) se quedan en la base de datos.
+  async listEuNoVatSales(sinceIso: string, livemode: boolean): Promise<EuSaleRow[]> {
+    const others = SALE_COUNTRIES.filter((c) => c !== 'ES' && isEuCountry(c))
+    const withCompany = await this.many<EuSaleRow>(
+      'purchases',
+      this.db
+        .from('purchases')
+        .select('*, companies!inner(country)')
+        .eq('tax_treatment', 'standard')
+        .eq('livemode', livemode)
+        .gte('paid_at', sinceIso)
+        .in('status', [...EU_SALE_STATUSES])
+        .in('companies.country', others),
+      (row) => {
+        const { companies, ...rest } = row
+        return { purchase: fromRow<Purchase>(rest), country: (companies as { country?: string | null } | null)?.country ?? null }
+      }
+    )
+    const pending = await this.many<EuSaleRow>(
+      'purchases',
+      this.db.from('purchases').select('*').is('company_id', null).eq('status', 'needs_review').eq('tax_treatment', 'standard').eq('livemode', livemode).gte('paid_at', sinceIso),
+      (row) => {
+        const purchase = fromRow<Purchase>(row)
+        return { purchase, country: reviewCountry(purchase.reviewData) }
+      }
+    )
+    return [...withCompany, ...pending]
   }
 
   async nextLicenseNumber(year: number) {

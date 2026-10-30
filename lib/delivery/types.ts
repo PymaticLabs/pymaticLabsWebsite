@@ -323,6 +323,12 @@ export type LicenseRequestInput = Omit<LicenseRequest, 'id' | 'createdAt' | 'sta
 export type InvoiceInput = Omit<InvoiceRecord, 'id' | 'createdAt' | 'approvedAt' | 'sentAt'>
 export type VersionFileInput = Omit<VersionFile, 'id' | 'createdAt'>
 
+/** Una compra con el pais que cuenta para el limite de las ventas a la UE sin NIF-IVA (listEuNoVatSales). */
+export interface EuSaleRow {
+  purchase: Purchase
+  country: string | null
+}
+
 export interface StripeEventRecord {
   id: string
   type: string
@@ -361,6 +367,14 @@ export interface Repository {
   /** Reserva el id de licencia de la compra una sola vez: los reintentos usan el mismo. */
   reserveLicenseId(purchaseId: string, licenseId: string): Promise<string>
   listPurchasesByCompany(companyId: string): Promise<Purchase[]>
+  /**
+   * Las compras con el 21 % (standard), de vivo o de prueba (livemode), cobradas desde esa fecha (ISO),
+   * de todas las empresas, con su pais: el de la empresa o, a revisar sin empresa, el declarado
+   * (review_data.declared). Las de otro pais de la UE sin NIF-IVA, para el limite de 10.000 euros:
+   * lo suma lib/delivery/eu-sales.ts, que vuelve a mirar el estado, el pais y el ano (una pieza puede
+   * dar de mas, nunca de menos).
+   */
+  listEuNoVatSales(sinceIso: string, livemode: boolean): Promise<EuSaleRow[]>
 
   /** El siguiente numero de licencia de la web en ese anyo, desde WEB_LICENSE_FIRST (los de antes son del Mac de Eric). */
   nextLicenseNumber(year: number): Promise<number>
@@ -496,12 +510,20 @@ export interface ProviderDocument {
   /** Total e IVA del documento, en unidades de la moneda, si el proveedor los da: se cruzan con lo que cobro Stripe. */
   total?: number | null
   tax?: number | null
+  /**
+   * El estado del registro en Verifactu, si el proveedor lo da (Holded: verifactu_status, accepted
+   * cuando Hacienda lo acepta; null en un borrador). Tras emitirla sola, otro que accepted es un aviso urgente.
+   */
+  verifactu?: string | null
 }
 
 export interface Invoicer {
   readonly name: string
-  /** El contacto de esa empresa por su NIF; lo crea si no esta. */
-  ensureContact(company: Company): Promise<string>
+  /**
+   * El contacto de esa empresa por su identificacion; lo crea si no esta. code: la que va al contacto
+   * (la de fuera, tal como la escribio el cliente: writtenOtherTaxId); sin ella, company.taxId.
+   */
+  ensureContact(company: Company, code?: string | null): Promise<string>
   /** Busca una factura ya creada con esa referencia (un reintento tras un corte). */
   findDocument(kind: InvoiceKind, contactId: string, reference: string): Promise<ProviderDocument | null>
   createDocument(kind: InvoiceKind, draft: InvoiceDraft): Promise<ProviderDocument>

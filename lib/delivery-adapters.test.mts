@@ -179,7 +179,8 @@ test('Holded: contacto por NIF (o nuevo), factura con el impuesto, aprobar, envi
     if (call.url.endsWith('/contacts')) return { status: 201, json: { id: 'ct1' } }
     if (call.url.endsWith('/invoices') && call.method === 'POST') return { status: 201, json: { id: 'inv1' } }
     if (call.url.endsWith('/invoices/inv1/approve')) return { status: 200 }
-    if (call.url.endsWith('/invoices/inv1') && call.method === 'GET') return { json: { id: 'inv1', document_number: 'F260001', draft: false, approved_at: '2026-11-02T10:00:00' } }
+    // Holded da el estado en Verifactu en el GET (verifactu_status), aunque su referencia no lo documente.
+    if (call.url.endsWith('/invoices/inv1') && call.method === 'GET') return { json: { id: 'inv1', document_number: 'F260001', draft: false, approved_at: '2026-11-02T10:00:00', verifactu_status: 'accepted' } }
     if (call.url.endsWith('/invoices/inv1/send')) return { json: { status: 'sent' } }
     if (call.url.endsWith('/invoices/inv1/pdf')) return { body: '%PDF-1.4 prueba', headers: { 'Content-Type': 'application/pdf' } }
     return { status: 404, json: { detail: 'no' } }
@@ -202,14 +203,17 @@ test('Holded: contacto por NIF (o nuevo), factura con el impuesto, aprobar, envi
     taxRate: 21,
     lines: [{ name: 'Cerebro Digital · Solista', description: null, units: 1, price: 990 }],
     body: null,
-    notes: 'Stripe pi_1',
+    notes: null,
   })
   assert.deepEqual(doc, { id: 'inv1', number: null, approved: false })
   const invoiceBody = JSON.parse(calls.find((c) => c.url.endsWith('/invoices'))!.body!)
   assert.deepEqual(invoiceBody.items[0].taxes, ['s_iva_21'])
   assert.equal(invoiceBody.currency, 'EUR')
   assert.equal(invoiceBody.number_line_id, 'serie-web')
-  assert.equal((await holded.approveDocument('invoice', 'inv1')).number, 'F260001')
+  // El pago de Stripe, en la descripcion (con ella la encuentra un reintento); las notas salen impresas: nada.
+  assert.deepEqual([invoiceBody.description, invoiceBody.notes], ['Cerebro Digital · Solista · pi_1', null])
+  const approved = await holded.approveDocument('invoice', 'inv1')
+  assert.deepEqual([approved.number, approved.verifactu], ['F260001', 'accepted'])
   await holded.sendDocument('invoice', 'inv1', 'compras@munoz.test', 'es')
   assert.deepEqual(JSON.parse(calls.find((c) => c.url.endsWith('/send'))!.body!).emails, ['compras@munoz.test'])
   assert.equal((await holded.getPdf('invoice', 'inv1')).subarray(0, 4).toString(), '%PDF')

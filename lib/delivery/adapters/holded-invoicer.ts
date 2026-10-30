@@ -4,15 +4,20 @@
 //
 // HOLDED_API_KEY: clave con sales:invoices.read/.write y contacts:contacts.read/.write.
 // El contacto va por la identificacion de la compra (code): el NIF espanol sin prefijo, el NIF-IVA
-// de la UE con el suyo (tambien en vat_number) o la de fuera de la UE con el del pais; con el pais
-// y la direccion de facturacion de Stripe.
+// de la UE con el suyo (tambien en vat_number, y sin acumular en el 347: va al 349, art. 33.2.i del
+// RD 1065/2007) o la de fuera de la UE tal como la escribio el cliente, sin el pais que le pone
+// delante la web (lib/delivery/checkout-tax.ts, writtenOtherTaxId: asi no parece un NIF-IVA); con el
+// pais y la direccion de facturacion de Stripe.
 // Impuestos (los ids de GET /api/v2/taxes de la cuenta), segun el IVA que se comprobo al pagar
 // (lib/delivery/tax-check.ts): HOLDED_TAX_STANDARD (21 %, por defecto s_iva_21),
-// HOLDED_TAX_REVERSE_CHARGE (UE con NIF-IVA valido en VIES: inversion del sujeto pasivo, no sujeta
-// por reglas de localizacion; N2 en Verifactu) y HOLDED_TAX_EXPORT (Canarias, Ceuta, Melilla y fuera
-// de la UE: no sujeta). HOLDED_TAX_EXEMPT no lo usa ninguna venta. Si falta el que toca, el paso no
-// factura y avisa: un IVA mal puesto en Verifactu no se deshace solo. La mencion de cada uno va en
-// el cuerpo (body) y la consulta de VIES, en las notas.
+// HOLDED_TAX_REVERSE_CHARGE (s_iva_intras: UE con NIF-IVA valido en VIES, inversion del sujeto pasivo,
+// casilla 59 del 303 y modelo 349) y HOLDED_TAX_EXPORT (s_iva_nosujeto: Canarias, Ceuta, Melilla y
+// fuera de la UE, no sujeta, casilla 120). La comprobacion de produccion exige esos dos. HOLDED_TAX_EXEMPT
+// no lo usa ninguna venta. Si falta el que toca, el paso no factura y avisa: un IVA mal puesto en
+// Verifactu no se deshace solo. La mencion de cada uno va en el cuerpo (body); en las notas, que
+// salen impresas («Observaciones»), solo la consulta de VIES; el pago de Stripe, en la descripcion.
+// Al aprobarla, el estado en Verifactu (verifactu_status del GET v2: su referencia no lo documenta,
+// pero lo trae; accepted en las aceptadas).
 //
 // Cuota: Holded limita las llamadas por minuto y por mes segun el plan (Plus, 500 al mes). Cada
 // venta gasta unas 6; para 100 ventas al mes hace falta el plan Basic o superior.
@@ -32,6 +37,15 @@ interface HoldedDocument {
   // En la v2, texto decimal ("121.00"), segun su referencia; si no vinieran, no se emite sola.
   total?: number | string | null
   tax?: number | string | null
+  // No esta en la referencia de la v2, pero el GET lo trae: accepted en una aceptada, null en un borrador.
+  verifactu_status?: string | null
+}
+
+// Lo que se mira de un contacto del listado (GET /api/v2/contacts?code=...).
+interface HoldedContact {
+  id: string
+  name?: string | null
+  bill_address?: { country_code?: string | null } | null
 }
 
 // La v2 da los importes como texto y con coma decimal ("1210,00"; con miles, "1.210,00"): el
@@ -61,22 +75,38 @@ export class HoldedInvoicer implements Invoicer {
     return { Authorization: `Bearer ${this.key}` }
   }
 
-  async ensureContact(company: Company): Promise<string> {
-    const found = await requestJson<{ items: { id: string }[] }>(
-      'Holded',
-      `${this.base}/contacts?${new URLSearchParams({ code: company.taxId, limit: '1' })}`,
-      { headers: this.headers() }
-    )
-    if (found.items?.[0]?.id) return found.items[0].id
+  /**
+   * El contacto con ese code. La identificacion tal como se escribio (sin el pais que pone la web) no
+   * es unica entre paises (el mismo numero en Estados Unidos y en Canada): con of, solo el de esa
+   * empresa, por el pais de su direccion de facturacion o, si no la tiene, por su nombre.
+   */
+  private async contactByCode(code: string, of?: Company): Promise<string | null> {
+    const found = await requestJson<{ items: HoldedContact[] }>('Holded', `${this.base}/contacts?${new URLSearchParams({ code, limit: of ? '25' : '1' })}`, {
+      headers: this.headers(),
+    })
+    const items = found.items ?? []
+    if (!of) return items[0]?.id ?? null
+    const country = (of.address?.country ?? of.country ?? '').toUpperCase()
+    const own = (c: HoldedContact) => (c.bill_address?.country_code ? c.bill_address.country_code.toUpperCase() === country : c.name === of.name)
+    return items.find(own)?.id ?? null
+  }
+
+  async ensureContact(company: Company, written?: string | null): Promise<string> {
+    const code = written || company.taxId
+    // Por la escrita, solo uno de esa empresa; si no, uno de antes con el prefijo de la web en code
+    // (el de companies.tax_id, que es unico).
+    const found = code === company.taxId ? await this.contactByCode(code) : ((await this.contactByCode(code, company)) ?? (await this.contactByCode(company.taxId)))
+    if (found) return found
     const address = company.address
+    const euVat = company.taxIdType === 'eu_vat'
     const created = await requestJson<{ id: string }>('Holded', `${this.base}/contacts`, {
       method: 'POST',
       headers: this.headers(),
       json: {
         name: company.name,
-        code: company.taxId,
+        code,
         // El NIF-IVA intracomunitario validado en VIES, con su prefijo (EL en Grecia): el de la factura sin IVA.
-        vat_number: company.taxIdType === 'eu_vat' ? company.taxId : null,
+        vat_number: euVat ? company.taxId : null,
         is_person: false,
         email: company.email,
         type: 'client',
@@ -90,7 +120,8 @@ export class HoldedInvoicer implements Invoicer {
               country_code: address.country,
             }
           : null,
-        defaults: { language: company.locale, currency: company.currency.toUpperCase() },
+        // Con NIF-IVA, sus ventas van al 349 y no al 347 (art. 33.2.i del RD 1065/2007).
+        defaults: { language: company.locale, currency: company.currency.toUpperCase(), ...(euVat ? { accumulate_in_form_347: false } : {}) },
       },
     })
     return created.id
@@ -162,6 +193,7 @@ export class HoldedInvoicer implements Invoicer {
     return this.toProvider(doc)
   }
 
+  /** Aprueba y lo vuelve a leer: aprobado, con su numero y su estado en Verifactu (verifactu). */
   async approveDocument(kind: InvoiceKind, id: string): Promise<ProviderDocument> {
     await request('Holded', `${this.base}/${PATHS[kind]}/${encodeURIComponent(id)}/approve`, { method: 'POST', headers: this.headers() })
     const doc = await this.getDocument(kind, id)
@@ -205,6 +237,7 @@ export class HoldedInvoicer implements Invoicer {
       approved: doc.draft === false || Boolean(doc.approved_at),
       total: amount(doc.total),
       tax: amount(doc.tax),
+      ...('verifactu_status' in doc ? { verifactu: doc.verifactu_status ?? null } : {}),
     }
   }
 }
