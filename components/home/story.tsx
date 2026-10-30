@@ -22,10 +22,12 @@ export default function Story() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div data-reveal className="max-w-3xl">
           <p className="text-lg font-semibold text-brand">{t('story.eyebrow')}</p>
-          <h2 className="mt-3 text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('story.title')}</h2>
+          <h2 id="tareas-titulo" className="mt-3 text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">
+            {t('story.title')}
+          </h2>
         </div>
         <div className="mt-8 lg:mt-0">
-          <StorySteps texts={texts} />
+          <StorySteps texts={texts} labelledBy="tareas-titulo" />
         </div>
       </div>
     </section>

@@ -144,10 +144,10 @@ export function FileCard({ name, meta }: { name: string; meta: string }) {
   )
 }
 
-/** Una tarea que ha aprendido. */
-export function TaskCard({ name, meta }: { name: string; meta: string }) {
+/** Una tarea que ha aprendido (className: mt-0 cuando va sola en la burbuja, sin texto encima). */
+export function TaskCard({ name, meta, className }: { name: string; meta: string; className?: string }) {
   return (
-    <span className="mt-2.5 flex items-center gap-3 rounded-2xl bg-surface p-2.5 pr-4 shadow-[0_1px_3px_rgb(0_0_0/0.08)]">
+    <span className={cn('mt-2.5 flex items-center gap-3 rounded-2xl bg-surface p-2.5 pr-4 shadow-[0_1px_3px_rgb(0_0_0/0.08)]', className)}>
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-white">
         <ListChecks className="h-5 w-5" aria-hidden="true" />
       </span>

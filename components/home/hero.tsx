@@ -46,21 +46,26 @@ export default function Hero({ launchLeft = null }: { launchLeft?: number | null
     </span>
   )
 
-  // En el movil, algo menos de aire arriba y entre bloques: la conversacion asoma ya en la primera pantalla.
+  // En el movil, el gancho primero: el titular y, justo debajo, la conversacion escribiendose sola; la
+  // explicacion, los botones y el precio, despues (order-last). Desde sm, el orden de siempre, con el
+  // producto al final. El nombre del producto de arriba solo desde sm: en el movil ya lo lleva la ventana.
   return (
-    <section className="relative overflow-hidden bg-paper pb-16 pt-24 sm:pb-28 sm:pt-36 low:pt-24">
-      <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6">
-        <p className="inline-flex items-center gap-2.5 text-lg font-semibold text-ink motion-safe:animate-[rise_0.8s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+    <section className="relative flex flex-col overflow-hidden bg-paper pb-14 pt-24 sm:block sm:pb-28 sm:pt-36 low:pt-24">
+      <div className="relative mx-auto w-full max-w-5xl px-4 text-center sm:px-6">
+        <p className="hidden items-center gap-2.5 text-lg font-semibold text-ink motion-safe:animate-[rise_0.8s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:inline-flex">
           <CerebroIcon className="h-8 w-8" />
           {t('hero.eyebrow')}
         </p>
-        <h1 className="mt-4 text-hero font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:mt-5 sm:text-7xl lg:text-[6.75rem] low:mt-3 low:text-6xl low:lg:text-[5rem]">
+        <h1 className="text-hero font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:mt-5 sm:text-7xl lg:text-[6.75rem] low:mt-3 low:text-6xl low:lg:text-[5rem]">
           {title.map((text, i) => word(text, i, false))}
           {/* En el movil, «tu empresa.» entera en su linea, con su color */}
           <span className="block sm:inline">{accent.map((text, i) => word(text, title.length + i, true))}</span>
         </h1>
+      </div>
+
+      <div className="relative order-last mx-auto mt-2 w-full max-w-5xl px-4 text-center sm:mt-0 sm:px-6">
         <p
-          className="mx-auto mt-5 max-w-2xl text-pretty text-xl leading-relaxed text-muted motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:mt-6 sm:text-2xl sm:leading-relaxed low:mt-4 low:sm:text-xl"
+          className="mx-auto max-w-2xl text-pretty text-xl leading-relaxed text-muted motion-safe:animate-[rise_0.9s_cubic-bezier(0.2,0.7,0.2,1)_both] sm:mt-6 sm:text-2xl sm:leading-relaxed low:mt-4 low:sm:text-xl"
           style={{ animationDelay: '0.45s' }}
         >
           {t('hero.text')}
@@ -86,8 +91,9 @@ export default function Hero({ launchLeft = null }: { launchLeft?: number | null
         </div>
       </div>
 
-      {/* El producto: crece un poco al subirlo a la vista (donde el navegador lo sabe hacer, ver .scroll-zoom) */}
-      <div className="relative mx-auto mt-10 max-w-3xl px-4 sm:mt-20 sm:px-6">
+      {/* El producto: crece un poco al subirlo a la vista (donde el navegador lo sabe hacer, ver .scroll-zoom).
+          En el movil entra antes (--chat-delay), que es lo primero que se ve bajo el titular. */}
+      <div className="relative mx-auto mt-7 w-full max-w-3xl px-4 [--chat-delay:0.35s] sm:mt-20 sm:px-6 sm:[--chat-delay:0.8s]">
         <svg
           aria-hidden="true"
           viewBox="0 0 1120 1120"
@@ -97,7 +103,7 @@ export default function Hero({ launchLeft = null }: { launchLeft?: number | null
         </svg>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-16 h-2/3 rounded-full bg-brand/25 blur-[90px] dark:bg-brand/30" />
         <div className="scroll-zoom relative">
-          <div className="motion-safe:animate-[rise_1s_cubic-bezier(0.2,0.7,0.2,1)_both]" style={{ animationDelay: '0.8s' }}>
+          <div className="motion-safe:animate-[rise_1s_cubic-bezier(0.2,0.7,0.2,1)_both]" style={{ animationDelay: 'var(--chat-delay)' }}>
             <HeroChat texts={chat} />
           </div>
         </div>

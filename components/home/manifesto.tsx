@@ -41,7 +41,7 @@ export default function Manifesto({ problem, promise }: { problem: string; promi
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <p
           ref={ref}
-          className="manifesto text-[1.85rem] font-semibold leading-[1.25] tracking-[-0.025em] text-ink sm:text-5xl sm:leading-[1.16]"
+          className="manifesto text-[1.6rem] font-semibold leading-[1.25] tracking-[-0.025em] text-ink sm:text-5xl sm:leading-[1.16]"
           style={{ '--n': words.length } as React.CSSProperties}
         >
           {words.map(({ word, promise }, i) => (

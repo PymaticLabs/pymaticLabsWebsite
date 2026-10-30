@@ -306,13 +306,24 @@ export default function Navbar({ zone }: { zone: boolean }) {
               </li>
             ))}
           </ul>
-          <div className="mt-auto space-y-4 pt-8">
+          <div className="mt-auto space-y-3 pt-8">
             <Button size="lg" className="h-13 w-full text-[17px]" asChild>
               <Link href={localePath(locale, '/precios')} onClick={closeMobile}>
                 {t('cta')}
               </Link>
             </Button>
-            <div className="flex items-center gap-3">
+            {/* La zona de socio, tambien aqui (con la zona montada): entrar o, con sesion, ir a ella */}
+            {account !== 'hidden' && (
+              <Link
+                href={account === 'guest' ? loginHref : localePath(locale, '/zona')}
+                onClick={closeMobile}
+                className="flex h-13 w-full items-center justify-center gap-2 rounded-full border border-field/50 text-[17px] font-medium text-ink transition-colors active:bg-paper-2"
+              >
+                <UserRound className="h-5 w-5" aria-hidden="true" />
+                {t('account.zone')}
+              </Link>
+            )}
+            <div className="flex items-center gap-3 pt-1">
               <ThemeToggle />
               <Link
                 href={altHref}
@@ -337,8 +348,8 @@ export default function Navbar({ zone }: { zone: boolean }) {
  * marca y el menu sin partirse.
  */
 const LOGIN_PILL =
-  'inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-medium max-[379px]:w-11 max-[379px]:justify-center max-[379px]:px-0'
-const LOGIN_LABEL = 'max-[379px]:hidden'
+  'inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-medium max-[359px]:w-11 max-[359px]:justify-center max-[359px]:px-0'
+const LOGIN_LABEL = 'max-[359px]:hidden'
 
 /** El icono del boton del menu: el que no toca, encogido, transparente y desenfocado. */
 const MENU_ICON = 'absolute inset-0 h-6 w-6 transition-[opacity,scale,filter] duration-200 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none'
@@ -470,14 +481,14 @@ function AccountMenu({
         className={cn(
           // Del ancho de Entrar (llena su hueco) y con su mismo contorno; las iniciales, en un azul suave,
           // no lleno: el boton azul lleno de la barra es solo el de Ver precios.
-          'inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border bg-surface/70 px-2 text-ink transition-colors hover:border-brand dark:bg-transparent max-[379px]:px-0',
+          'inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border bg-surface/70 px-2 text-ink transition-colors hover:border-brand dark:bg-transparent max-[359px]:px-0',
           open ? 'border-brand ring-2 ring-brand/30' : 'border-field/50'
         )}
       >
         <span aria-hidden="true" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold tracking-wide text-brand dark:bg-brand/20">
           {initials}
         </span>
-        <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted transition-transform max-[379px]:hidden', open && 'rotate-180')} aria-hidden="true" />
+        <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted transition-transform max-[359px]:hidden', open && 'rotate-180')} aria-hidden="true" />
       </button>
 
       {open && (

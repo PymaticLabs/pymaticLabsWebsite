@@ -84,15 +84,17 @@ export default function PricingTeaser({ launchLeft = null }: { launchLeft?: numb
           ))}
         </div>
 
-        <dl className="mx-auto mt-12 grid max-w-4xl gap-8 text-center sm:mt-20 sm:grid-cols-3 sm:gap-10">
+        {/* En el movil, una tabla corta (el dato a la izquierda, lo que significa a la derecha) en vez de tres
+            bloques grandes; los div pasan a contents para que las tres filas compartan columnas. */}
+        <dl className="mx-auto mt-10 grid max-w-md grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-left sm:mt-20 sm:max-w-4xl sm:grid-cols-3 sm:items-start sm:gap-10 sm:text-center">
           {stats.map((stat, i) => (
-            <div key={stat.value} data-reveal style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}>
-              <dt className="text-3xl font-bold tracking-[-0.035em] text-ink sm:text-4xl">{stat.value}</dt>
-              <dd className="mx-auto mt-2 max-w-[16rem] text-base leading-relaxed text-muted">{stat.text}</dd>
+            <div key={stat.value} data-reveal className="contents sm:block" style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}>
+              <dt className="text-lg font-bold tracking-[-0.02em] text-ink sm:text-4xl sm:tracking-[-0.035em]">{stat.value}</dt>
+              <dd className="text-[15px] leading-snug text-muted sm:mx-auto sm:mt-2 sm:max-w-[16rem] sm:text-base sm:leading-relaxed">{stat.text}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-10 text-center text-sm text-muted sm:mt-12">{t('note')}</p>
+        <p className="mt-8 text-center text-sm text-muted sm:mt-12">{t('note')}</p>
       </div>
     </section>
   )
