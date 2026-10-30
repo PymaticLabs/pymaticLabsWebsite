@@ -879,7 +879,8 @@
     "lastUpdated": "Version of {date}",
     "draftBadge": "Draft",
     "draftNote": "Pending legal review. It may change before its final version.",
-    "fallbackNote": "This text is only available in Spanish, and the Spanish version is the only one that applies. It is shown below and also on <link>its Spanish page</link>."
+    "fallbackNote": "This text is only available in Spanish, and the Spanish version is the only one that applies. It is shown below and also on <link>its Spanish page</link>.",
+    "toc": "Contents ({count} sections)"
   },
   "zone": {
     "meta": {

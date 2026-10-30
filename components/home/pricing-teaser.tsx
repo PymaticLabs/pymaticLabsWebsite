@@ -24,24 +24,25 @@ export default function PricingTeaser({ launchLeft = null }: { launchLeft?: numb
   const stats = t.raw('stats') as { value: string; text: string }[]
 
   return (
-    <section id="precio" className="bg-paper-2 py-24 sm:py-36">
+    <section id="precio" className="bg-paper-2 py-16 sm:py-36">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div data-reveal className="mx-auto max-w-3xl text-center">
-          <h2 className="text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">
-            {t('title')} <span className="text-gradient">{t('titleAccent')}</span>
+          {/* En el movil, cada frase en su linea («Pagas una vez.» / «Es tuyo.»), sin dejar una palabra suelta */}
+          <h2 className="text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">
+            {t('title')} <span className="text-gradient block sm:inline">{t('titleAccent')}</span>
           </h2>
           <p className="mt-5 text-xl leading-relaxed text-muted sm:text-2xl">{t('subtitle')}</p>
           <LaunchBadge left={launchLeft} className="mt-7" />
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-4xl gap-5 md:grid-cols-2">
+        <div className="mx-auto mt-10 grid max-w-4xl gap-4 sm:mt-14 sm:gap-5 md:grid-cols-2">
           {FAMILIES.map(({ key, guided }, i) => (
             <div
               key={key}
               data-reveal
               style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}
               className={cn(
-                'flex flex-col items-center rounded-[28px] px-5 py-10 text-center sm:px-8 sm:py-12',
+                'flex flex-col items-center rounded-[28px] px-5 py-8 text-center sm:px-8 sm:py-12',
                 guided ? 'bg-brand-soft ring-1 ring-inset ring-brand/15' : 'bg-surface dark:bg-white/[0.04] dark:ring-1 dark:ring-inset dark:ring-white/10'
               )}
             >
@@ -76,22 +77,24 @@ export default function PricingTeaser({ launchLeft = null }: { launchLeft?: numb
               <p className="mt-6 text-sm text-muted first-letter:uppercase">
                 {tOffer('oneOff')} · {tOffer('noVat')}
               </p>
-              <Button size="lg" className="mt-8 h-12 px-8 text-[17px]" asChild>
+              <Button size="lg" className="mt-6 h-12 w-full px-8 text-[17px] sm:mt-8 sm:w-auto" asChild>
                 <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
               </Button>
             </div>
           ))}
         </div>
 
-        <dl className="mx-auto mt-16 grid max-w-4xl gap-10 text-center sm:mt-20 sm:grid-cols-3">
+        {/* En el movil, una tabla corta (el dato a la izquierda, lo que significa a la derecha) en vez de tres
+            bloques grandes; los div pasan a contents para que las tres filas compartan columnas. */}
+        <dl className="mx-auto mt-10 grid max-w-md grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-left sm:mt-20 sm:max-w-4xl sm:grid-cols-3 sm:items-start sm:gap-10 sm:text-center">
           {stats.map((stat, i) => (
-            <div key={stat.value} data-reveal style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}>
-              <dt className="text-4xl font-bold tracking-[-0.035em] text-ink">{stat.value}</dt>
-              <dd className="mx-auto mt-2 max-w-[16rem] text-base leading-relaxed text-muted">{stat.text}</dd>
+            <div key={stat.value} data-reveal className="contents sm:block" style={{ '--delay': `${i * 0.1}s` } as React.CSSProperties}>
+              <dt className="text-lg font-bold tracking-[-0.02em] text-ink sm:text-4xl sm:tracking-[-0.035em]">{stat.value}</dt>
+              <dd className="text-[15px] leading-snug text-muted sm:mx-auto sm:mt-2 sm:max-w-[16rem] sm:text-base sm:leading-relaxed">{stat.text}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-12 text-center text-sm text-muted">{t('note')}</p>
+        <p className="mt-8 text-center text-sm text-muted sm:mt-12">{t('note')}</p>
       </div>
     </section>
   )

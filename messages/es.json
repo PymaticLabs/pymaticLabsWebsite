@@ -879,7 +879,8 @@
     "lastUpdated": "Versión del {date}",
     "draftBadge": "Borrador",
     "draftNote": "Pendiente de revisión legal. Puede cambiar antes de su versión definitiva.",
-    "fallbackNote": "Este texto solo está en castellano, y la versión en castellano es la única que vale. Va aquí debajo y también en <link>su página en castellano</link>."
+    "fallbackNote": "Este texto solo está en castellano, y la versión en castellano es la única que vale. Va aquí debajo y también en <link>su página en castellano</link>.",
+    "toc": "Índice ({count} apartados)"
   },
   "zone": {
     "meta": {

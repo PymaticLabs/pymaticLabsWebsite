@@ -18,7 +18,7 @@ export default function Closing() {
   const locale = useLocale()
 
   return (
-    <section id="hablamos" className="bg-paper pb-28 pt-8 sm:pb-40">
+    <section id="hablamos" className="bg-paper pb-20 pt-4 sm:pb-40 sm:pt-8">
       <div data-reveal className="mx-auto max-w-3xl px-4 text-center sm:px-6">
         <ul className="flex justify-center -space-x-4">
           {PEOPLE.map((person) => (
@@ -33,9 +33,9 @@ export default function Closing() {
             </li>
           ))}
         </ul>
-        <h2 className="mt-8 text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h2>
-        <p className="mx-auto mt-6 max-w-2xl text-xl leading-relaxed text-muted sm:text-2xl sm:leading-relaxed">{t('text')}</p>
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <h2 className="mt-8 text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h2>
+        <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-muted sm:mt-6 sm:text-2xl sm:leading-relaxed">{t('text')}</p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row">
           <Button size="lg" className="h-13 w-full px-8 text-[17px] sm:w-auto" asChild>
             <Link href={localePath(locale, '/precios')}>{t('cta')}</Link>
           </Button>

@@ -126,7 +126,7 @@ export default async function ComprarPage({ params, searchParams }: { params: Pa
   }
 
   return (
-    <section className="pt-32 pb-20">
+    <section className="pt-24 sm:pt-32 pb-20">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
           {t('title', { product: tOffer(`modalities.${producto}.name`) })}
@@ -171,11 +171,11 @@ export default async function ComprarPage({ params, searchParams }: { params: Pa
                   {[...days.entries()].map(([day, daySlots]) => (
                     <div key={day}>
                       <p className="text-sm font-semibold text-ink first-letter:uppercase">{day}</p>
-                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="mt-2 grid grid-cols-2 gap-2">
                         {daySlots.map((slot) => (
                           <label
                             key={`${slot.host}|${slot.start}`}
-                            className="flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-body has-[:checked]:border-brand has-[:checked]:ring-1 has-[:checked]:ring-brand"
+                            className="flex min-h-12 cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-surface px-3 py-3 text-sm text-body sm:gap-3 sm:px-4 has-[:checked]:border-brand has-[:checked]:ring-1 has-[:checked]:ring-brand"
                           >
                             <input type="radio" name="slot" value={`${slot.host}|${slot.start}`} required className="accent-brand" />
                             <span>
@@ -221,7 +221,7 @@ export default async function ComprarPage({ params, searchParams }: { params: Pa
               }}
             />
             <p className="text-xs text-muted">{t('b2b')}</p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <PayButton label={t('pay')} disabled={guided && !slots.length} />
               <Button variant="outline" size="lg" asChild>
                 <Link href={localePath(locale, '/precios')}>{t('back')}</Link>

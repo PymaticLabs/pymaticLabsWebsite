@@ -76,7 +76,7 @@ app/
   api/jobs/, api/admin/ # Cola, conciliación, versiones, licencias a mano y comprobación de producción (con secreto)
   api/zone/             # Zona de socio
 components/
-  home/                 # Home: chat que se escribe solo, párrafo que se enciende al bajar, tareas con el chat fijo, baldosas, privacidad, pasos, precios, dudas y cierre
+  home/                 # Home: chat que se escribe solo, párrafo que se enciende al bajar, tareas con el chat fijo, baldosas (en el móvil, tareas y baldosas se deslizan de lado: swipe-row.tsx), privacidad, pasos, precios, dudas y cierre
   cerebro-icon.tsx      # El sello del Cerebro Digital (el mismo trazo que public/icon.svg)
   pymatic-mark.tsx      # El símbolo de Pymatic Labs (las dos piezas, negra y azul), en la barra y el pie
   pricing/              # Las dos familias (en solitario y acompañado), la tarjeta de cada modalidad y las licencias de lanzamiento que quedan

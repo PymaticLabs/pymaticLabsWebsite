@@ -19,7 +19,7 @@ export default function NotFound() {
   const locale = useLocale()
 
   return (
-    <section className="pt-32 pb-24">
+    <section className="pt-24 sm:pt-32 pb-24">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <CerebroIcon className="mx-auto h-16 w-16" />
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-brand">{t('eyebrow')}</p>

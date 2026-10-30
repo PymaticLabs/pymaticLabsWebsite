@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { CerebroIcon } from '@/components/cerebro-icon'
+import SwipeRow from '@/components/home/swipe-row'
 import { cn } from '@/lib/utils'
 
 /** Cada tipo de documento (en el orden de bento.read.kinds), con su icono y su color de siempre. */
@@ -44,15 +45,22 @@ export default function Bento() {
   const delay = (s: number) => ({ '--d': `${s}s` }) as React.CSSProperties
 
   return (
-    <section id="documentos" className="bg-paper py-24 sm:py-36">
+    <section id="documentos" className="bg-paper py-16 sm:py-36">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div data-reveal className="max-w-3xl">
           <p className="text-lg font-semibold text-brand">{t('eyebrow')}</p>
-          <h2 className="mt-3 text-[2.75rem] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">{t('title')}</h2>
-          <p className="mt-6 text-xl leading-relaxed text-muted sm:text-2xl sm:leading-relaxed">{t('text')}</p>
+          <h2 id="documentos-titulo" className="mt-3 text-balance text-section font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-7xl">
+            {t('title')}
+          </h2>
+          <p className="mt-5 text-pretty text-xl leading-relaxed text-muted sm:mt-6 sm:text-2xl sm:leading-relaxed">{t('text')}</p>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {/* En el movil, las baldosas se deslizan de lado (una pantalla en vez de cinco); desde md, la rejilla */}
+        <SwipeRow
+          labelledBy="documentos-titulo"
+          className="-mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:-mx-6 sm:mt-14 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden"
+          dotsClassName="md:hidden"
+        >
           <Tile title={t('read.title')} className="md:col-span-2">
             <div className="w-full">
               <div className="flex items-center gap-5">
@@ -166,20 +174,21 @@ export default function Bento() {
                   <p className="enter ml-auto w-fit max-w-[90%] rounded-2xl rounded-br-md bg-brand px-3 py-2 text-white" style={delay(0.2)}>
                     {t('mobile.q')}
                   </p>
-                  <p className="enter w-fit max-w-[90%] rounded-2xl rounded-bl-md bg-[#EDEEF1] px-3 py-2 text-ink dark:bg-[#1C2230]" style={delay(0.7)}>
+                  <p className="enter w-fit max-w-[90%] rounded-2xl rounded-bl-md bg-bubble px-3 py-2 text-ink" style={delay(0.7)}>
                     {t('mobile.a')}
                   </p>
                 </div>
               </div>
             </div>
           </Tile>
-        </div>
+        </SwipeRow>
       </div>
     </section>
   )
 }
 
-/** Una baldosa: titulo arriba, su dibujo abajo. */
+/** Una baldosa: titulo arriba, su dibujo abajo. En el movil, una tarjeta de la fila que se desliza (todas
+    del alto de la mas alta, el dibujo abajo); desde md, una celda de la rejilla. */
 function Tile({
   title,
   text,
@@ -197,11 +206,14 @@ function Tile({
     <div
       data-reveal
       style={{ '--delay': `${delay}s` } as React.CSSProperties}
-      className={cn('flex min-h-[21rem] flex-col overflow-hidden rounded-[28px] bg-paper-2 p-7 sm:p-9', className)}
+      className={cn(
+        'flex w-[85%] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-[28px] bg-paper-2 p-6 sm:p-9 md:min-h-[21rem] md:w-auto md:max-w-none md:shrink',
+        className
+      )}
     >
-      <h3 className="text-2xl font-bold leading-tight tracking-[-0.025em] text-ink sm:text-[1.75rem]">{title}</h3>
-      {text && <p className="mt-2 text-lg leading-snug text-muted">{text}</p>}
-      <div className="mt-8 flex flex-1 items-end">{children}</div>
+      <h3 className="text-balance text-2xl font-bold leading-tight tracking-[-0.025em] text-ink sm:text-[1.75rem]">{title}</h3>
+      {text && <p className="mt-2 text-pretty text-lg leading-snug text-muted">{text}</p>}
+      <div className="mt-6 flex flex-1 items-end sm:mt-8">{children}</div>
     </div>
   )
 }

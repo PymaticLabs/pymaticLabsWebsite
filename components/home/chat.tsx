@@ -20,6 +20,7 @@ export interface ChatFrame {
 export function ChatWindow({
   frame,
   input,
+  compact = false,
   className,
   bodyClassName,
   children,
@@ -27,6 +28,8 @@ export function ChatWindow({
   frame: ChatFrame
   /** Lo que se esta escribiendo en la caja; si no hay nada, se ve el texto de ayuda. */
   input?: string
+  /** Sin la fecha ni la caja de escribir: los trozos de conversacion que van uno tras otro en el movil. */
+  compact?: boolean
   className?: string
   bodyClassName?: string
   children: React.ReactNode
@@ -34,8 +37,8 @@ export function ChatWindow({
   return (
     <div
       className={cn(
-        'flex flex-col overflow-hidden rounded-[28px] border border-black/[0.06] bg-white/95 text-left shadow-[0_40px_100px_-30px_rgb(4_40_120/0.35)] backdrop-blur-xl',
-        'dark:border-white/10 dark:bg-[#0C111C]/95 dark:shadow-[0_40px_100px_-30px_rgb(0_0_0/0.8)]',
+        'flex flex-col overflow-hidden rounded-[28px] border border-black/[0.06] bg-surface/95 text-left shadow-[0_40px_100px_-30px_rgb(4_40_120/0.35)]',
+        'dark:border-white/10 dark:shadow-[0_40px_100px_-30px_rgb(0_0_0/0.8)]',
         className
       )}
     >
@@ -52,10 +55,10 @@ export function ChatWindow({
         <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-muted">{frame.example}</span>
       </div>
       <div className={cn('flex flex-1 flex-col justify-end gap-3 px-4 py-5 sm:px-5', bodyClassName)}>
-        {frame.today && <p className="mb-auto self-center rounded-full bg-paper-2 px-3 py-0.5 text-xs font-medium text-muted">{frame.today}</p>}
+        {frame.today && !compact && <p className="mb-auto self-center rounded-full bg-paper-2 px-3 py-0.5 text-xs font-medium text-muted">{frame.today}</p>}
         {children}
       </div>
-      <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+      <div className={cn('px-3 pb-3 sm:px-4 sm:pb-4', compact && 'hidden')}>
         <div className="flex items-center gap-2 rounded-full border border-line bg-paper-2/80 py-1.5 pl-4 pr-1.5 sm:pl-5">
           <span className={cn('min-w-0 flex-1 truncate text-[15px] sm:text-base', input ? 'text-ink' : 'text-muted')}>
             {input || frame.placeholder}
@@ -89,7 +92,7 @@ export function Answer({ children, pop }: { children: React.ReactNode; pop?: boo
   return (
     <div className={cn('flex items-end gap-2', pop && POP)}>
       <CerebroIcon className="mb-0.5 h-7 w-7" />
-      <div className="max-w-[85%] rounded-[22px] rounded-bl-md bg-[#EDEEF1] px-4 py-2.5 text-[15px] leading-snug text-ink dark:bg-[#1C2230] sm:text-base">
+      <div className="max-w-[85%] rounded-[22px] rounded-bl-md bg-bubble px-4 py-2.5 text-[15px] leading-snug text-ink sm:text-base">
         {children}
       </div>
     </div>
@@ -104,7 +107,7 @@ export function Typing() {
   return (
     <div className="flex items-end gap-2">
       <CerebroIcon className="mb-0.5 h-7 w-7" />
-      <div className="flex gap-1 rounded-[22px] rounded-bl-md bg-[#EDEEF1] px-4 py-3.5 dark:bg-[#1C2230]">
+      <div className="flex gap-1 rounded-[22px] rounded-bl-md bg-bubble px-4 py-3.5">
         {[0, 1, 2].map((i) => (
           <span key={i} className="h-2 w-2 rounded-full bg-muted motion-safe:animate-[typing-dot_1.1s_ease-in-out_3_both]" style={{ animationDelay: `${i * 0.15}s` }} />
         ))}
@@ -141,10 +144,10 @@ export function FileCard({ name, meta }: { name: string; meta: string }) {
   )
 }
 
-/** Una tarea que ha aprendido. */
-export function TaskCard({ name, meta }: { name: string; meta: string }) {
+/** Una tarea que ha aprendido (className: mt-0 cuando va sola en la burbuja, sin texto encima). */
+export function TaskCard({ name, meta, className }: { name: string; meta: string; className?: string }) {
   return (
-    <span className="mt-2.5 flex items-center gap-3 rounded-2xl bg-surface p-2.5 pr-4 shadow-[0_1px_3px_rgb(0_0_0/0.08)]">
+    <span className={cn('mt-2.5 flex items-center gap-3 rounded-2xl bg-surface p-2.5 pr-4 shadow-[0_1px_3px_rgb(0_0_0/0.08)]', className)}>
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-white">
         <ListChecks className="h-5 w-5" aria-hidden="true" />
       </span>
